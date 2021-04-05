@@ -19,8 +19,10 @@ def get_db():
 
 
 @app.post("/wardInfo")
-def ingest_wardinfo(db: Session = Depends(get_db)):
-    return {"message": "Hello World"}
+def ingest_wardinfo(wardinfo: schemas.ffxiv.HousingWardInfo, db: Session = Depends(get_db)):
+    print("I got wardinfo")
+    print(wardinfo.json(indent=2))
+    return {"message": "OK"}
 
 
 @app.get("/worlds")
