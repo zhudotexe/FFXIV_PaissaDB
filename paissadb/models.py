@@ -1,4 +1,4 @@
-from sqlalchemy import BigInteger, Column, DateTime, ForeignKey, Integer, SmallInteger, String
+from sqlalchemy import BigInteger, Column, DateTime, ForeignKey, ForeignKeyConstraint, Integer, SmallInteger, String
 from sqlalchemy.orm import relationship
 
 from .database import Base
@@ -31,8 +31,20 @@ class District(Base):
     __tablename__ = "districts"
 
     id = Column(Integer, primary_key=True, index=True)  # territoryTypeId
-    name = Column(String)
-    land_set_id = Column(Integer)
+    name = Column(String, unique=True)
+    land_set_id = Column(Integer, unique=True, index=True)
+
+
+class PlotInfo(Base):
+    __tablename__ = "plotinfo"
+
+    territory_type_id = Column(Integer, ForeignKey("districts.id"), primary_key=True)
+    plot_number = Column(Integer, primary_key=True)
+
+    house_size = Column(Integer)
+    house_base_price = Column(Integer)
+
+    district = relationship("District", viewonly=True)
 
 
 class WardSweep(Base):
@@ -48,17 +60,21 @@ class WardSweep(Base):
     sweeper = relationship("Sweeper", back_populates="sweeps")
     world = relationship("World", back_populates="sweeps")
     plots = relationship("Plot", back_populates="sweep")
-    district = relationship("District")
+    district = relationship("District", viewonly=True)
 
 
 class Plot(Base):
     __tablename__ = "plots"
+    __table_args__ = (
+        ForeignKeyConstraint(("territory_type_id", "plot_number"),
+                             ("plotinfo.territory_type_id", "plotinfo.plot_number")),
+    )
 
     id = Column(Integer, primary_key=True, index=True)
     world_id = Column(Integer, ForeignKey("worlds.id"))
-    territory_type_id = Column(Integer, ForeignKey("plotinfo.territory_type_id"))
+    territory_type_id = Column(Integer, ForeignKey("districts.id"))
     ward_number = Column(Integer, index=True)
-    plot_number = Column(Integer, ForeignKey("plotinfo.plot_number"))
+    plot_number = Column(Integer, index=True)
     sweep_id = Column(Integer, ForeignKey("wardsweeps.id"))
 
     # HouseInfoEntry
@@ -71,17 +87,5 @@ class Plot(Base):
 
     sweep = relationship("WardSweep", back_populates="plots")
     world = relationship("World", back_populates="plots")
-    plot_info = relationship("PlotInfo", foreign_keys=[territory_type_id, plot_number])
-
-
-class PlotInfo(Base):
-    __tablename__ = "plotinfo"
-
-    id = Column(Integer, primary_key=True, index=True)
-    territory_type_id = Column(Integer, ForeignKey("districts.id"))
-    plot_number = Column(Integer, index=True)
-
-    house_size = Column(Integer)
-    house_base_price = Column(Integer)
-
-    district = relationship("District")
+    district = relationship("District", viewonly=True)
+    plot_info = relationship("PlotInfo", viewonly=True)
