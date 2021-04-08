@@ -6,10 +6,11 @@ PaissaDB is the companion website for the [PaissaHouse](https://github.com/zhudo
 
 You can find the Swagger docs at https://paissadb.zhu.codes/docs.
 
-### Endpoints (Draft)
+**Important: All ward IDs and plot IDs returned by PaissaDB are 0-indexed!**
 
-Note: all endpoints should be prefixed with the relevant APi version (`/v1`). Some endpoints expect a valid JWT (see
-PaissaHouse JWT).
+### Endpoints
+
+Note: Some endpoints expect a valid JWT (see PaissaHouse JWT below).
 
 #### POST /wardInfo
 
@@ -72,3 +73,15 @@ Standard [JWT spec](https://jwt.io/) using HS256 for signature verification with
 ```
 
 This JWT should be sent as an `Authorization` bearer header to all endpoints that require it.
+
+## Updating Game Data
+
+Using [SaintCoinach.Cmd](https://github.com/ufx/SaintCoinach), run `SaintCoinach.Cmd.exe "<path to FFXIV>" rawexd`
+and copy the following files to `gamedata/`:
+
+- HousingLandSet.csv (used to generate `plotinfo`)
+- PlaceName.csv (used to generate `districts`)
+- TerritoryType.csv (used to generate `districts`)
+- World.csv (used to generate `worlds`)
+
+It is recommended to run this once after each patch.

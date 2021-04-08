@@ -5,6 +5,15 @@ from typing import List
 from pydantic import BaseModel
 
 
+class Hello(BaseModel):
+    cid: int
+    name: str
+    world: str
+    worldId: int
+
+
+# ======= DB reflections =======
+
 # ==== Sweeper ====
 class SweeperBase(BaseModel):
     cid: int

@@ -7,8 +7,7 @@ from .database import Base
 class Sweeper(Base):
     __tablename__ = "sweepers"
 
-    id = Column(Integer, primary_key=True, index=True)
-    cid = Column(BigInteger, unique=True, index=True)
+    id = Column(BigInteger, primary_key=True, index=True)
     name = Column(String)
     world_id = Column(Integer, ForeignKey("worlds.id"))
 
@@ -43,6 +42,7 @@ class PlotInfo(Base):
 
     house_size = Column(Integer)
     house_base_price = Column(Integer)
+    house_min_price = Column(Integer)
 
     district = relationship("District", viewonly=True)
 
@@ -51,7 +51,7 @@ class WardSweep(Base):
     __tablename__ = "wardsweeps"
 
     id = Column(Integer, primary_key=True, index=True)
-    cid = Column(Integer, ForeignKey("sweepers.cid"))
+    sweeper_id = Column(Integer, ForeignKey("sweepers.id"))
     world_id = Column(Integer, ForeignKey("worlds.id"))
     territory_type_id = Column(Integer, ForeignKey("districts.id"))
     ward_number = Column(Integer, index=True)
