@@ -1,11 +1,11 @@
 from fastapi import Depends, FastAPI
 from sqlalchemy.orm import Session
 
-from . import crud, gamedata, models, schemas
+from . import config, crud, gamedata, models, schemas
 from .database import engine, get_db
 
 models.Base.metadata.create_all(bind=engine)
-gamedata.upsert_all(dir="", db=get_db())
+gamedata.upsert_all(gamedata_dir=config.GAMEDATA_DIR, db=get_db())
 
 app = FastAPI()
 
