@@ -100,12 +100,15 @@ class Plot(Base):
     plot_number = Column(Integer, index=True)
     timestamp = Column(DateTime, index=True)
     sweep_id = Column(Integer, ForeignKey("wardsweeps.id"), nullable=True)
+    event_id = Column(Integer, ForeignKey("events.id"))
 
     is_owned = Column(Boolean, index=True)
+    has_built_house = Column(Boolean)  # used to determine if a plot was reloed into or bought (not super accurate)
     house_price = Column(Integer, nullable=True)  # null for unknown price
     owner_name = Column(String, nullable=True)  # "Unknown" for unknown owner (UNKNOWN_OWNER), used to build relo graph
 
     sweep = relationship("WardSweep", back_populates="plots")
+    event = relationship("Event", back_populates="plots")
     world = relationship("World", back_populates="plots")
     district = relationship("District", viewonly=True)
     plot_info = relationship("PlotInfo", viewonly=True)
@@ -122,3 +125,4 @@ class Event(Base):
     data = Column(UnicodeText)
 
     sweeper = relationship("Sweeper", back_populates="events")
+    plots = relationship("Plot", back_populates="event")

@@ -1,6 +1,9 @@
 # PaissaDB
 
-PaissaDB is the companion website for the [PaissaHouse](https://github.com/zhudotexe/FFXIV_PaissaHouse) FFXIV plugin
+PaissaDB is the companion website for the [PaissaHouse](https://github.com/zhudotexe/FFXIV_PaissaHouse) FFXIV plugin.
+
+Note that PaissaDB only supports game servers that are marked as public in the NA game client; this means that
+KR and CN servers are not supported.
 
 ## API Specification
 
@@ -66,13 +69,14 @@ Standard [JWT spec](https://jwt.io/) using HS256 for signature verification with
 ```typescript
 {
     cid: number | null; // character's content ID; may be null or omitted for anonymous contribution
-    iss: "PaissaHouse";
-    aud: "PaissaDB";
+    iss: "PaissaDB";
+    aud: "PaissaHouse";
     iat: number; // JWT generation timestamp
 }
 ```
 
-This JWT should be sent as an `Authorization` bearer header to all endpoints that require it.
+This JWT should be sent as an `Authorization` bearer header to all endpoints that require it. Note that the `iss` claim
+is `PaissaDB` regardless of what service generates the token.
 
 ## Updating Game Data
 

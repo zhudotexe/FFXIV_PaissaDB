@@ -32,6 +32,8 @@ def upsert_all(gamedata_dir, db: Session):
 def generate_worlds(gamedata_dir):
     worlds = []
     for world in read_csv(os.path.join(gamedata_dir, 'World.csv')):
+        if world['IsPublic'] != 'True':
+            continue
         db_world = models.World(id=int(world['#']), name=world['Name'])
         worlds.append(db_world)
     return worlds

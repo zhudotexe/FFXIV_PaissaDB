@@ -6,7 +6,10 @@ import enum
 
 from pydantic import BaseModel, conlist, constr
 
+from .. import models
 
+
+# ---- substructures ----
 class HousingFlags(enum.IntFlag):
     PlotOwned = 1 << 0
     VisitorsAllowed = 1 << 1
@@ -29,6 +32,13 @@ class HouseInfoEntry(BaseModel):
     EstateOwnerName: constr(max_length=32)
 
 
-class HousingWardInfo(BaseModel):
+# ---- packets ----
+class BaseFFXIVPacket(BaseModel):
+    event_type: models.EventType
+
+
+class HousingWardInfo(BaseFFXIVPacket):
+    event_type = models.EventType.HOUSING_WARD_INFO
+
     LandIdent: LandIdent
     HouseInfoEntries: conlist(HouseInfoEntry, min_items=60, max_items=60)

@@ -1,4 +1,4 @@
 fastapi[all]==0.63.0
-jwt==1.2.0
 pydantic==1.8.1
-sqlalchemy==1.4.5
+pyjwt==2.0.1
+sqlalchemy==1.4.7
