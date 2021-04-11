@@ -2,10 +2,11 @@ from fastapi import Depends, FastAPI
 from sqlalchemy.orm import Session
 
 from . import config, crud, gamedata, models, schemas
-from .database import engine, get_db
+from .database import engine, get_db, SessionLocal
 
 models.Base.metadata.create_all(bind=engine)
-gamedata.upsert_all(gamedata_dir=config.GAMEDATA_DIR, db=get_db())
+with SessionLocal() as sess:
+    gamedata.upsert_all(gamedata_dir=config.GAMEDATA_DIR, db=sess)
 
 app = FastAPI()
 

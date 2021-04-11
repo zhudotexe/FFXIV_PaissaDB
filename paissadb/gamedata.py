@@ -1,15 +1,31 @@
 import csv
+import logging
 import os
+
+from sqlalchemy.orm import Session
 
 from . import models
 
+log = logging.getLogger(__name__)
 
-def upsert_all(gamedata_dir, db):
+PLOTS_PER_WARD = 60
+
+
+def upsert_all(gamedata_dir, db: Session):
     """
     Given the path to the directory where gamedata files are, upserts the necessary rows into worlds, districts,
     and plotinfo.
     """
-    pass
+    worlds = generate_worlds(gamedata_dir)
+    districts = generate_districts(gamedata_dir)
+    plotinfo = generate_plotinfo(districts, gamedata_dir)
+    for world in worlds:
+        db.merge(world)
+    for district in districts:
+        db.merge(district)
+    for pi in plotinfo:
+        db.merge(pi)
+    db.commit()
 
 
 # ==== Transient Gen ====
@@ -32,16 +48,54 @@ def generate_districts(gamedata_dir):
     territoryintendeduse=13
     resident=78
     """
-    return
+    territory_to_land_set_map = {
+        339: 0,  # Mist
+        340: 1,  # Lavender Beds
+        341: 2,  # Goblet
+        641: 3,  # Shirogane
+        886: 4,  # Firmament (fixme may change for 6.1?)
+    }
+    place_names = {int(p['#']): p['Name'] for p in read_csv(os.path.join(gamedata_dir, 'PlaceName.csv'))}
+
+    def is_housing(t):
+        # any of these should work below
+        return int(t['TerritoryIntendedUse']) == 13
+        # return int(t['Resident']) == 78
+        # return '/hou/' in t['Bg']
+        # return int(t['#']) in territory_to_land_set_map
+
+    districts = []
+    for territory in read_csv(os.path.join(gamedata_dir, 'TerritoryType.csv')):
+        if not is_housing(territory):
+            continue
+        if (tid := int(territory['#'])) not in territory_to_land_set_map:
+            log.warning(f"TerritoryType ID {tid} not found in map! Skipping...")
+            continue
+        name = place_names[int(territory['PlaceName'])]
+        db_district = models.District(id=tid, name=name, land_set_id=territory_to_land_set_map[tid])
+        districts.append(db_district)
+    return districts
 
 
-def generate_plotinfo(gamedata_dir):
-    return
+def generate_plotinfo(districts, gamedata_dir):
+    plotinfo = []
+    landsets = {int(ls['#']): ls for ls in read_csv(os.path.join(gamedata_dir, 'HousingLandSet.csv'))}
+    for district in districts:
+        landset = landsets[district.land_set_id]
+        for plotnum in range(PLOTS_PER_WARD):
+            db_plotinfo = models.PlotInfo(
+                territory_type_id=district.id,
+                plot_number=plotnum,
+                house_size=int(landset[f'PlotSize[{plotnum}]']),
+                house_base_price=int(landset[f'InitialPrice[{plotnum}]'])
+            )
+            plotinfo.append(db_plotinfo)
+    return plotinfo
 
 
 # ==== utils ====
 def read_csv(csv_path):
-    with open(csv_path, newline='') as csvfile:
+    with open(csv_path, newline='', encoding='utf-8') as csvfile:
         # skip header rows
         next(csvfile)
         headers = next(csvfile).strip().split(',')

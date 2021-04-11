@@ -42,7 +42,6 @@ class PlotInfo(Base):
 
     house_size = Column(Integer)
     house_base_price = Column(Integer)
-    house_min_price = Column(Integer)
 
     district = relationship("District", viewonly=True)
 
