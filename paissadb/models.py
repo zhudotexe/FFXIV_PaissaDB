@@ -1,9 +1,32 @@
-from sqlalchemy import BigInteger, Column, DateTime, ForeignKey, ForeignKeyConstraint, Integer, SmallInteger, String
+import enum
+
+from sqlalchemy import BigInteger, Boolean, Column, DateTime, Enum, ForeignKey, ForeignKeyConstraint, Integer, String, \
+    UnicodeText
 from sqlalchemy.orm import relationship
 
 from .database import Base
 
+UNKNOWN_OWNER = "Unknown"
 
+
+class EventType(enum.Enum):
+    HOUSING_WARD_INFO = "HOUSING_WARD_INFO"
+    # LAND_UPDATE (house sold, reloed, autodemoed, etc)
+    #   https://github.com/SapphireServer/Sapphire/blob/master/src/common/Network/PacketDef/Zone/ServerZoneDef.h#L1888
+    #   https://github.com/SapphireServer/Sapphire/blob/master/src/world/Manager/HousingMgr.cpp#L365
+    # LAND_SET_INITIALIZE (sent on zonein)
+    #   https://github.com/SapphireServer/Sapphire/blob/master/src/common/Network/PacketDef/Zone/ServerZoneDef.h#L1943
+    #   https://github.com/SapphireServer/Sapphire/blob/master/src/world/Territory/HousingZone.cpp#L197
+    # LAND_SET_MAP (sent on zonein, after init, probably the useful one)
+    #   https://github.com/SapphireServer/Sapphire/blob/master/src/common/Network/PacketDef/Zone/ServerZoneDef.h#L1929
+    #   https://github.com/SapphireServer/Sapphire/blob/master/src/world/Territory/HousingZone.cpp#L154
+    # other packets:
+    #   LAND_INFO_SIGN (view placard on owned house) - probably not useful, if we get this we already got a LAND_SET_MAP
+    #       and if the ward changed since then, we got a LAND_UPDATE
+    #   LAND_PRICE_UPDATE (view placard on unowned house) - similar to above, plus spammy if someone is buying a house
+
+
+# ==== Table defs ====
 class Sweeper(Base):
     __tablename__ = "sweepers"
 
@@ -13,6 +36,7 @@ class Sweeper(Base):
 
     world = relationship("World", back_populates="sweepers")
     sweeps = relationship("WardSweep", back_populates="sweeper")
+    events = relationship("Event", back_populates="sweeper")
 
 
 class World(Base):
@@ -50,7 +74,7 @@ class WardSweep(Base):
     __tablename__ = "wardsweeps"
 
     id = Column(Integer, primary_key=True, index=True)
-    sweeper_id = Column(Integer, ForeignKey("sweepers.id"))
+    sweeper_id = Column(Integer, ForeignKey("sweepers.id"), nullable=True)
     world_id = Column(Integer, ForeignKey("worlds.id"))
     territory_type_id = Column(Integer, ForeignKey("districts.id"))
     ward_number = Column(Integer, index=True)
@@ -74,17 +98,27 @@ class Plot(Base):
     territory_type_id = Column(Integer, ForeignKey("districts.id"))
     ward_number = Column(Integer, index=True)
     plot_number = Column(Integer, index=True)
-    sweep_id = Column(Integer, ForeignKey("wardsweeps.id"))
+    timestamp = Column(DateTime, index=True)
+    sweep_id = Column(Integer, ForeignKey("wardsweeps.id"), nullable=True)
 
-    # HouseInfoEntry
-    house_price = Column(Integer)
-    info_flags = Column(Integer, index=True)
-    house_appeal_1 = Column(SmallInteger, nullable=True)
-    house_appeal_2 = Column(SmallInteger, nullable=True)
-    house_appeal_3 = Column(SmallInteger, nullable=True)
-    owner_name = Column(String, nullable=True)
+    is_owned = Column(Boolean, index=True)
+    house_price = Column(Integer, nullable=True)  # null for unknown price
+    owner_name = Column(String, nullable=True)  # "Unknown" for unknown owner (UNKNOWN_OWNER), used to build relo graph
 
     sweep = relationship("WardSweep", back_populates="plots")
     world = relationship("World", back_populates="plots")
     district = relationship("District", viewonly=True)
     plot_info = relationship("PlotInfo", viewonly=True)
+
+
+# store of all ingested events for later analysis (e.g. FC/player ownership, relocation/resell graphs, etc)
+class Event(Base):
+    __tablename__ = "events"
+
+    id = Column(Integer, primary_key=True, index=True)
+    sweeper_id = Column(Integer, ForeignKey("sweepers.id"), nullable=True, index=True)
+    timestamp = Column(DateTime, index=True)
+    event_type = Column(Enum(EventType), index=True)
+    data = Column(UnicodeText)
+
+    sweeper = relationship("Sweeper", back_populates="events")
