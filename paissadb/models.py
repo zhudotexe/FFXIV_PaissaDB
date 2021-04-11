@@ -1,4 +1,5 @@
 import enum
+from typing import Optional
 
 from sqlalchemy import BigInteger, Boolean, Column, DateTime, Enum, ForeignKey, ForeignKeyConstraint, Integer, String, \
     UnicodeText
@@ -7,6 +8,7 @@ from sqlalchemy.orm import relationship
 from .database import Base
 
 UNKNOWN_OWNER = "Unknown"
+HOUSING_DEVAL_FACTOR = 0.0042
 
 
 class EventType(enum.Enum):
@@ -112,6 +114,19 @@ class Plot(Base):
     world = relationship("World", back_populates="plots")
     district = relationship("District", viewonly=True)
     plot_info = relationship("PlotInfo", viewonly=True)
+
+    @property
+    def num_devals(self) -> Optional[int]:
+        """
+        Returns the number of price this house has devalued. If the price is unknown, returns None.
+        If price>max, returns 0.
+        """
+        if self.house_price is None:
+            return None
+        max_price = self.plot_info.house_base_price
+        if self.house_price >= max_price:
+            return 0
+        return round((max_price - self.house_price) / (HOUSING_DEVAL_FACTOR * max_price))
 
 
 # store of all ingested events for later analysis (e.g. FC/player ownership, relocation/resell graphs, etc)
