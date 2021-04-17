@@ -1,7 +1,7 @@
 import datetime
-from typing import List, Optional
+from typing import Iterator, List, Optional
 
-from sqlalchemy import func
+from sqlalchemy import desc, func
 from sqlalchemy.orm import Session, aliased
 
 from . import models, schemas
@@ -46,6 +46,16 @@ def get_latest_plots_in_district(db: Session, world_id: int, district_id: int) -
     latest_plots = aliased(models.Plot, subq)
     stmt = db.query(models.Plot).join(latest_plots, models.Plot.id == latest_plots.id)
     return stmt.all()
+
+
+def plot_history(db: Session, plot: models.Plot) -> Iterator[models.Plot]:
+    return db.query(models.Plot) \
+        .filter(models.Plot.world_id == plot.world_id,
+                models.Plot.territory_type_id == plot.territory_type_id,
+                models.Plot.ward_number == plot.ward_number,
+                models.Plot.plot_number == plot.plot_number) \
+        .order_by(desc(models.Plot.timestamp)) \
+        .yield_per(100)
 
 
 # ---- ingest ----

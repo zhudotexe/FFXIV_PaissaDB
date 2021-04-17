@@ -5,7 +5,7 @@ from typing import List
 from fastapi import Depends, FastAPI, HTTPException
 from sqlalchemy.orm import Session
 
-from . import auth, config, crud, gamedata, models, schemas
+from . import auth, config, crud, gamedata, models, schemas, calc
 from .database import SessionLocal, engine, get_db
 
 models.Base.metadata.create_all(bind=engine)
@@ -72,3 +72,34 @@ def list_worlds(db: Session = Depends(get_db)):
 @app.get("/worlds/{world_id}", response_model=schemas.paissa.WorldDetail)
 def get_world(world_id: int, db: Session = Depends(get_db)):
     world = crud.get_world_by_id(db, world_id)
+    districts = crud.get_districts(db)
+
+    district_details = []
+    for district in districts:
+        latest_plots = crud.get_latest_plots_in_district(db, world.id, district.id)
+        num_open_plots = sum(1 for p in latest_plots if not p.is_owned)
+        oldest_plot_time = min(p.timestamp for p in latest_plots) \
+            if latest_plots else datetime.datetime.fromtimestamp(0)
+        open_plots = []
+
+        for plot in latest_plots:
+            if plot.is_owned:
+                continue
+            # we found a plot that was last known as open, iterate over its history to find the details
+            open_plots.append(calc.plot_detail(db, plot))
+
+        district_details.append(schemas.paissa.DistrictDetail(
+            id=district.id,
+            name=district.name,
+            num_open_plots=num_open_plots,
+            oldest_plot_time=oldest_plot_time,
+            open_plots=open_plots
+        ))
+
+    return schemas.paissa.WorldDetail(
+        id=world.id,
+        name=world.name,
+        districts=district_details,
+        num_open_plots=sum(d.num_open_plots for d in district_details),
+        oldest_plot_time=min(d.oldest_plot_time for d in district_details)
+    )
