@@ -1,4 +1,6 @@
+import datetime
 import logging
+from typing import List
 
 from fastapi import Depends, FastAPI, HTTPException
 from sqlalchemy.orm import Session
@@ -38,11 +40,35 @@ def hello(
     return {"message": "OK"}
 
 
-@app.get("/worlds")
+@app.get("/worlds", response_model=List[schemas.paissa.WorldSummary])
 def list_worlds(db: Session = Depends(get_db)):
-    return db.query(models.World).all()
+    worlds = crud.get_worlds(db)
+    districts = crud.get_districts(db)
+
+    out = []
+    for world in worlds:
+        district_summaries = []
+        for district in districts:
+            latest_plots = crud.get_latest_plots_in_district(db, world.id, district.id)
+            num_open_plots = sum(1 for p in latest_plots if not p.is_owned)
+            oldest_plot_time = min(p.timestamp for p in latest_plots) \
+                if latest_plots else datetime.datetime.fromtimestamp(0)
+            district_summaries.append(schemas.paissa.DistrictSummary(
+                id=district.id,
+                name=district.name,
+                num_open_plots=num_open_plots,
+                oldest_plot_time=oldest_plot_time
+            ))
+        out.append(schemas.paissa.WorldSummary(
+            id=world.id,
+            name=world.name,
+            districts=district_summaries,
+            num_open_plots=sum(d.num_open_plots for d in district_summaries),
+            oldest_plot_time=min(d.oldest_plot_time for d in district_summaries)
+        ))
+    return out
 
 
-@app.get("/worlds/{world_id}")
+@app.get("/worlds/{world_id}", response_model=schemas.paissa.WorldDetail)
 def get_world(world_id: int, db: Session = Depends(get_db)):
-    return db.query(models.World).all()
+    world = crud.get_world_by_id(db, world_id)

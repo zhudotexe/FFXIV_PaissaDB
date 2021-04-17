@@ -1,16 +1,51 @@
 import datetime
-from typing import Optional
+from typing import List, Optional
 
-from sqlalchemy.orm import Session
+from sqlalchemy import func
+from sqlalchemy.orm import Session, aliased
 
 from . import models, schemas
 
 
-def upsert_sweeper(db: Session, sweeper: schemas.paissa.Hello):
+def upsert_sweeper(db: Session, sweeper: schemas.paissa.Hello) -> models.Sweeper:
     db_sweeper = models.Sweeper(id=sweeper.cid, name=sweeper.name, world_id=sweeper.worldId)
     merged = db.merge(db_sweeper)
     db.commit()
     return merged
+
+
+def get_worlds(db: Session) -> List[models.World]:
+    return db.query(models.World).all()
+
+
+def get_world_by_id(db: Session, world_id: int) -> models.World:
+    return db.query(models.World).filter(models.World.id == world_id).first()
+
+
+def get_districts(db: Session) -> List[models.District]:
+    return db.query(models.District).all()
+
+
+def get_latest_plots_in_district(db: Session, world_id: int, district_id: int) -> List[models.Plot]:
+    """
+    SELECT * FROM plots
+    JOIN (
+        SELECT plots.id AS id, max(plots.timestamp) AS max_1
+        FROM plots
+        WHERE plots.world_id = ?
+            AND plots.territory_type_id = ?
+        GROUP BY plots.ward_number, plots.plot_number
+    ) AS latest_plots
+        ON plots.id = latest_plots.id
+    """
+
+    subq = db.query(models.Plot.id, func.max(models.Plot.timestamp)) \
+        .filter(models.Plot.world_id == world_id, models.Plot.territory_type_id == district_id) \
+        .group_by(models.Plot.ward_number, models.Plot.plot_number) \
+        .subquery()
+    latest_plots = aliased(models.Plot, subq)
+    stmt = db.query(models.Plot).join(latest_plots, models.Plot.id == latest_plots.id)
+    return stmt.all()
 
 
 # ---- ingest ----
@@ -27,7 +62,10 @@ def _ingest(db: Session, event: schemas.ffxiv.BaseFFXIVPacket, sweeper: Optional
     return db_event
 
 
-def ingest_wardinfo(db: Session, wardinfo: schemas.ffxiv.HousingWardInfo, sweeper: Optional[schemas.paissa.JWTSweeper]):
+def ingest_wardinfo(
+        db: Session,
+        wardinfo: schemas.ffxiv.HousingWardInfo,
+        sweeper: Optional[schemas.paissa.JWTSweeper]) -> models.WardSweep:
     event = _ingest(db, wardinfo, sweeper)
     db_wardsweep = models.WardSweep(
         sweeper_id=event.sweeper_id,

@@ -1,6 +1,6 @@
 # PaissaDB
 
-PaissaDB is the companion website for the [PaissaHouse](https://github.com/zhudotexe/FFXIV_PaissaHouse) FFXIV plugin.
+PaissaDB is the companion API for the [PaissaHouse](https://github.com/zhudotexe/FFXIV_PaissaHouse) FFXIV plugin.
 
 Note that PaissaDB only supports game servers that are marked as public in the NA game client; this means that
 KR and CN servers are not supported.

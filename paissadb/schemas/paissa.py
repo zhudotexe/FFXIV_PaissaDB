@@ -1,10 +1,12 @@
 from __future__ import annotations
 
-from typing import Optional
+import datetime
+from typing import List, Optional
 
 from pydantic import BaseModel
 
 
+# ==== inputs ====
 class Hello(BaseModel):
     cid: int
     name: str
@@ -14,3 +16,42 @@ class Hello(BaseModel):
 
 class JWTSweeper(BaseModel):
     cid: Optional[int]
+
+
+# ==== outputs ====
+# --- summary ---
+class DistrictSummary(BaseModel):
+    id: int
+    name: str
+    num_open_plots: int
+    oldest_plot_time: datetime.datetime
+
+
+class WorldSummary(BaseModel):
+    id: int
+    name: str
+    districts: List[DistrictSummary]
+    num_open_plots: int
+    oldest_plot_time: datetime.datetime
+
+
+# --- detail ---
+class PlotDetail(BaseModel):
+    world_id: int
+    district_id: int
+    ward_number: int
+    plot_number: int
+    size: int
+    price: int
+    last_updated_time: datetime.datetime
+    est_time_open_min: datetime.datetime
+    est_time_open_max: datetime.datetime
+    est_num_devals: int
+
+
+class DistrictDetail(DistrictSummary):
+    open_plots: List[PlotDetail]
+
+
+class WorldDetail(WorldSummary):
+    districts: List[DistrictDetail]
