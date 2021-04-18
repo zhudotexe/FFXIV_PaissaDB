@@ -36,13 +36,13 @@ class WorldSummary(BaseModel):
 
 
 # --- detail ---
-class PlotDetail(BaseModel):
+class OpenPlotDetail(BaseModel):
     world_id: int
     district_id: int
     ward_number: int
     plot_number: int
     size: int
-    price: int
+    known_price: int
     last_updated_time: datetime.datetime
     est_time_open_min: datetime.datetime
     est_time_open_max: datetime.datetime
@@ -50,7 +50,7 @@ class PlotDetail(BaseModel):
 
 
 class DistrictDetail(DistrictSummary):
-    open_plots: List[PlotDetail]
+    open_plots: List[OpenPlotDetail]
 
 
 class WorldDetail(WorldSummary):

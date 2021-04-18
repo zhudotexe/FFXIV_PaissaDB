@@ -74,6 +74,9 @@ def get_world(world_id: int, db: Session = Depends(get_db)):
     world = crud.get_world_by_id(db, world_id)
     districts = crud.get_districts(db)
 
+    if world is None:
+        raise HTTPException(404, "World not found")
+
     district_details = []
     for district in districts:
         latest_plots = crud.get_latest_plots_in_district(db, world.id, district.id)
@@ -86,7 +89,7 @@ def get_world(world_id: int, db: Session = Depends(get_db)):
             if plot.is_owned:
                 continue
             # we found a plot that was last known as open, iterate over its history to find the details
-            open_plots.append(calc.plot_detail(db, plot))
+            open_plots.append(calc.open_plot_detail(db, plot))
 
         district_details.append(schemas.paissa.DistrictDetail(
             id=district.id,
