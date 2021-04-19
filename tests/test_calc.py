@@ -125,7 +125,7 @@ class TestDevals:
 
 
 # ============= open time =============
-def test_earliest_open_time(self):
+def test_earliest_open_time():
     assert earliest_possible_open_time(num_devals=0, known_at=SOON_AFTER_DEVALUE_TIME) == TODAYS_DEVALUE
     assert earliest_possible_open_time(num_devals=0, known_at=SOON_BEFORE_DEVALUE_TIME) == TODAYS_DEVALUE - ONE_DAY
     assert earliest_possible_open_time(num_devals=1, known_at=SOON_AFTER_DEVALUE_TIME) == TODAYS_DEVALUE - ONE_DAY
