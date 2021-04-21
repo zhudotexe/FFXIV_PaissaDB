@@ -76,7 +76,7 @@ class WardSweep(Base):
     __tablename__ = "wardsweeps"
 
     id = Column(Integer, primary_key=True, index=True)
-    sweeper_id = Column(Integer, ForeignKey("sweepers.id"), nullable=True)
+    sweeper_id = Column(BigInteger, ForeignKey("sweepers.id"), nullable=True)
     world_id = Column(Integer, ForeignKey("worlds.id"))
     territory_type_id = Column(Integer, ForeignKey("districts.id"))
     ward_number = Column(Integer, index=True)
@@ -134,7 +134,7 @@ class Event(Base):
     __tablename__ = "events"
 
     id = Column(Integer, primary_key=True, index=True)
-    sweeper_id = Column(Integer, ForeignKey("sweepers.id"), nullable=True, index=True)
+    sweeper_id = Column(BigInteger, ForeignKey("sweepers.id"), nullable=True, index=True)
     timestamp = Column(DateTime, index=True)
     event_type = Column(Enum(EventType), index=True)
     data = Column(UnicodeText)
