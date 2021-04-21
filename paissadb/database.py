@@ -5,7 +5,7 @@ from . import config
 
 engine_kwargs = {}
 
-if config.DB_URI.startswith("sqlite://"):
+if config.DB_TYPE == 'sqlite':
     engine_kwargs.update(connect_args={"check_same_thread": False})
 
 engine = create_engine(config.DB_URI, **engine_kwargs)

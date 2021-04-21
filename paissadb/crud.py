@@ -4,7 +4,7 @@ from typing import Iterator, List, Optional
 from sqlalchemy import desc, func
 from sqlalchemy.orm import Session, aliased
 
-from . import models, schemas
+from . import config, models, schemas
 
 
 def upsert_sweeper(db: Session, sweeper: schemas.paissa.Hello) -> models.Sweeper:
@@ -28,6 +28,7 @@ def get_districts(db: Session) -> List[models.District]:
 
 def get_latest_plots_in_district(db: Session, world_id: int, district_id: int) -> List[models.Plot]:
     """
+    sqlite:
     SELECT * FROM plots
     JOIN (
         SELECT plots.id AS id, max(plots.timestamp) AS max_1
@@ -37,14 +38,26 @@ def get_latest_plots_in_district(db: Session, world_id: int, district_id: int) -
         GROUP BY plots.ward_number, plots.plot_number
     ) AS latest_plots
         ON plots.id = latest_plots.id
-    """
 
-    subq = db.query(models.Plot.id, func.max(models.Plot.timestamp)) \
-        .filter(models.Plot.world_id == world_id, models.Plot.territory_type_id == district_id) \
-        .group_by(models.Plot.ward_number, models.Plot.plot_number) \
-        .subquery()
-    latest_plots = aliased(models.Plot, subq)
-    stmt = db.query(models.Plot).join(latest_plots, models.Plot.id == latest_plots.id)
+    postgres:
+    SELECT DISTINCT ON (ward_number, plot_number) *
+        FROM plots
+        WHERE world_id = ?
+            AND territory_type_id = ?
+        ORDER BY ward_number, plot_number, timestamp DESC
+    """
+    if config.DB_TYPE == 'postgres':
+        stmt = db.query(models.Plot) \
+            .distinct(models.Plot.ward_number, models.Plot.plot_number) \
+            .filter(models.Plot.world_id == world_id, models.Plot.territory_type_id == district_id) \
+            .order_by(models.Plot.ward_number, models.Plot.plot_number, desc(models.Plot.timestamp))
+    else:
+        subq = db.query(models.Plot.id, func.max(models.Plot.timestamp)) \
+            .filter(models.Plot.world_id == world_id, models.Plot.territory_type_id == district_id) \
+            .group_by(models.Plot.ward_number, models.Plot.plot_number) \
+            .subquery()
+        latest_plots = aliased(models.Plot, subq)
+        stmt = db.query(models.Plot).join(latest_plots, models.Plot.id == latest_plots.id)
     return stmt.all()
 
 

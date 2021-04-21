@@ -6,3 +6,4 @@ JWT_AUDIENCES = ['PaissaHouse']
 
 JWT_SECRET_PAISSAHOUSE = os.getenv("JWT_SECRET_PAISSAHOUSE")
 DB_URI = os.getenv("DB_URI", "sqlite:///./sql_app.db")
+DB_TYPE = DB_URI.split('://')[0]
