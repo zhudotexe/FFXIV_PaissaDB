@@ -46,7 +46,7 @@ def get_latest_plots_in_district(db: Session, world_id: int, district_id: int) -
             AND territory_type_id = ?
         ORDER BY ward_number, plot_number, timestamp DESC
     """
-    if config.DB_TYPE == 'postgres':
+    if config.DB_TYPE == 'postgresql':
         stmt = db.query(models.Plot) \
             .distinct(models.Plot.ward_number, models.Plot.plot_number) \
             .filter(models.Plot.world_id == world_id, models.Plot.territory_type_id == district_id) \
