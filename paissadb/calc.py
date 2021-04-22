@@ -56,8 +56,11 @@ def open_plot_detail(db: Session, plot: models.Plot):
     last_known_devals, last_known_devals_time = last_known_devals_i
     est_num_devals = (last_known_devals or 0) + num_missed_devals(last_known_devals, last_known_devals_time, when=now)
 
-    # ensure that the min open time is sane for the number of devals
-    est_time_open_min = max(est_time_open_min, earliest_possible_open_time(last_known_devals, now))
+    # ensure that the min open time/max open time is sane for the number of devals
+    early = earliest_possible_open_time(last_known_devals, now)
+    late = early + datetime.timedelta(days=1)
+    est_time_open_min = max(est_time_open_min, early)
+    est_time_open_max = min(est_time_open_max, late)
 
     return schemas.paissa.OpenPlotDetail(
         world_id=plot.world_id,
