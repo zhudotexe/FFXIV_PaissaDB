@@ -130,3 +130,25 @@ def test_earliest_open_time():
     assert earliest_possible_open_time(num_devals=0, known_at=SOON_BEFORE_DEVALUE_TIME) == TODAYS_DEVALUE - ONE_DAY
     assert earliest_possible_open_time(num_devals=1, known_at=SOON_AFTER_DEVALUE_TIME) == TODAYS_DEVALUE - ONE_DAY
     assert earliest_possible_open_time(num_devals=1, known_at=SOON_BEFORE_DEVALUE_TIME) == TODAYS_DEVALUE - ONE_DAY
+
+
+def test_earliest_open_time_spanning_day():
+    # now: 2021-04-22 1:32 (reset + 8h32m)
+    # num devals: 2
+    # t0: 2021-04-21 13:32
+    # devalue time: 17:00
+    # should be earliest: 2021-4-20 17:00
+    k1 = datetime.datetime(year=2021, month=4, day=22, hour=1, minute=32)
+    d1 = datetime.time(hour=17)
+    s1 = datetime.datetime(year=2021, month=4, day=20, hour=17)
+    assert earliest_possible_open_time(num_devals=2, known_at=k1, devalue_time=d1) == s1
+
+    # now: 2021-01-02 9:00 (reset + 23h)
+    # num devals: 4
+    # t0: 2021-01-01 9:00
+    # devalue time: 10:00
+    # should be earliest: 2020-12-31 10:00
+    k2 = datetime.datetime(year=2021, month=1, day=2, hour=9)
+    d2 = datetime.time(hour=10)
+    s2 = datetime.datetime(year=2020, month=12, day=31, hour=10)
+    assert earliest_possible_open_time(num_devals=4, known_at=k2, devalue_time=d2) == s2

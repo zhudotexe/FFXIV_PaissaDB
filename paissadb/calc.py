@@ -102,7 +102,7 @@ def num_missed_devals(num_devals, known_at, when=None):
     return n
 
 
-def earliest_possible_open_time(num_devals, known_at=None):
+def earliest_possible_open_time(num_devals, known_at=None, devalue_time=DEVALUE_TIME_NAIVE):
     """Given the number of devals at *known_at*, returns the earliest datetime the plot could have opened."""
     if known_at is None:
         known_at = datetime.datetime.now()
@@ -111,7 +111,7 @@ def earliest_possible_open_time(num_devals, known_at=None):
     # 1+ devals: the most recent devalue time to n * 6 hours ago
     t0 = known_at - datetime.timedelta(hours=HOURS_PER_DEVAL * num_devals)  # some time when it had 0 devals
 
-    if t0.time() >= DEVALUE_TIME_NAIVE:
-        return datetime.datetime.combine(t0.date(), DEVALUE_TIME_NAIVE)
+    if t0.time() >= devalue_time:
+        return datetime.datetime.combine(t0.date(), devalue_time)
     else:
-        return datetime.datetime.combine(t0.date() - datetime.timedelta(days=1), DEVALUE_TIME_NAIVE)
+        return datetime.datetime.combine(t0.date() - datetime.timedelta(days=1), devalue_time)

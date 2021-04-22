@@ -42,24 +42,24 @@ def get_latest_plots_in_district(
     detached.
     """
     # sqlite:
-    #     SELECT * FROM plots
-    #     JOIN (
-    #         SELECT plots.id AS id, max(plots.timestamp) AS max_1
-    #         FROM plots
-    #         WHERE plots.world_id = ?
-    #             AND plots.territory_type_id = ?
-    #         GROUP BY plots.ward_number, plots.plot_number
-    #     ) AS latest_plots
-    #         ON plots.id = latest_plots.id;
+    # SELECT * FROM plots
+    # JOIN (
+    #     SELECT plots.id AS id, max(plots.timestamp) AS max_1
+    #     FROM plots
+    #     WHERE plots.world_id = ?
+    #         AND plots.territory_type_id = ?
+    #     GROUP BY plots.ward_number, plots.plot_number
+    # ) AS latest_plots
+    #     ON plots.id = latest_plots.id;
     #
-    #     postgres:
-    #     SELECT DISTINCT ON (ward_number, plot_number) *
-    #         FROM plots
-    #         WHERE world_id = ?
-    #             AND territory_type_id = ?
-    #         ORDER BY ward_number, plot_number, timestamp DESC;
+    # postgres:
+    # SELECT DISTINCT ON (ward_number, plot_number) *
+    #     FROM plots
+    #     WHERE world_id = ?
+    #         AND territory_type_id = ?
+    #     ORDER BY ward_number, plot_number, timestamp DESC;
 
-    if (cached := district_plot_cache.get((world_id, district_id))) is not None and use_cache:
+    if use_cache and (cached := district_plot_cache.get((world_id, district_id))) is not None:
         return cached
 
     if config.DB_TYPE == 'postgresql':
