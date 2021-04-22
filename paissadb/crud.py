@@ -1,10 +1,16 @@
 import datetime
-from typing import Iterator, List, Optional
+from typing import Iterator, List, Optional, Tuple
 
+import cachetools
 from sqlalchemy import desc, func
 from sqlalchemy.orm import Session, aliased
 
 from . import config, models, schemas
+
+# caching - todo move this to Redis or something if scaling is needed?
+# 72 worlds * 4 districts = 288
+# IMPORTANT: each ingest method has to clear the cache entry it updates
+district_plot_cache: cachetools.LRUCache[Tuple[int, int], List[models.Plot]] = cachetools.LRUCache(288)
 
 
 def upsert_sweeper(db: Session, sweeper: schemas.paissa.Hello) -> models.Sweeper:
@@ -37,15 +43,18 @@ def get_latest_plots_in_district(db: Session, world_id: int, district_id: int) -
             AND plots.territory_type_id = ?
         GROUP BY plots.ward_number, plots.plot_number
     ) AS latest_plots
-        ON plots.id = latest_plots.id
+        ON plots.id = latest_plots.id;
 
     postgres:
     SELECT DISTINCT ON (ward_number, plot_number) *
         FROM plots
         WHERE world_id = ?
             AND territory_type_id = ?
-        ORDER BY ward_number, plot_number, timestamp DESC
+        ORDER BY ward_number, plot_number, timestamp DESC;
     """
+    if (cached := district_plot_cache.get((world_id, district_id))) is not None:
+        return cached
+
     if config.DB_TYPE == 'postgresql':
         stmt = db.query(models.Plot) \
             .distinct(models.Plot.ward_number, models.Plot.plot_number) \
@@ -58,7 +67,9 @@ def get_latest_plots_in_district(db: Session, world_id: int, district_id: int) -
             .subquery()
         latest_plots = aliased(models.Plot, subq)
         stmt = db.query(models.Plot).join(latest_plots, models.Plot.id == latest_plots.id)
-    return stmt.all()
+    result = stmt.all()
+    district_plot_cache[world_id, district_id] = result
+    return result
 
 
 def plot_history(db: Session, plot: models.Plot) -> Iterator[models.Plot]:
@@ -124,4 +135,6 @@ def ingest_wardinfo(
     db.add_all(plots)
     db.commit()
     db.refresh(db_wardsweep)
+    # evict stale cache entry
+    district_plot_cache.pop((db_wardsweep.world_id, db_wardsweep.territory_type_id), None)
     return db_wardsweep

@@ -96,8 +96,8 @@ class Plot(Base):
     )
 
     id = Column(Integer, primary_key=True, index=True)
-    world_id = Column(Integer, ForeignKey("worlds.id"))
-    territory_type_id = Column(Integer, ForeignKey("districts.id"))
+    world_id = Column(Integer, ForeignKey("worlds.id"), index=True)
+    territory_type_id = Column(Integer, ForeignKey("districts.id"), index=True)
     ward_number = Column(Integer, index=True)
     plot_number = Column(Integer, index=True)
     timestamp = Column(DateTime, index=True)
