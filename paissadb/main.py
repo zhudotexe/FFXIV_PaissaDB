@@ -49,7 +49,7 @@ def list_worlds(db: Session = Depends(get_db)):
     for world in worlds:
         district_summaries = []
         for district in districts:
-            latest_plots = crud.get_latest_plots_in_district(db, world.id, district.id)
+            latest_plots = crud.get_latest_plots_in_district(db, world.id, district.id, use_cache=True)
             num_open_plots = sum(1 for p in latest_plots if not p.is_owned)
             oldest_plot_time = min(p.timestamp for p in latest_plots) \
                 if latest_plots else datetime.datetime.fromtimestamp(0)
