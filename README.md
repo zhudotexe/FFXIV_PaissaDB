@@ -2,8 +2,8 @@
 
 PaissaDB is the companion API for the [PaissaHouse](https://github.com/zhudotexe/FFXIV_PaissaHouse) FFXIV plugin.
 
-Note that PaissaDB only supports game servers that are marked as public in the NA game client; this means that
-KR and CN servers are not supported.
+Note that PaissaDB only supports game servers that are marked as public in the NA game client; this means that KR and CN
+servers are not supported.
 
 ## API Specification
 
@@ -36,24 +36,51 @@ Called by PaissaHouse on startup to register sweeper's world and name. Requires 
 
 Gets a list of known worlds, and for each world:
 
-- the world name
-- the number of open plots per district
-- last sweep time per district
+```typescript
+{
+    id: number;
+    name: string;
+    num_open_plots: number;
+    oldest_plot_time: string<iso8601>; // the oldest datapoint of all plots on this world
+    districts: {
+        id: number;
+        name: string;
+        num_open_plots: number;
+        oldest_plot_time: string<iso8601>; // the oldest datapoint of all plots in this district
+    }[];
+}[];
+```
 
 #### GET /worlds/{world_id:int}
 
 For the specified world, returns:
 
-- the world name
-- the list of district names
-- the list of open plots per district
-    - last updated time
-    - selling price
-    - estimated time open (based on update times and devalues)
-    - estimated number of devalues
-    - house size
-    - ward id
-    - plot id
+```typescript
+{
+    id: number;
+    name: string;
+    num_open_plots: number;
+    oldest_plot_time: string<iso8601>; // the oldest datapoint of all plots on this world
+    districts: {
+        id: number;
+        name: string;
+        num_open_plots: number;
+        oldest_plot_time: string<iso8601>; // the oldest datapoint of all plots in this district
+        open_plots: {
+            world_id: number;
+            district_id: number;
+            ward_number: number; // 0-indexed
+            plot_number: number; // 0-indexed
+            size: number; // 0 = Small, 1 = Medium, 2 = Large
+            known_price: number;
+            last_updated_time: string<iso8601>;
+            est_time_open_min: string<iso8601>; // the earliest time this plot could have opened, given the update times and devaules
+            est_time_open_max: string<iso8601>; // the latest time this plot could have opened, given the update times and devaules
+            est_num_devals: number;  // the estimated number of devalues at the time of the request
+        }[];
+    }[];
+}[];
+```
 
 #### TODO: Websocket @ /
 
