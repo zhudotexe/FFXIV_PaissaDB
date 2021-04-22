@@ -9,7 +9,7 @@ KR and CN servers are not supported.
 
 You can find the Swagger docs at https://paissadb.zhu.codes/docs.
 
-**Important: All ward IDs and plot IDs returned by PaissaDB are 0-indexed!**
+**Important: All ward IDs and plot IDs returned by PaissaDB are 0-indexed, and times are in UTC!**
 
 ### Endpoints
 
@@ -18,8 +18,6 @@ Note: Some endpoints expect a valid JWT (see PaissaHouse JWT below).
 #### POST /wardInfo
 
 Takes a HousingWardInfo object from the game and ingests it. Requires a PaissaHouse JWT.
-
-Returns `201` on success, `400` if invalid data, `401` if missing JWT, or `403` if invalid JWT.
 
 #### POST /hello
 
@@ -51,8 +49,8 @@ For the specified world, returns:
 - the list of open plots per district
     - last updated time
     - selling price
-    - estimated time open
-    - estimated primetime
+    - estimated time open (based on update times and devalues)
+    - estimated number of devalues
     - house size
     - ward id
     - plot id
