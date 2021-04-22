@@ -79,7 +79,7 @@ For the specified world, returns:
             est_num_devals: number;  // the estimated number of devalues at the time of the request
         }[];
     }[];
-}[];
+}
 ```
 
 #### TODO: Websocket @ /
