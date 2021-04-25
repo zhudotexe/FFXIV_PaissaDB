@@ -1,3 +1,4 @@
+import asyncio
 import datetime
 import logging
 from typing import List
@@ -24,8 +25,8 @@ def ingest_wardinfo(
         db: Session = Depends(get_db)):
     log.debug("Received wardInfo:")
     log.debug(wardinfo.json(indent=2))
-    db_wardsweep = crud.ingest_wardinfo(db, wardinfo, sweeper)
-    asyncio.create_task(ws.broadcast_changes_in_wardsweep(db, db_wardsweep))
+    wardsweep = crud.ingest_wardinfo(db, wardinfo, sweeper)
+    ws.broadcast_changes_in_wardsweep(db, wardsweep)
     return {"message": "OK"}
 
 
@@ -114,6 +115,7 @@ def get_world(world_id: int, db: Session = Depends(get_db)):
 @app.on_event("startup")
 async def connect_broadcast():
     await ws.manager.connect()
+    asyncio.create_task(ws.broadcast_loop())
 
 
 @app.on_event("shutdown")
@@ -128,20 +130,6 @@ async def plot_updates(websocket: WebSocket):
 
 # ==== dev test ====
 from fastapi.responses import HTMLResponse
-import asyncio
-import random
-
-
-@app.on_event("startup")
-async def startup():
-    asyncio.create_task(test_task())
-
-
-async def test_task():
-    while True:
-        message = random.choices(["hewwo", "hewwo?", "awe you owt thewe", "hewwo ;w;"], [99, 1, 1, 1], k=1)[0]
-        await ws.broadcast(message)
-        await asyncio.sleep(1)
 
 
 @app.get("/")

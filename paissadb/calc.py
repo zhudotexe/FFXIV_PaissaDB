@@ -18,18 +18,15 @@ def open_plot_detail(db: Session, plot: models.Plot):
     """
     Gets the current plot detail for a plot given the *latest* data point on the plot (assumed to be open).
     """
-    log.debug(plot.district.name, plot.ward_number, plot.plot_number)
+    log.debug(f"Calculating open plot detail for {plot.district.name} {plot.ward_number}-{plot.plot_number}")
 
     last_known_price_i = (plot.house_price, plot.timestamp)
     last_known_devals_i = (plot.num_devals, plot.timestamp)
     est_time_open_max = plot.timestamp
     now = datetime.datetime.now()
 
-    for ph in crud.plot_history(db, plot):
+    for ph in crud.plot_history(db, plot, before=plot.timestamp):
         log.debug(ph.timestamp)
-        if ph.timestamp > plot.timestamp:
-            raise ValueError("Plot history timestamp greater than plot timestamp - is the latest being passed?")
-
         last_known_price, _ = last_known_price_i
         # fill in any attrs that we don't know yet
         if last_known_price is None:
@@ -118,3 +115,34 @@ def earliest_possible_open_time(num_devals, known_at=None, devalue_time=DEVALUE_
         return datetime.datetime.combine(t0.date(), devalue_time)
     else:
         return datetime.datetime.combine(t0.date() - datetime.timedelta(days=1), devalue_time)
+
+
+def sold_plot_detail(db: Session, plot: models.Plot):
+    """
+    Gets the current plot detail for a plot given the *latest* data point on the plot (assumed to be sold).
+    """
+    log.debug(f"Calculating sold plot detail for {plot.district.name} {plot.ward_number}-{plot.plot_number}")
+
+    est_time_sold_max = plot.timestamp
+
+    for ph in crud.plot_history(db, plot, before=plot.timestamp):
+        log.debug(ph.timestamp)
+        if not ph.is_owned:
+            est_time_sold_min = ph.timestamp
+            break
+        # otherwise the latest it could have sold was the instant before the last time it was closed
+        est_time_sold_max = ph.timestamp
+    else:
+        # the plot has been sold for as long as we've known it, so could be whenever, the devalue calc will get it
+        est_time_sold_min = datetime.datetime.fromtimestamp(0)
+
+    return schemas.paissa.SoldPlotDetail(
+        world_id=plot.world_id,
+        district_id=plot.territory_type_id,
+        ward_number=plot.ward_number,
+        plot_number=plot.plot_number,
+        size=plot.plot_info.house_size,
+        last_updated_time=plot.timestamp,
+        est_time_sold_min=est_time_sold_min,
+        est_time_sold_max=est_time_sold_max
+    )
