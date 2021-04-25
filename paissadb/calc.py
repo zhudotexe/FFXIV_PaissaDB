@@ -54,7 +54,7 @@ def open_plot_detail(db: Session, plot: models.Plot):
     est_num_devals = (last_known_devals or 0) + num_missed_devals(last_known_devals, last_known_devals_time, when=now)
 
     # ensure that the min open time/max open time is sane for the number of devals
-    early = earliest_possible_open_time(last_known_devals, now)
+    early = earliest_possible_open_time(est_num_devals, now)
     late = early + datetime.timedelta(days=1)
     est_time_open_min = max(est_time_open_min, early)
     est_time_open_max = min(est_time_open_max, late)
@@ -73,7 +73,7 @@ def open_plot_detail(db: Session, plot: models.Plot):
     )
 
 
-def num_missed_devals(num_devals, known_at, when=None):
+def num_missed_devals(num_devals, known_at, when=None, devalue_time=DEVALUE_TIME_NAIVE):
     """
     Given a known number of devalues and the time it was known, calculates the number of known devals
     (if *when* is passed, at *when*, otherwise at current time).
@@ -84,14 +84,14 @@ def num_missed_devals(num_devals, known_at, when=None):
     if num_devals == 0:
         # if the last known devals time is before the deval time,
         # and it's after the deval time now, add (num_hours_since_deval_time / 6) to devals
-        if known_at.time() < DEVALUE_TIME_NAIVE:
+        if known_at.time() < devalue_time:
             devalue_date = known_at.date()
         else:
             devalue_date = known_at.date() + datetime.timedelta(days=1)
-        next_deval_datetime = datetime.datetime.combine(devalue_date, DEVALUE_TIME_NAIVE)
+        next_deval_datetime = datetime.datetime.combine(devalue_date, devalue_time)
     else:
         # add num_hours_since_deval_time / 6 to devals
-        hours_to_skip = (DEVALUE_TIME_NAIVE.hour - known_at.hour) % HOURS_PER_DEVAL
+        hours_to_skip = (devalue_time.hour - known_at.hour) % HOURS_PER_DEVAL
         next_deval_datetime = known_at.replace(minute=0, second=0, microsecond=0) \
                               + datetime.timedelta(hours=hours_to_skip)
         if next_deval_datetime < known_at:  # edge case if known_at happens immediately after a devalue
