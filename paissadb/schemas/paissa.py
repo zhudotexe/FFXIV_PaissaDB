@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import datetime
-from typing import List, Optional
+from typing import Any, List, Optional
 
 from pydantic import BaseModel
 
@@ -55,3 +55,30 @@ class DistrictDetail(DistrictSummary):
 
 class WorldDetail(WorldSummary):
     districts: List[DistrictDetail]
+
+
+class SoldPlotDetail(BaseModel):
+    world_id: int
+    district_id: int
+    ward_number: int
+    plot_number: int
+    size: int
+    last_updated_time: datetime.datetime
+    est_time_sold_min: datetime.datetime
+    est_time_sold_max: datetime.datetime
+
+
+# ==== websocket ====
+class WSMessage(BaseModel):
+    type: str
+    data: Optional[Any]
+
+
+class WSPlotOpened(WSMessage):
+    type = "plot_open"
+    data: OpenPlotDetail
+
+
+class WSPlotSold(WSMessage):
+    type = "plot_sold"
+    data: SoldPlotDetail

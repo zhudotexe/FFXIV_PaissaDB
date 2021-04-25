@@ -79,13 +79,68 @@ def get_latest_plots_in_district(
     return result
 
 
-def plot_history(db: Session, plot: models.Plot) -> Iterator[models.Plot]:
-    return db.query(models.Plot) \
+def get_plot_states_before(
+        db: Session,
+        world_id: int,
+        district_id: int,
+        ward_number: int,
+        before: datetime.datetime) -> List[models.Plot]:
+    """
+    Gets the state of plots in the ward before a given time.
+    """
+    # sqlite:
+    # SELECT * FROM plots
+    # JOIN (
+    #     SELECT plots.id AS id, max(plots.timestamp) AS max_1
+    #     FROM plots
+    #     WHERE plots.world_id = ?
+    #         AND plots.territory_type_id = ?
+    #         AND plots.ward_number = ?
+    #         AND plots.timestamp < ?
+    #     GROUP BY plots.ward_number, plots.plot_number
+    # ) AS latest_plots
+    #     ON plots.id = latest_plots.id;
+    #
+    # postgres:
+    # SELECT DISTINCT ON (plot_number) *
+    #     FROM plots
+    #     WHERE world_id = ?
+    #         AND territory_type_id = ?
+    #         AND ward_number = ?
+    #         AND timestamp < ?
+    #     ORDER BY plot_number, timestamp DESC;
+    plot = models.Plot
+    if config.DB_TYPE == 'postgresql':
+        stmt = db.query(plot) \
+            .distinct(plot.plot_number) \
+            .filter(plot.world_id == world_id,
+                    plot.territory_type_id == district_id,
+                    plot.ward_number == ward_number,
+                    plot.timestamp < before) \
+            .order_by(plot.plot_number, desc(plot.timestamp))
+    else:
+        subq = db.query(plot.id, func.max(plot.timestamp)) \
+            .filter(plot.world_id == world_id,
+                    plot.territory_type_id == district_id,
+                    plot.ward_number == ward_number,
+                    plot.timestamp < before) \
+            .group_by(plot.plot_number) \
+            .subquery()
+        latest_plots = aliased(plot, subq)
+        stmt = db.query(plot).join(latest_plots, plot.id == latest_plots.id)
+    result = stmt.all()
+    return result
+
+
+def plot_history(db: Session, plot: models.Plot, before: datetime.datetime = None) -> Iterator[models.Plot]:
+    q = db.query(models.Plot) \
         .filter(models.Plot.world_id == plot.world_id,
                 models.Plot.territory_type_id == plot.territory_type_id,
                 models.Plot.ward_number == plot.ward_number,
-                models.Plot.plot_number == plot.plot_number) \
-        .order_by(desc(models.Plot.timestamp)) \
+                models.Plot.plot_number == plot.plot_number)
+    if before is not None:
+        q = q.filter(models.Plot.timestamp < before)
+    return q.order_by(desc(models.Plot.timestamp)) \
         .yield_per(100)
 
 

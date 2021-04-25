@@ -2,10 +2,10 @@ import datetime
 import logging
 from typing import List
 
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, WebSocket
 from sqlalchemy.orm import Session
 
-from . import auth, config, crud, gamedata, models, schemas, calc
+from . import auth, calc, config, crud, gamedata, models, schemas, ws
 from .database import SessionLocal, engine, get_db
 
 models.Base.metadata.create_all(bind=engine)
@@ -16,6 +16,7 @@ log = logging.getLogger(__name__)
 app = FastAPI()
 
 
+# ==== HTTP ====
 @app.post("/wardInfo", status_code=201)
 def ingest_wardinfo(
         wardinfo: schemas.ffxiv.HousingWardInfo,
@@ -23,7 +24,8 @@ def ingest_wardinfo(
         db: Session = Depends(get_db)):
     log.debug("Received wardInfo:")
     log.debug(wardinfo.json(indent=2))
-    crud.ingest_wardinfo(db, wardinfo, sweeper)
+    db_wardsweep = crud.ingest_wardinfo(db, wardinfo, sweeper)
+    asyncio.create_task(ws.broadcast_changes_in_wardsweep(db, db_wardsweep))
     return {"message": "OK"}
 
 
@@ -106,3 +108,63 @@ def get_world(world_id: int, db: Session = Depends(get_db)):
         num_open_plots=sum(d.num_open_plots for d in district_details),
         oldest_plot_time=min(d.oldest_plot_time for d in district_details)
     )
+
+
+# ==== WS ====
+@app.on_event("startup")
+async def connect_broadcast():
+    await ws.manager.connect()
+
+
+@app.on_event("shutdown")
+async def disconnect_broadcast():
+    await ws.manager.disconnect()
+
+
+@app.websocket("/ws")
+async def plot_updates(websocket: WebSocket):
+    await ws.connect(websocket)
+
+
+# ==== dev test ====
+from fastapi.responses import HTMLResponse
+import asyncio
+import random
+
+
+@app.on_event("startup")
+async def startup():
+    asyncio.create_task(test_task())
+
+
+async def test_task():
+    while True:
+        message = random.choices(["hewwo", "hewwo?", "awe you owt thewe", "hewwo ;w;"], [99, 1, 1, 1], k=1)[0]
+        await ws.broadcast(message)
+        await asyncio.sleep(1)
+
+
+@app.get("/")
+async def get():
+    return HTMLResponse("""
+    <!DOCTYPE html>
+    <html>
+        <head>
+            <title>Chat</title>
+        </head>
+        <body>
+            <ul id='messages'>
+            </ul>
+            <script>
+                var ws = new WebSocket(`ws://localhost:8000/ws`);
+                ws.onmessage = function(event) {
+                    var messages = document.getElementById('messages')
+                    var message = document.createElement('li')
+                    var content = document.createTextNode(event.data)
+                    message.appendChild(content)
+                    messages.appendChild(message)
+                };
+            </script>
+        </body>
+    </html>
+    """)

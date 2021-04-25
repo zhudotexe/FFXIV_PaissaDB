@@ -47,8 +47,10 @@ Gets a list of known worlds, and for each world:
         name: string;
         num_open_plots: number;
         oldest_plot_time: string<iso8601>; // the oldest datapoint of all plots in this district
-    }[];
-}[];
+    }
+    [];
+}
+[];
 ```
 
 #### GET /worlds/{world_id:int}
@@ -77,15 +79,49 @@ For the specified world, returns:
             est_time_open_min: string<iso8601>; // the earliest time this plot could have opened, given the update times and devaules
             est_time_open_max: string<iso8601>; // the latest time this plot could have opened, given the update times and devaules
             est_num_devals: number;  // the estimated number of devalues at the time of the request
-        }[];
-    }[];
+        }
+        [];
+    }
+    [];
 }
 ```
 
-#### TODO: Websocket @ /
+#### Websocket /ws
 
 Clients connected to this websocket will receive update events each time a house changes state (owned -> open or open ->
-sold). Spec TBD.
+sold).
+
+##### Plot Opened
+
+Sent each time a plot transitions from owned to opened, or is seen for the first time and is open.
+
+```typescript
+{
+    type: "plot_open";
+    data: OpenPlotDetail;  // same as World Detail endpoint
+}
+```
+
+##### Plot Sold
+
+Sent each time a previously open plot transitions to owned.
+
+```typescript
+{
+    type: "plot_sold";
+    data: SoldPlotDetail;
+}
+```
+
+##### Ping
+
+Sent every minute, to keep the websocket open. If the client does not receive a ping for >120s, it should reconnect.
+
+```typescript
+{
+    type: "ping";
+}
+```
 
 ### PaissaHouse JWT
 
