@@ -15,12 +15,22 @@ manager = Broadcast(config.WS_BACKEND_URI)
 broadcast_queue = asyncio.Queue()  # maybe eventually this should be redis, and we can remove the manager
 
 
+# hierarchy summary:
+# broadcast_* is the main entrypoint (sync)
+# it pushes messages to the broadcast queue
+# all messages in the broadcast queue are eventually sent to the manager
+# all messages in the manager (regardless of origin process) are eventually sent to all connected websockets
+
+
 # ==== lifecycle ====
 async def broadcast_loop():
     """Main loop of the ws module - broadcasts all messages put to *broadcast_queue*."""
     while True:
-        msg = await broadcast_queue.get()
-        await broadcast(msg)
+        try:
+            msg = await broadcast_queue.get()
+            await manager.publish(CHANNEL, msg)
+        except asyncio.CancelledError:
+            pass
 
 
 async def connect(websocket: WebSocket):
@@ -59,10 +69,6 @@ async def listener(websocket: WebSocket):
 
 
 # ==== broadcasts ====
-async def broadcast(message: str):
-    await manager.publish(CHANNEL, message)
-
-
 def broadcast_changes_in_wardsweep(db: Session, wardsweep: models.WardSweep):
     plot_history = crud.get_plot_states_before(
         db, wardsweep.world_id, wardsweep.territory_type_id, wardsweep.ward_number, wardsweep.timestamp)
