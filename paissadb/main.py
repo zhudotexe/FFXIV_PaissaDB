@@ -1,9 +1,8 @@
-import asyncio
 import datetime
 import logging
 from typing import List
 
-from fastapi import Depends, FastAPI, HTTPException, WebSocket
+from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, WebSocket
 from sqlalchemy.orm import Session
 
 from . import auth, calc, config, crud, gamedata, models, schemas, ws
@@ -18,15 +17,16 @@ app = FastAPI()
 
 
 # ==== HTTP ====
-@app.post("/wardInfo", status_code=201)
+@app.post("/wardInfo", status_code=202)
 def ingest_wardinfo(
         wardinfo: schemas.ffxiv.HousingWardInfo,
+        background: BackgroundTasks,
         sweeper: schemas.paissa.JWTSweeper = Depends(auth.required),
         db: Session = Depends(get_db)):
     log.debug("Received wardInfo:")
     log.debug(wardinfo.json(indent=2))
     wardsweep = crud.ingest_wardinfo(db, wardinfo, sweeper)
-    ws.broadcast_changes_in_wardsweep(db, wardsweep)
+    background.add_task(ws.broadcast_changes_in_wardsweep, db, wardsweep)
     return {"message": "OK"}
 
 
@@ -115,7 +115,6 @@ def get_world(world_id: int, db: Session = Depends(get_db)):
 @app.on_event("startup")
 async def connect_broadcast():
     await ws.manager.connect()
-    asyncio.create_task(ws.broadcast_loop())
 
 
 @app.on_event("shutdown")
@@ -129,6 +128,7 @@ async def plot_updates(websocket: WebSocket):
 
 
 # ==== dev test ====
+# todo remove me
 from fastapi.responses import HTMLResponse
 
 
@@ -138,7 +138,7 @@ async def get():
     <!DOCTYPE html>
     <html>
         <head>
-            <title>Chat</title>
+            <title>Websocket Debug</title>
         </head>
         <body>
             <ul id='messages'>
