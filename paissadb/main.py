@@ -24,7 +24,7 @@ def ingest_wardinfo(
         sweeper: schemas.paissa.JWTSweeper = Depends(auth.required),
         db: Session = Depends(get_db)):
     log.debug("Received wardInfo:")
-    log.debug(wardinfo.json(indent=2))
+    log.debug(wardinfo.json())
     wardsweep = crud.ingest_wardinfo(db, wardinfo, sweeper)
     background.add_task(ws.broadcast_changes_in_wardsweep, db, wardsweep)
     return {"message": "OK"}
@@ -38,7 +38,7 @@ def hello(
     if sweeper.cid != data.cid:
         raise HTTPException(400, "Token CID and given CID do not match")
     log.debug("Received hello:")
-    log.debug(data.json(indent=2))
+    log.debug(data.json())
     crud.upsert_sweeper(db, data)
     return {"message": "OK"}
 

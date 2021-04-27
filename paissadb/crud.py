@@ -152,7 +152,7 @@ def _ingest(db: Session, event: schemas.ffxiv.BaseFFXIVPacket, sweeper: Optional
         sweeper_id=sweeper_id,
         timestamp=datetime.datetime.now(),
         event_type=event.event_type,
-        data=event.json()
+        data=event.json().replace('\x00', '')  # remove any null bytes that might sneak in somehow
     )
     db.add(db_event)
     return db_event
@@ -173,6 +173,8 @@ def ingest_wardinfo(
 
     plots = []
     for i, plot in enumerate(wardinfo.HouseInfoEntries):
+        is_owned = bool(plot.InfoFlags & schemas.ffxiv.HousingFlags.PlotOwned)
+        owner_name = plot.EstateOwnerName if is_owned else ""
         db_plot = models.Plot(
             # plot location info
             world_id=wardinfo.LandIdent.WorldId,
@@ -181,10 +183,10 @@ def ingest_wardinfo(
             plot_number=i,
             timestamp=event.timestamp,
             # plot info
-            is_owned=bool(plot.InfoFlags & schemas.ffxiv.HousingFlags.PlotOwned),
+            is_owned=is_owned,
             has_built_house=bool(plot.InfoFlags & schemas.ffxiv.HousingFlags.HouseBuilt),
             house_price=plot.HousePrice,
-            owner_name=plot.EstateOwnerName,
+            owner_name=owner_name,
             # references
             sweep=db_wardsweep,
             event=event,
