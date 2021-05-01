@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from typing import List
 
 from broadcaster import Broadcast
 from fastapi import WebSocket
@@ -12,6 +13,7 @@ CHANNEL = "messages"
 log = logging.getLogger(__name__)
 
 manager = Broadcast(config.WS_BACKEND_URI)
+clients: List[WebSocket] = []
 
 
 # ==== lifecycle ====
@@ -23,9 +25,11 @@ async def connect(websocket: WebSocket):
         listener(websocket)
     )
     try:
+        clients.append(websocket)
         await task
     except ConnectionClosed as e:
         log.info(f"WS disconnected ({e.code}: {e.reason}): {websocket.client!r}")
+        clients.remove(websocket)
         task.cancel()
 
 

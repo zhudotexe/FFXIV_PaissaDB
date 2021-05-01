@@ -117,6 +117,11 @@ Sent each time a previously open plot transitions to owned.
 
 Sent every minute, to keep the websocket open. If the client does not receive a ping for >120s, it should reconnect.
 
+Note that this ping packet is not the standard ping defined in 
+[RFC 6455 sec. 5.5.2](https://datatracker.ietf.org/doc/html/rfc6455#section-5.5.2). 
+In addition to this ping packet, PaissaDB will send a RFC6455-compliant ping packet occasionally (and will respond to
+pings from clients with a pong); it is up to the client to choose which ping implementation to use.
+
 ```typescript
 {
     type: "ping";

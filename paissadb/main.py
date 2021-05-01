@@ -127,6 +127,8 @@ async def connect_broadcast():
 
 @app.on_event("shutdown")
 async def disconnect_broadcast():
+    for client in ws.clients:
+        await client.close(1012)  # Service Restart
     await ws.manager.disconnect()
 
 
