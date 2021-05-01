@@ -1,5 +1,6 @@
 import datetime
 import logging
+import sys
 from typing import List
 
 from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, WebSocket
@@ -14,6 +15,9 @@ with SessionLocal() as sess:
     gamedata.upsert_all(gamedata_dir=config.GAMEDATA_DIR, db=sess)
 
 log = logging.getLogger(__name__)
+if 'debug' in sys.argv:
+    logging.basicConfig(stream=sys.stdout, encoding='utf-8', level=logging.DEBUG)
+
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
