@@ -88,31 +88,12 @@ def list_worlds(db: Session = Depends(get_db)):
 def get_world(world_id: int, db: Session = Depends(get_db)):
     world = crud.get_world_by_id(db, world_id)
     districts = crud.get_districts(db)
-
     if world is None:
         raise HTTPException(404, "World not found")
 
     district_details = []
     for district in districts:
-        latest_plots = crud.get_latest_plots_in_district(db, world.id, district.id)
-        num_open_plots = sum(1 for p in latest_plots if not p.is_owned)
-        oldest_plot_time = min(p.timestamp for p in latest_plots) \
-            if latest_plots else datetime.datetime.fromtimestamp(0)
-        open_plots = []
-
-        for plot in latest_plots:
-            if plot.is_owned:
-                continue
-            # we found a plot that was last known as open, iterate over its history to find the details
-            open_plots.append(calc.open_plot_detail(db, plot))
-
-        district_details.append(schemas.paissa.DistrictDetail(
-            id=district.id,
-            name=district.name,
-            num_open_plots=num_open_plots,
-            oldest_plot_time=oldest_plot_time,
-            open_plots=open_plots
-        ))
+        district_details.append(calc.get_district_detail(db, world, district))
 
     return schemas.paissa.WorldDetail(
         id=world.id,
@@ -121,6 +102,16 @@ def get_world(world_id: int, db: Session = Depends(get_db)):
         num_open_plots=sum(d.num_open_plots for d in district_details),
         oldest_plot_time=min(d.oldest_plot_time for d in district_details)
     )
+
+
+@app.get("/worlds/{world_id}/{district_id}", response_model=schemas.paissa.DistrictDetail)
+def get_district_detail(world_id: int, district_id: int, db: Session = Depends(get_db)):
+    world = crud.get_world_by_id(db, world_id)
+    district = crud.get_district_by_id(db, district_id)
+    if world is None or district is None:
+        raise HTTPException(404, "World not found")
+
+    return calc.get_district_detail(db, world, district)
 
 
 # ==== WS ====

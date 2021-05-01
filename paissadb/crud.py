@@ -32,6 +32,10 @@ def get_districts(db: Session) -> List[models.District]:
     return db.query(models.District).all()
 
 
+def get_district_by_id(db: Session, district_id: int) -> models.District:
+    return db.query(models.District).filter(models.District.id == district_id).first()
+
+
 def get_latest_plots_in_district(
         db: Session,
         world_id: int,

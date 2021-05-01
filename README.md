@@ -60,6 +60,10 @@ For the specified world, returns:
 }
 ```
 
+#### GET /worlds/{world_id:int}/{district_id:int}
+
+For the specified district in the specified world, returns a list of ``DistrictDetail``.
+
 #### Websocket /ws
 
 Clients connected to this websocket will receive update events each time a house changes state (owned -> open or open ->

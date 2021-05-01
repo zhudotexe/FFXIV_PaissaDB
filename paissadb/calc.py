@@ -14,7 +14,29 @@ HOURS_PER_DEVAL = 6  # after 1st deval, 1 deval every 6 hours
 log = logging.getLogger(__name__)
 
 
-def open_plot_detail(db: Session, plot: models.Plot):
+def get_district_detail(db: Session, world: models.World, district: models.District) -> schemas.paissa.DistrictDetail:
+    """Gets the district detail for a given district in a world."""
+    latest_plots = crud.get_latest_plots_in_district(db, world.id, district.id)
+    num_open_plots = sum(1 for p in latest_plots if not p.is_owned)
+    oldest_plot_time = min(p.timestamp for p in latest_plots) if latest_plots else datetime.datetime.fromtimestamp(0)
+    open_plots = []
+
+    for plot in latest_plots:
+        if plot.is_owned:
+            continue
+        # we found a plot that was last known as open, iterate over its history to find the details
+        open_plots.append(open_plot_detail(db, plot))
+
+    return schemas.paissa.DistrictDetail(
+        id=district.id,
+        name=district.name,
+        num_open_plots=num_open_plots,
+        oldest_plot_time=oldest_plot_time,
+        open_plots=open_plots
+    )
+
+
+def open_plot_detail(db: Session, plot: models.Plot) -> schemas.paissa.OpenPlotDetail:
     """
     Gets the current plot detail for a plot given the *latest* data point on the plot (assumed to be open).
     """
