@@ -42,15 +42,8 @@ Gets a list of known worlds, and for each world:
     name: string;
     num_open_plots: number;
     oldest_plot_time: string<iso8601>; // the oldest datapoint of all plots on this world
-    districts: {
-        id: number;
-        name: string;
-        num_open_plots: number;
-        oldest_plot_time: string<iso8601>; // the oldest datapoint of all plots in this district
-    }
-    [];
-}
-[];
+    districts: DistrictSummary[];
+}[];
 ```
 
 #### GET /worlds/{world_id:int}
@@ -63,26 +56,7 @@ For the specified world, returns:
     name: string;
     num_open_plots: number;
     oldest_plot_time: string<iso8601>; // the oldest datapoint of all plots on this world
-    districts: {
-        id: number;
-        name: string;
-        num_open_plots: number;
-        oldest_plot_time: string<iso8601>; // the oldest datapoint of all plots in this district
-        open_plots: {
-            world_id: number;
-            district_id: number;
-            ward_number: number; // 0-indexed
-            plot_number: number; // 0-indexed
-            size: number; // 0 = Small, 1 = Medium, 2 = Large
-            known_price: number;
-            last_updated_time: string<iso8601>;
-            est_time_open_min: string<iso8601>; // the earliest time this plot could have opened, given the update times and devaules
-            est_time_open_max: string<iso8601>; // the latest time this plot could have opened, given the update times and devaules
-            est_num_devals: number;  // the estimated number of devalues at the time of the request
-        }
-        [];
-    }
-    [];
+    districts: DistrictDetail[];
 }
 ```
 
@@ -125,6 +99,63 @@ pings from clients with a pong); it is up to the client to choose which ping imp
 ```typescript
 {
     type: "ping";
+}
+```
+
+### Schemas
+
+#### DistrictSummary
+
+```typescript
+{
+    id: number;
+    name: string;
+    num_open_plots: number;
+    oldest_plot_time: string<iso8601>; // the oldest datapoint of all plots in this district
+}
+```
+
+#### OpenPlotDetail
+
+```typescript
+{
+    world_id: number;
+    district_id: number;
+    ward_number: number; // 0-indexed
+    plot_number: number; // 0-indexed
+    size: number; // 0 = Small, 1 = Medium, 2 = Large
+    known_price: number;
+    last_updated_time: string<iso8601>;
+    est_time_open_min: string<iso8601>; // the earliest time this plot could have opened, given the update times and devalues
+    est_time_open_max: string<iso8601>; // the latest time this plot could have opened, given the update times and devalues
+    est_num_devals: number;  // the estimated number of devalues at the time of the request
+}
+```
+
+#### DistrictDetail
+
+```typescript
+{
+    id: number;
+    name: string;
+    num_open_plots: number;
+    oldest_plot_time: string<iso8601>; // the oldest datapoint of all plots in this district
+    open_plots: OpenPlotDetail[];
+}
+```
+
+#### SoldPlotDetail
+
+```typescript
+{
+    world_id: number;
+    district_id: number;
+    ward_number: number; // 0-indexed
+    plot_number: number; // 0-indexed
+    size: number; // 0 = Small, 1 = Medium, 2 = Large
+    last_updated_time: string<iso8601>;
+    est_time_sold_min: string<iso8601>; // the earliest time this plot could have sold, given the update times
+    est_time_sold_max: string<iso8601>; // the latest time this plot could have sole, given the update times
 }
 ```
 
