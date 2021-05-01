@@ -3,6 +3,7 @@ import logging
 from typing import List
 
 from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, WebSocket
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
 from . import auth, calc, config, crud, gamedata, models, schemas, ws
@@ -14,6 +15,13 @@ with SessionLocal() as sess:
 
 log = logging.getLogger(__name__)
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 # ==== HTTP ====
