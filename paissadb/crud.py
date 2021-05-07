@@ -44,6 +44,8 @@ def get_latest_plots_in_district(
     """
     Gets the latest plots in the district. Note that if *use_cache* is True, the returned objects will be
     detached.
+
+    Warning: slow! (~70ms)
     """
     # sqlite:
     # SELECT * FROM plots

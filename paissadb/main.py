@@ -130,34 +130,3 @@ async def disconnect_broadcast():
 @app.websocket("/ws")
 async def plot_updates(websocket: WebSocket):
     await ws.connect(websocket)
-
-
-# ==== dev test ====
-# todo remove me
-from fastapi.responses import HTMLResponse
-
-
-@app.get("/")
-async def get():
-    return HTMLResponse("""
-    <!DOCTYPE html>
-    <html>
-        <head>
-            <title>Websocket Debug</title>
-        </head>
-        <body>
-            <ul id='messages'>
-            </ul>
-            <script>
-                var ws = new WebSocket(`ws://localhost:8000/ws`);
-                ws.onmessage = function(event) {
-                    var messages = document.getElementById('messages')
-                    var message = document.createElement('li')
-                    var content = document.createTextNode(event.data)
-                    message.appendChild(content)
-                    messages.appendChild(message)
-                };
-            </script>
-        </body>
-    </html>
-    """)

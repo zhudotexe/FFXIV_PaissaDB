@@ -1,8 +1,8 @@
 import enum
 from typing import Optional
 
-from sqlalchemy import BigInteger, Boolean, Column, DateTime, Enum, ForeignKey, ForeignKeyConstraint, Integer, String, \
-    UnicodeText
+from sqlalchemy import BigInteger, Boolean, Column, DateTime, Enum, ForeignKey, ForeignKeyConstraint, Index, Integer, \
+    String, UnicodeText
 from sqlalchemy.orm import relationship
 
 from .database import Base
@@ -32,7 +32,7 @@ class EventType(enum.Enum):
 class Sweeper(Base):
     __tablename__ = "sweepers"
 
-    id = Column(BigInteger, primary_key=True, index=True)
+    id = Column(BigInteger, primary_key=True)
     name = Column(String)
     world_id = Column(Integer, ForeignKey("worlds.id"))
 
@@ -44,7 +44,7 @@ class Sweeper(Base):
 class World(Base):
     __tablename__ = "worlds"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True)
     name = Column(String, index=True)
 
     sweepers = relationship("Sweeper", back_populates="world")
@@ -55,7 +55,7 @@ class World(Base):
 class District(Base):
     __tablename__ = "districts"
 
-    id = Column(Integer, primary_key=True, index=True)  # territoryTypeId
+    id = Column(Integer, primary_key=True)  # territoryTypeId
     name = Column(String, unique=True)
     land_set_id = Column(Integer, unique=True, index=True)
 
@@ -75,12 +75,12 @@ class PlotInfo(Base):
 class WardSweep(Base):
     __tablename__ = "wardsweeps"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True)
     sweeper_id = Column(BigInteger, ForeignKey("sweepers.id"), nullable=True)
     world_id = Column(Integer, ForeignKey("worlds.id"))
     territory_type_id = Column(Integer, ForeignKey("districts.id"))
-    ward_number = Column(Integer, index=True)
-    timestamp = Column(DateTime, index=True)
+    ward_number = Column(Integer)
+    timestamp = Column(DateTime)
 
     sweeper = relationship("Sweeper", back_populates="sweeps")
     world = relationship("World", back_populates="sweeps")
@@ -95,16 +95,16 @@ class Plot(Base):
                              ("plotinfo.territory_type_id", "plotinfo.plot_number")),
     )
 
-    id = Column(Integer, primary_key=True, index=True)
-    world_id = Column(Integer, ForeignKey("worlds.id"), index=True)
-    territory_type_id = Column(Integer, ForeignKey("districts.id"), index=True)
-    ward_number = Column(Integer, index=True)
-    plot_number = Column(Integer, index=True)
-    timestamp = Column(DateTime, index=True)
+    id = Column(Integer, primary_key=True)
+    world_id = Column(Integer, ForeignKey("worlds.id"))
+    territory_type_id = Column(Integer, ForeignKey("districts.id"))
+    ward_number = Column(Integer)
+    plot_number = Column(Integer)
+    timestamp = Column(DateTime)
     sweep_id = Column(Integer, ForeignKey("wardsweeps.id"), nullable=True)
     event_id = Column(Integer, ForeignKey("events.id"))
 
-    is_owned = Column(Boolean, index=True)
+    is_owned = Column(Boolean)
     has_built_house = Column(Boolean)  # used to determine if a plot was reloed into or bought (not super accurate)
     house_price = Column(Integer, nullable=True)  # null for unknown price
     owner_name = Column(String, nullable=True)  # "Unknown" for unknown owner (UNKNOWN_OWNER), used to build relo graph
@@ -129,11 +129,22 @@ class Plot(Base):
         return round((max_price - self.house_price) / (HOUSING_DEVAL_FACTOR * max_price))
 
 
+# common query indices
+Index("ix_plots_world_id_territory_type_id", Plot.world_id, Plot.territory_type_id)
+Index("ix_plots_world_id_territory_type_id_ward_number", Plot.world_id, Plot.territory_type_id, Plot.ward_number)
+Index("ix_plots_world_id_territory_type_id_ward_number_plot_number",
+      Plot.world_id, Plot.territory_type_id, Plot.ward_number, Plot.plot_number)
+# sorting indices
+Index("ix_plots_ward_number_plot_number_timestamp_desc", Plot.ward_number, Plot.plot_number, Plot.timestamp.desc())
+Index("ix_plots_plot_number_timestamp_desc", Plot.plot_number, Plot.timestamp.desc())
+Index("ix_plots_timestamp_desc", Plot.timestamp.desc())
+
+
 # store of all ingested events for later analysis (e.g. FC/player ownership, relocation/resell graphs, etc)
 class Event(Base):
     __tablename__ = "events"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True)
     sweeper_id = Column(BigInteger, ForeignKey("sweepers.id"), nullable=True, index=True)
     timestamp = Column(DateTime, index=True)
     event_type = Column(Enum(EventType), index=True)
