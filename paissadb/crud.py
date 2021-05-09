@@ -36,6 +36,10 @@ def get_district_by_id(db: Session, district_id: int) -> models.District:
     return db.query(models.District).filter(models.District.id == district_id).first()
 
 
+def get_wardsweep_by_id(db: Session, wardsweep_id: int) -> models.WardSweep:
+    return db.query(models.WardSweep).filter(models.WardSweep.id == wardsweep_id).first()
+
+
 def get_latest_plots_in_district(
         db: Session,
         world_id: int,

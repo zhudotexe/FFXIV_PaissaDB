@@ -1,0 +1,610 @@
+{
+  "LandIdent": {
+    "LandId": 0,
+    "WardNumber": 0,
+    "TerritoryTypeId": 339,
+    "WorldId": 31415
+  },
+  "HouseInfoEntries": [
+    {
+      "HousePrice": 17848800,
+      "InfoFlags": 13,
+      "HouseAppeals": [
+        0,
+        0,
+        0
+      ],
+      "EstateOwnerName": "Dummy Data"
+    },
+    {
+      "HousePrice": 2987400,
+      "InfoFlags": 15,
+      "HouseAppeals": [
+        12,
+        7,
+        21
+      ],
+      "EstateOwnerName": "Dummy Data"
+    },
+    {
+      "HousePrice": 47500000,
+      "InfoFlags": 11,
+      "HouseAppeals": [
+        0,
+        0,
+        0
+      ],
+      "EstateOwnerName": "Dummy Data"
+    },
+    {
+      "HousePrice": 3000000,
+      "InfoFlags": 0,
+      "HouseAppeals": [
+        0,
+        0,
+        0
+      ],
+      "EstateOwnerName": "Dummy Data"
+    },
+    {
+      "HousePrice": 15804000,
+      "InfoFlags": 27,
+      "HouseAppeals": [
+        0,
+        0,
+        0
+      ],
+      "EstateOwnerName": "Dummy Data"
+    },
+    {
+      "HousePrice": 49600000,
+      "InfoFlags": 31,
+      "HouseAppeals": [
+        0,
+        0,
+        0
+      ],
+      "EstateOwnerName": "Dummy Data"
+    },
+    {
+      "HousePrice": 3147339,
+      "InfoFlags": 15,
+      "HouseAppeals": [
+        0,
+        0,
+        0
+      ],
+      "EstateOwnerName": "Dummy Data"
+    },
+    {
+      "HousePrice": 3275775,
+      "InfoFlags": 31,
+      "HouseAppeals": [
+        0,
+        0,
+        0
+      ],
+      "EstateOwnerName": "Dummy Data"
+    },
+    {
+      "HousePrice": 3562500,
+      "InfoFlags": 15,
+      "HouseAppeals": [
+        0,
+        0,
+        0
+      ],
+      "EstateOwnerName": "Dummy Data"
+    },
+    {
+      "HousePrice": 3562500,
+      "InfoFlags": 15,
+      "HouseAppeals": [
+        12,
+        0,
+        0
+      ],
+      "EstateOwnerName": "Dummy Data"
+    },
+    {
+      "HousePrice": 20000000,
+      "InfoFlags": 0,
+      "HouseAppeals": [
+        0,
+        0,
+        0
+      ],
+      "EstateOwnerName": "Dummy Data"
+    },
+    {
+      "HousePrice": 2638633,
+      "InfoFlags": 15,
+      "HouseAppeals": [
+        0,
+        0,
+        0
+      ],
+      "EstateOwnerName": "Dummy Data"
+    },
+    {
+      "HousePrice": 3532576,
+      "InfoFlags": 27,
+      "HouseAppeals": [
+        0,
+        0,
+        0
+      ],
+      "EstateOwnerName": "Dummy Data"
+    },
+    {
+      "HousePrice": 2974800,
+      "InfoFlags": 15,
+      "HouseAppeals": [
+        0,
+        0,
+        0
+      ],
+      "EstateOwnerName": "Dummy Data"
+    },
+    {
+      "HousePrice": 3053630,
+      "InfoFlags": 15,
+      "HouseAppeals": [
+        3,
+        5,
+        14
+      ],
+      "EstateOwnerName": "Dummy Data"
+    },
+    {
+      "HousePrice": 20000000,
+      "InfoFlags": 15,
+      "HouseAppeals": [
+        19,
+        6,
+        14
+      ],
+      "EstateOwnerName": "Dummy Data"
+    },
+    {
+      "HousePrice": 2962500,
+      "InfoFlags": 13,
+      "HouseAppeals": [
+        10,
+        0,
+        0
+      ],
+      "EstateOwnerName": "Dummy Data"
+    },
+    {
+      "HousePrice": 3563200,
+      "InfoFlags": 0,
+      "HouseAppeals": [
+        0,
+        0,
+        0
+      ],
+      "EstateOwnerName": "Dummy Data"
+    },
+    {
+      "HousePrice": 3187500,
+      "InfoFlags": 31,
+      "HouseAppeals": [
+        21,
+        14,
+        4
+      ],
+      "EstateOwnerName": "Dummy Data"
+    },
+    {
+      "HousePrice": 3174113,
+      "InfoFlags": 15,
+      "HouseAppeals": [
+        23,
+        4,
+        11
+      ],
+      "EstateOwnerName": "Dummy Data"
+    },
+    {
+      "HousePrice": 17000000,
+      "InfoFlags": 25,
+      "HouseAppeals": [
+        0,
+        0,
+        0
+      ],
+      "EstateOwnerName": "Dummy Data"
+    },
+    {
+      "HousePrice": 3750000,
+      "InfoFlags": 11,
+      "HouseAppeals": [
+        0,
+        0,
+        0
+      ],
+      "EstateOwnerName": "Dummy Data"
+    },
+    {
+      "HousePrice": 3375000,
+      "InfoFlags": 31,
+      "HouseAppeals": [
+        0,
+        0,
+        0
+      ],
+      "EstateOwnerName": "Dummy Data"
+    },
+    {
+      "HousePrice": 3750000,
+      "InfoFlags": 15,
+      "HouseAppeals": [
+        0,
+        0,
+        0
+      ],
+      "EstateOwnerName": "Dummy Data"
+    },
+    {
+      "HousePrice": 3360825,
+      "InfoFlags": 15,
+      "HouseAppeals": [
+        12,
+        19,
+        10
+      ],
+      "EstateOwnerName": "Dummy Data"
+    },
+    {
+      "HousePrice": 3562500,
+      "InfoFlags": 9,
+      "HouseAppeals": [
+        23,
+        0,
+        0
+      ],
+      "EstateOwnerName": "Dummy Data"
+    },
+    {
+      "HousePrice": 17670000,
+      "InfoFlags": 31,
+      "HouseAppeals": [
+        0,
+        0,
+        0
+      ],
+      "EstateOwnerName": "Dummy Data"
+    },
+    {
+      "HousePrice": 41230000,
+      "InfoFlags": 31,
+      "HouseAppeals": [
+        0,
+        0,
+        0
+      ],
+      "EstateOwnerName": "Dummy Data"
+    },
+    {
+      "HousePrice": 3639750,
+      "InfoFlags": 11,
+      "HouseAppeals": [
+        0,
+        0,
+        0
+      ],
+      "EstateOwnerName": "Dummy Data"
+    },
+    {
+      "HousePrice": 19000000,
+      "InfoFlags": 25,
+      "HouseAppeals": [
+        0,
+        0,
+        0
+      ],
+      "EstateOwnerName": "Dummy Data"
+    },
+    {
+      "HousePrice": 18000000,
+      "InfoFlags": 13,
+      "HouseAppeals": [
+        0,
+        0,
+        0
+      ],
+      "EstateOwnerName": "Dummy Data"
+    },
+    {
+      "HousePrice": 3000000,
+      "InfoFlags": 15,
+      "HouseAppeals": [
+        0,
+        0,
+        0
+      ],
+      "EstateOwnerName": "Dummy Data"
+    },
+    {
+      "HousePrice": 47500000,
+      "InfoFlags": 31,
+      "HouseAppeals": [
+        8,
+        11,
+        21
+      ],
+      "EstateOwnerName": "Dummy Data"
+    },
+    {
+      "HousePrice": 1563600,
+      "InfoFlags": 9,
+      "HouseAppeals": [
+        0,
+        0,
+        0
+      ],
+      "EstateOwnerName": "Dummy Data"
+    },
+    {
+      "HousePrice": 15865600,
+      "InfoFlags": 11,
+      "HouseAppeals": [
+        0,
+        0,
+        0
+      ],
+      "EstateOwnerName": "Dummy Data"
+    },
+    {
+      "HousePrice": 40000000,
+      "InfoFlags": 27,
+      "HouseAppeals": [
+        4,
+        0,
+        0
+      ],
+      "EstateOwnerName": "Dummy Data"
+    },
+    {
+      "HousePrice": 3187500,
+      "InfoFlags": 13,
+      "HouseAppeals": [
+        0,
+        0,
+        0
+      ],
+      "EstateOwnerName": "Dummy Data"
+    },
+    {
+      "HousePrice": 1674000,
+      "InfoFlags": 11,
+      "HouseAppeals": [
+        0,
+        0,
+        0
+      ],
+      "EstateOwnerName": "Dummy Data"
+    },
+    {
+      "HousePrice": 3547538,
+      "InfoFlags": 25,
+      "HouseAppeals": [
+        0,
+        0,
+        0
+      ],
+      "EstateOwnerName": "Dummy Data"
+    },
+    {
+      "HousePrice": 2844324,
+      "InfoFlags": 15,
+      "HouseAppeals": [
+        0,
+        0,
+        0
+      ],
+      "EstateOwnerName": "Dummy Data"
+    },
+    {
+      "HousePrice": 20000000,
+      "InfoFlags": 15,
+      "HouseAppeals": [
+        0,
+        0,
+        0
+      ],
+      "EstateOwnerName": "Dummy Data"
+    },
+    {
+      "HousePrice": 3160726,
+      "InfoFlags": 15,
+      "HouseAppeals": [
+        21,
+        4,
+        0
+      ],
+      "EstateOwnerName": "Dummy Data"
+    },
+    {
+      "HousePrice": 2215920,
+      "InfoFlags": 15,
+      "HouseAppeals": [
+        0,
+        0,
+        0
+      ],
+      "EstateOwnerName": "Dummy Data"
+    },
+    {
+      "HousePrice": 2987400,
+      "InfoFlags": 15,
+      "HouseAppeals": [
+        0,
+        0,
+        0
+      ],
+      "EstateOwnerName": "Dummy Data"
+    },
+    {
+      "HousePrice": 2531537,
+      "InfoFlags": 15,
+      "HouseAppeals": [
+        0,
+        0,
+        0
+      ],
+      "EstateOwnerName": "Dummy Data"
+    },
+    {
+      "HousePrice": 20000000,
+      "InfoFlags": 15,
+      "HouseAppeals": [
+        3,
+        7,
+        11
+      ],
+      "EstateOwnerName": "Dummy Data"
+    },
+    {
+      "HousePrice": 3529500,
+      "InfoFlags": 31,
+      "HouseAppeals": [
+        0,
+        0,
+        0
+      ],
+      "EstateOwnerName": "Dummy Data"
+    },
+    {
+      "HousePrice": 3000000,
+      "InfoFlags": 31,
+      "HouseAppeals": [
+        21,
+        7,
+        10
+      ],
+      "EstateOwnerName": "Dummy Data"
+    },
+    {
+      "HousePrice": 3147339,
+      "InfoFlags": 15,
+      "HouseAppeals": [
+        7,
+        10,
+        21
+      ],
+      "EstateOwnerName": "Dummy Data"
+    },
+    {
+      "HousePrice": 3187500,
+      "InfoFlags": 15,
+      "HouseAppeals": [
+        0,
+        0,
+        0
+      ],
+      "EstateOwnerName": "Dummy Data"
+    },
+    {
+      "HousePrice": 17000000,
+      "InfoFlags": 15,
+      "HouseAppeals": [
+        3,
+        19,
+        14
+      ],
+      "EstateOwnerName": "Dummy Data"
+    },
+    {
+      "HousePrice": 3734250,
+      "InfoFlags": 31,
+      "HouseAppeals": [
+        7,
+        0,
+        0
+      ],
+      "EstateOwnerName": "Dummy Data"
+    },
+    {
+      "HousePrice": 1787400,
+      "InfoFlags": 15,
+      "HouseAppeals": [
+        0,
+        0,
+        0
+      ],
+      "EstateOwnerName": "Dummy Data"
+    },
+    {
+      "HousePrice": 3608250,
+      "InfoFlags": 15,
+      "HouseAppeals": [
+        0,
+        0,
+        0
+      ],
+      "EstateOwnerName": "Dummy Data"
+    },
+    {
+      "HousePrice": 4500000,
+      "InfoFlags": 31,
+      "HouseAppeals": [
+        4,
+        2,
+        1
+      ],
+      "EstateOwnerName": "Dummy Data"
+    },
+    {
+      "HousePrice": 3532576,
+      "InfoFlags": 11,
+      "HouseAppeals": [
+        0,
+        0,
+        0
+      ],
+      "EstateOwnerName": "Dummy Data"
+    },
+    {
+      "HousePrice": 19000000,
+      "InfoFlags": 27,
+      "HouseAppeals": [
+        0,
+        0,
+        0
+      ],
+      "EstateOwnerName": "Dummy Data"
+    },
+    {
+      "HousePrice": 47500000,
+      "InfoFlags": 31,
+      "HouseAppeals": [
+        0,
+        0,
+        0
+      ],
+      "EstateOwnerName": "Dummy Data"
+    },
+    {
+      "HousePrice": 3324750,
+      "InfoFlags": 31,
+      "HouseAppeals": [
+        6,
+        0,
+        5
+      ],
+      "EstateOwnerName": "Dummy Data"
+    },
+    {
+      "HousePrice": 19000000,
+      "InfoFlags": 31,
+      "HouseAppeals": [
+        21,
+        0,
+        0
+      ],
+      "EstateOwnerName": "Dummy Data"
+    }
+  ]
+}

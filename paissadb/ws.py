@@ -8,12 +8,14 @@ from sqlalchemy.orm import Session
 from websockets import ConnectionClosed
 
 from . import calc, config, crud, models, schemas
+from .database import SessionLocal
 
 CHANNEL = "messages"
 log = logging.getLogger(__name__)
 
 manager = Broadcast(config.WS_BACKEND_URI)
 clients: List[WebSocket] = []
+broadcast_process_queue = asyncio.Queue()
 
 
 # ==== lifecycle ====
@@ -33,7 +35,7 @@ async def connect(websocket: WebSocket):
         task.cancel()
 
 
-# ==== tasks ====
+# ==== websocket tasks ====
 async def ping(websocket: WebSocket, delay=60):
     """Naively sends a ping message to the given websocket every 60 seconds."""
     while True:
@@ -54,13 +56,38 @@ async def listener(websocket: WebSocket):
                 break
 
 
+# ==== processing tasks ====
+async def queue_wardsweep_for_processing(wardsweep: models.WardSweep):
+    await broadcast_process_queue.put(wardsweep.id)
+    if (qsize := broadcast_process_queue.qsize()) > 50:
+        log.warning(f"Broadcast process queue is getting large! ({qsize=})")
+
+
+async def process_wardsweeps():
+    while True:
+        try:
+            with SessionLocal() as db:
+                sweep_id = await broadcast_process_queue.get()
+                wardsweep = await asyncio.get_running_loop() \
+                    .run_in_executor(None, crud.get_wardsweep_by_id, db, sweep_id)
+                await broadcast_changes_in_wardsweep(db, wardsweep)
+                qsize = broadcast_process_queue.qsize()
+                if qsize > 50:
+                    log.warning(f"Broadcast process queue is still large! ({qsize=})")
+        except asyncio.CancelledError:
+            break
+        except Exception:
+            log.exception("Failed to process wardsweep:")
+
+
 # ==== broadcasts ====
 async def broadcast(message: str):
     await manager.publish(CHANNEL, message)
 
 
 async def broadcast_changes_in_wardsweep(db: Session, wardsweep: models.WardSweep):
-    plot_history = crud.get_plot_states_before(
+    plot_history = await asyncio.get_running_loop().run_in_executor(
+        None, crud.get_plot_states_before,
         db, wardsweep.world_id, wardsweep.territory_type_id, wardsweep.ward_number, wardsweep.timestamp)
     history_map = {p.plot_number: p for p in plot_history}
     for plot in wardsweep.plots:

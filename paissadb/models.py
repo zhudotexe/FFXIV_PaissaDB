@@ -134,6 +134,7 @@ Index("ix_plots_world_id_territory_type_id", Plot.world_id, Plot.territory_type_
 Index("ix_plots_world_id_territory_type_id_ward_number", Plot.world_id, Plot.territory_type_id, Plot.ward_number)
 Index("ix_plots_world_id_territory_type_id_ward_number_plot_number",
       Plot.world_id, Plot.territory_type_id, Plot.ward_number, Plot.plot_number)
+Index("ix_plots_sweep_id_desc", Plot.sweep_id.desc())
 # sorting indices
 Index("ix_plots_ward_number_plot_number_timestamp_desc", Plot.ward_number, Plot.plot_number, Plot.timestamp.desc())
 Index("ix_plots_plot_number_timestamp_desc", Plot.plot_number, Plot.timestamp.desc())

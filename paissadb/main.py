@@ -1,3 +1,4 @@
+import asyncio
 import datetime
 import logging
 import sys
@@ -38,7 +39,7 @@ def ingest_wardinfo(
     log.debug("Received wardInfo:")
     log.debug(wardinfo.json())
     wardsweep = crud.ingest_wardinfo(db, wardinfo, sweeper)
-    background.add_task(ws.broadcast_changes_in_wardsweep, db, wardsweep)
+    background.add_task(ws.queue_wardsweep_for_processing, wardsweep)
     return {"message": "OK"}
 
 
@@ -118,6 +119,8 @@ def get_district_detail(world_id: int, district_id: int, db: Session = Depends(g
 @app.on_event("startup")
 async def connect_broadcast():
     await ws.manager.connect()
+    # this never gets cancelled explicitly, it's just killed when the app dies
+    asyncio.create_task(ws.process_wardsweeps())
 
 
 @app.on_event("shutdown")
