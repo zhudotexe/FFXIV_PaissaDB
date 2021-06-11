@@ -117,3 +117,5 @@ dmypy.json
 .idea/
 *.db
 venv*/
+temp/
+**.DS_Store

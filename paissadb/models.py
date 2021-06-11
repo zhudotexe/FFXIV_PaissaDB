@@ -76,9 +76,10 @@ class WardSweep(Base):
     __tablename__ = "wardsweeps"
 
     id = Column(Integer, primary_key=True)
-    sweeper_id = Column(BigInteger, ForeignKey("sweepers.id"), nullable=True)
+    sweeper_id = Column(BigInteger, ForeignKey("sweepers.id", ondelete="SET NULL"), nullable=True)
     world_id = Column(Integer, ForeignKey("worlds.id"))
     territory_type_id = Column(Integer, ForeignKey("districts.id"))
+    event_id = Column(Integer, ForeignKey("events.id", ondelete="CASCADE"), nullable=True)  # todo remove nullable after removing old data
     ward_number = Column(Integer)
     timestamp = Column(DateTime)
 
@@ -86,6 +87,7 @@ class WardSweep(Base):
     world = relationship("World", back_populates="sweeps")
     plots = relationship("Plot", back_populates="sweep")
     district = relationship("District", viewonly=True)
+    event = relationship("Event", viewonly=True)
 
 
 class Plot(Base):
@@ -101,8 +103,8 @@ class Plot(Base):
     ward_number = Column(Integer)
     plot_number = Column(Integer)
     timestamp = Column(DateTime)
-    sweep_id = Column(Integer, ForeignKey("wardsweeps.id"), nullable=True)
-    event_id = Column(Integer, ForeignKey("events.id"))
+    sweep_id = Column(Integer, ForeignKey("wardsweeps.id", ondelete="SET NULL"), nullable=True)
+    event_id = Column(Integer, ForeignKey("events.id", ondelete="CASCADE"))
 
     is_owned = Column(Boolean)
     has_built_house = Column(Boolean)  # used to determine if a plot was reloed into or bought (not super accurate)
@@ -146,10 +148,10 @@ class Event(Base):
     __tablename__ = "events"
 
     id = Column(Integer, primary_key=True)
-    sweeper_id = Column(BigInteger, ForeignKey("sweepers.id"), nullable=True, index=True)
+    sweeper_id = Column(BigInteger, ForeignKey("sweepers.id", ondelete="SET NULL"), nullable=True, index=True)
     timestamp = Column(DateTime, index=True)
     event_type = Column(Enum(EventType), index=True)
     data = Column(UnicodeText)
 
     sweeper = relationship("Sweeper", back_populates="events")
-    plots = relationship("Plot", back_populates="event")
+    plots = relationship("Plot", back_populates="event", cascade="all, delete", passive_deletes=True)
