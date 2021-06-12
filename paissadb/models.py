@@ -87,7 +87,7 @@ class WardSweep(Base):
     world = relationship("World", back_populates="sweeps")
     plots = relationship("Plot", back_populates="sweep")
     district = relationship("District", viewonly=True)
-    event = relationship("Event", viewonly=True)
+    event = relationship("Event")
 
 
 class Plot(Base):

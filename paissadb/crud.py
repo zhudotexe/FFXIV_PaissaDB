@@ -180,9 +180,9 @@ def ingest_wardinfo(
         sweeper_id=event.sweeper_id,
         world_id=wardinfo.LandIdent.WorldId,
         territory_type_id=wardinfo.LandIdent.TerritoryTypeId,
-        event_id=event.id,
         ward_number=wardinfo.LandIdent.WardNumber,
         timestamp=event.timestamp,
+        event=event
     )
 
     plots = []
