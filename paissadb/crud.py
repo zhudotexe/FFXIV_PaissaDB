@@ -63,6 +63,8 @@ def get_latest_plots_in_district(
     #     ON plots.id = latest_plots.id;
     #
     # postgres:
+    # note that running this query in a postgres connection "upgrades" the transaction to 32MB work mem
+    # SET LOCAL work_mem = '32MB';
     # SELECT DISTINCT ON (ward_number, plot_number) *
     #     FROM plots
     #     WHERE world_id = ?
@@ -73,6 +75,7 @@ def get_latest_plots_in_district(
         return cached
 
     if config.DB_TYPE == 'postgresql':
+        db.execute("SET LOCAL work_mem = '32MB'")
         stmt = db.query(models.Plot) \
             .distinct(models.Plot.ward_number, models.Plot.plot_number) \
             .filter(models.Plot.world_id == world_id, models.Plot.territory_type_id == district_id) \
