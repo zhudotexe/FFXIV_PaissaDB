@@ -36,7 +36,7 @@ def get_district_detail(db: Session, world: models.World, district: models.Distr
     )
 
 
-def open_plot_detail(db: Session, plot: models.Plot) -> schemas.paissa.OpenPlotDetail:
+def open_plot_detail(db: Session, plot: models.Plot, now: datetime.datetime = None) -> schemas.paissa.OpenPlotDetail:
     """
     Gets the current plot detail for a plot given the *latest* data point on the plot (assumed to be open).
     """
@@ -45,7 +45,8 @@ def open_plot_detail(db: Session, plot: models.Plot) -> schemas.paissa.OpenPlotD
     last_known_price_i = (plot.house_price, plot.timestamp)
     last_known_devals_i = (plot.num_devals, plot.timestamp)
     est_time_open_max = plot.timestamp
-    now = datetime.datetime.now()
+    if now is None:
+        now = datetime.datetime.now()
 
     for ph in crud.plot_history(db, plot, before=plot.timestamp):
         log.debug(ph.timestamp)

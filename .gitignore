@@ -119,3 +119,4 @@ dmypy.json
 venv*/
 temp/
 **.DS_Store
+*.csv
