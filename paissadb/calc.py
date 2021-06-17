@@ -58,10 +58,15 @@ def open_plot_detail(db: Session, plot: models.Plot, now: datetime.datetime = No
 
         # if the house was owned then, the earliest it could be open is instantaneously after then
         # also if the price decreases going back in history, there was a relo
+        # or if the price should have increased but didn't (some relo happened between sweeps)
         price_decreased = last_known_price is not None \
                           and ph.house_price is not None \
                           and ph.house_price < last_known_price
-        if ph.is_owned or price_decreased:
+        price_did_not_increase = last_known_price is not None \
+                                 and ph.house_price is not None \
+                                 and ph.house_price == last_known_price \
+                                 and dt_range_contains_time(ph.timestamp, est_time_open_max, DEVALUE_TIME_NAIVE)
+        if ph.is_owned or price_decreased or price_did_not_increase:
             est_time_open_min = ph.timestamp
             break
 
@@ -94,6 +99,25 @@ def open_plot_detail(db: Session, plot: models.Plot, now: datetime.datetime = No
         est_time_open_max=est_time_open_max,
         est_num_devals=est_num_devals
     )
+
+
+def dt_range_contains_time(start, end, time):
+    """Returns whether the datetime range defined by [start, end) contains at least one instance of the given time."""
+    if end <= start:
+        return False
+
+    # end is after target and start is before it
+    if start.time() <= time < end.time():
+        return True
+
+    # at least 24 hours has passed
+    if end - start >= datetime.timedelta(days=1):
+        return True
+
+    # the start is before the time and the end is on the next day
+    if start.time() <= time and start.date() < end.date():
+        return True
+    return False
 
 
 def num_missed_devals(num_devals, known_at, when=None, devalue_time=DEVALUE_TIME_NAIVE):

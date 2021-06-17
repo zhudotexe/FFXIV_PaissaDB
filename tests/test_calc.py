@@ -1,6 +1,6 @@
 import datetime
 
-from paissadb.calc import DEVALUE_TIME_NAIVE, earliest_possible_open_time, num_missed_devals
+from paissadb.calc import DEVALUE_TIME_NAIVE, dt_range_contains_time, earliest_possible_open_time, num_missed_devals
 
 # *theoretically* these tests are fragile if devalue falls on a midnight locally
 # or you happen to run these tests exactly at midnight
@@ -162,3 +162,13 @@ def test_earliest_open_time_spanning_day():
     d3 = datetime.time(hour=17)
     s3 = datetime.datetime(year=2021, month=4, day=24, hour=17)
     assert earliest_possible_open_time(num_devals=1, known_at=k3, devalue_time=d3) == s3
+
+
+# ============== dt range ==============
+def test_dt_range_contains_time():
+    assert dt_range_contains_time(SOON_BEFORE_DEVALUE_TIME, SOON_AFTER_DEVALUE_TIME, DEVALUE_TIME_NAIVE)
+    assert dt_range_contains_time(SOON_BEFORE_DEVALUE_TIME, SOON_BEFORE_DEVALUE_TIME + ONE_DAY, DEVALUE_TIME_NAIVE)
+    assert dt_range_contains_time(SOON_BEFORE_DEVALUE_TIME, SOON_BEFORE_DEVALUE_TIME + ONE_DAY - ONE_HOUR, DEVALUE_TIME_NAIVE)
+    assert not dt_range_contains_time(SOON_AFTER_DEVALUE_TIME, SOON_AFTER_DEVALUE_TIME + ONE_HOUR, DEVALUE_TIME_NAIVE)
+    assert not dt_range_contains_time(SOON_BEFORE_DEVALUE_TIME - ONE_HOUR, SOON_BEFORE_DEVALUE_TIME, DEVALUE_TIME_NAIVE)
+    assert not dt_range_contains_time(SOON_AFTER_DEVALUE_TIME, SOON_BEFORE_DEVALUE_TIME + ONE_DAY - ONE_HOUR, DEVALUE_TIME_NAIVE)
