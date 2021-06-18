@@ -39,6 +39,7 @@ def ingest_wardinfo(
     log.debug("Received wardInfo:")
     log.debug(wardinfo.json())
     wardsweep = crud.ingest_wardinfo(db, wardinfo, sweeper)
+    db.close()
     background.add_task(ws.queue_wardsweep_for_processing, wardsweep)
     return {"message": "OK"}
 
