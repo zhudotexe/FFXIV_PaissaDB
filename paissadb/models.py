@@ -90,6 +90,9 @@ class WardSweep(Base):
     event = relationship("Event")
 
 
+Index("ix_wardsweeps_event_id_desc", WardSweep.event_id.desc())  # NULLS LAST
+
+
 class Plot(Base):
     __tablename__ = "plots"
     __table_args__ = (
@@ -137,6 +140,7 @@ Index("ix_plots_world_id_territory_type_id_ward_number_plot_number",
 Index("ix_plots_ward_number_plot_number_timestamp_desc", Plot.ward_number, Plot.plot_number, Plot.timestamp.desc())
 # FK indices
 Index("ix_plots_sweep_id_desc", Plot.sweep_id.desc())
+Index("ix_plots_event_id_desc", Plot.event_id.desc())
 Index("ix_plots_timestamp_desc", Plot.timestamp.desc())
 
 
