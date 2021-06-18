@@ -20,5 +20,7 @@ sudo -u paissadb pg_dump --data-only --no-owner -t plots -t events -v -Z 3 paiss
 
 # if the upload succeeded, delete data older than 1 week
 if [[ $? == 0 ]]; then
-  sudo -u paissadb psql -f ${dir}/delete_1w.sql paissadb
+  paissaHome=$(eval echo "~paissadb")  # mild hack but whatever
+  cp ${dir}/delete_1w.sql ${paissaHome}/delete_1w.sql
+  sudo -u paissadb psql -f ${paissaHome}/delete_1w.sql paissadb
 fi
