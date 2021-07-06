@@ -4,9 +4,12 @@ import logging
 import sys
 from typing import List
 
+import sentry_sdk
 import sqlalchemy.exc
 from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
+from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
+from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 from sqlalchemy.orm import Session
 
 from . import auth, calc, config, crud, gamedata, models, schemas, ws
@@ -22,6 +25,9 @@ if 'debug' in sys.argv:
     logging.basicConfig(stream=sys.stdout, encoding='utf-8', level=logging.DEBUG)
 
 app = FastAPI()
+
+# ==== Middleware ====
+# CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -29,6 +35,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+# Sentry
+if config.SENTRY_DSN is not None:
+    sentry_sdk.init(dsn=config.SENTRY_DSN, environment=config.SENTRY_ENV, integrations=[SqlalchemyIntegration()])
+    app.add_middleware(SentryAsgiMiddleware)
 
 
 # ==== HTTP ====
