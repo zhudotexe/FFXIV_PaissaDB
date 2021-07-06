@@ -4,6 +4,7 @@ import logging
 import sys
 from typing import List
 
+import sqlalchemy.exc
 from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
@@ -17,6 +18,7 @@ with SessionLocal() as sess:
 
 log = logging.getLogger(__name__)
 if 'debug' in sys.argv:
+    # noinspection PyArgumentList
     logging.basicConfig(stream=sys.stdout, encoding='utf-8', level=logging.DEBUG)
 
 app = FastAPI()
@@ -38,7 +40,16 @@ def ingest_wardinfo(
         db: Session = Depends(get_db)):
     log.debug("Received wardInfo:")
     log.debug(wardinfo.json())
-    wardsweep = crud.ingest_wardinfo(db, wardinfo, sweeper)
+
+    try:
+        wardsweep = crud.ingest_wardinfo(db, wardinfo, sweeper)
+    except sqlalchemy.exc.IntegrityError:
+        db.rollback()
+        try:
+            wardsweep = crud.ingest_wardinfo(db, wardinfo, None)
+        except sqlalchemy.exc.IntegrityError:
+            raise HTTPException(400, "Could not ingest sweep")
+
     db.close()
     background.add_task(ws.queue_wardsweep_for_processing, wardsweep)
     return {"message": "OK"}
