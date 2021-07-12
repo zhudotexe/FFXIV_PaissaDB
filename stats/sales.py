@@ -14,21 +14,34 @@ could have happened. If the transition was a sale, it determines whether the sal
    time. If any is found, it is likely a relocation. Otherwise, assume it's a first-time buyer.
 
 If the transition was an opening, pair it with the next chronological sale. Use these pairs to emit PlotSale records.
+
+* Note: This script was able to lock all 8 cores of an i9-9900K at 100% for ~20 minutes. I recommend running this on
+  a very capable computer.
 """
 import os
+import sys
 import time
 
-os.environ['TZ'] = 'Etc/UTC'
-time.tzset()
+# set working tz to UTC, if on Windows you should do this system-wide in time settings
+if sys.platform != 'win32':
+    os.environ['TZ'] = 'Etc/UTC'
+    time.tzset()
 
 import csv
 import datetime
 from contextlib import contextmanager
+import threading
+import queue
 
 from pydantic import BaseModel
 
 from paissadb import calc, crud, models
 from paissadb.database import SessionLocal
+
+# threading: setting this to 1 on slower systems and (num cpus) on faster systems is generally fine
+NUM_THREADS = 8
+district_q = queue.Queue()
+sale_q = queue.Queue()
 
 
 # ==== helpers ====
@@ -112,30 +125,53 @@ class SaleStatGenerator:
         )
 
 
-def do_all_sale_stats(db):
-    for world in crud.get_worlds(db):
-        with timer('WRLD', f'{world.id} ({world.name})'):
+def queue_processing():
+    with SessionLocal() as db:
+        for world in crud.get_worlds(db):
             for district in crud.get_districts(db):
-                with timer('DIST', f'{district.id} ({district.name})', indent=2):
-                    latest_plots = crud.get_latest_plots_in_district(db, world.id, district.id)
-                    for plot in latest_plots:
-                        statter = SaleStatGenerator(db, plot)
-                        # with timer('PLOT', f'{plot.ward_number + 1}-{plot.plot_number + 1}', indent=4):
-                        yield from statter.do_stats()
-        db.expunge_all()  # stop memory use from going wild
-        db.rollback()
+                district_q.put((world.id, district.id))
 
 
-def run(db):
+def t_processor():
+    while True:
+        world_id, district_id = district_q.get()
+        with SessionLocal() as db:
+            district = crud.get_district_by_id(db, district_id)
+            world = crud.get_world_by_id(db, world_id)
+            with timer(f'T-{threading.get_ident()}', f'{world_id}-{district_id} ({world.name}, {district.name})'):
+                latest_plots = crud.get_latest_plots_in_district(db, world_id, district_id)
+                for plot in latest_plots:
+                    statter = SaleStatGenerator(db, plot)
+                    for result in statter.do_stats():
+                        sale_q.put(result)
+        district_q.task_done()
+
+
+def t_writer():
     with open('sales.csv', 'w', newline='') as f:
         writer = csv.DictWriter(f, fieldnames=PlotSale.__fields__.keys())
         writer.writeheader()
-        with timer('MAIN', 'all'):
-            for plot_sale in do_all_sale_stats(db):
-                writer.writerow(plot_sale.dict())
+        while True:
+            plot_sale = sale_q.get()
+            writer.writerow(plot_sale.dict())
+            sale_q.task_done()
+
+
+def run():
+    queue_processing()
+
+    # launch worker threads
+    for _ in range(NUM_THREADS):
+        threading.Thread(target=t_processor, daemon=True).start()
+
+    # launch writer thread
+    threading.Thread(target=t_writer, daemon=True).start()
+
+    # wait for all tasks to complete before returning
+    district_q.join()
+    sale_q.join()
 
 
 if __name__ == '__main__':
-    with SessionLocal() as sess:
-        sess.execute("SET LOCAL work_mem = '256MB'")
-        run(sess)
+    with timer('MAIN', 'all'):
+        run()
