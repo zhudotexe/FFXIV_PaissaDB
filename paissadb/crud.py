@@ -41,7 +41,7 @@ def get_wardsweep_by_id(db: Session, wardsweep_id: int) -> models.WardSweep:
 
 
 def get_plots_by_ids(db: Session, plot_ids: List[int]) -> List[models.Plot]:
-    return db.query(models.Plot).filter(models.Plot.id in plot_ids).all()
+    return db.query(models.Plot).filter(models.Plot.id.in_(plot_ids)).all()
 
 
 def get_latest_plots_in_district(
