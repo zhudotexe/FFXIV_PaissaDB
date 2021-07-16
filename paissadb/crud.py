@@ -10,7 +10,7 @@ from . import config, models, schemas
 # caching - todo move this to Redis or something if scaling is needed?
 # 72 worlds * 4 districts = 288
 # IMPORTANT: each ingest method has to clear the cache entry it updates
-district_plot_cache: cachetools.LRUCache[Tuple[int, int], List[models.Plot]] = cachetools.LRUCache(288)
+district_plot_cache: cachetools.LRUCache[Tuple[int, int], List[int]] = cachetools.LRUCache(288)
 
 
 def upsert_sweeper(db: Session, sweeper: schemas.paissa.Hello) -> models.Sweeper:
@@ -38,6 +38,10 @@ def get_district_by_id(db: Session, district_id: int) -> models.District:
 
 def get_wardsweep_by_id(db: Session, wardsweep_id: int) -> models.WardSweep:
     return db.query(models.WardSweep).filter(models.WardSweep.id == wardsweep_id).first()
+
+
+def get_plots_by_ids(db: Session, plot_ids: List[int]) -> List[models.Plot]:
+    return db.query(models.Plot).filter(models.Plot.id in plot_ids).all()
 
 
 def get_latest_plots_in_district(
@@ -72,7 +76,7 @@ def get_latest_plots_in_district(
     #     ORDER BY ward_number, plot_number, timestamp DESC;
 
     if use_cache and (cached := district_plot_cache.get((world_id, district_id))) is not None:
-        return cached
+        return get_plots_by_ids(db, cached)
 
     if config.DB_TYPE == 'postgresql':
         db.execute("SET LOCAL work_mem = '32MB'")
@@ -88,7 +92,7 @@ def get_latest_plots_in_district(
         latest_plots = aliased(models.Plot, subq)
         stmt = db.query(models.Plot).join(latest_plots, models.Plot.id == latest_plots.id)
     result = stmt.all()
-    district_plot_cache[world_id, district_id] = result
+    district_plot_cache[world_id, district_id] = [p.id for p in result]
     return result
 
 
