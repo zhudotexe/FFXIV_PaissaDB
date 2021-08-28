@@ -23,6 +23,7 @@ def upsert_sweeper(db: Session, sweeper: schemas.paissa.Hello) -> models.Sweeper
 def touch_sweeper_by_id(db: Session, sweeper_id: int):
     stmt = update(models.Sweeper).where(models.Sweeper.id == sweeper_id)
     db.execute(stmt)
+    db.commit()
 
 
 def get_worlds(db: Session) -> List[models.World]:

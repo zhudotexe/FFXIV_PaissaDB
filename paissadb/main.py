@@ -76,6 +76,7 @@ def hello(
     log.debug("Received hello:")
     log.debug(data.json())
     crud.upsert_sweeper(db, data)
+    crud.touch_sweeper_by_id(db, sweeper.cid)
     return {"message": "OK"}
 
 
