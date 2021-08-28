@@ -2,11 +2,12 @@ import asyncio
 import datetime
 import logging
 import sys
-from typing import List
+from typing import List, Optional
 
+import jwt as jwtlib  # name conflict with jwt query param in /ws
 import sentry_sdk
 import sqlalchemy.exc
-from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, WebSocket
+from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, WebSocket, status
 from fastapi.middleware.cors import CORSMiddleware
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
@@ -148,10 +149,22 @@ async def connect_broadcast():
 @app.on_event("shutdown")
 async def disconnect_broadcast():
     for client in ws.clients:
-        await client.close(1012)  # Service Restart
+        await client.close(status.WS_1012_SERVICE_RESTART)
     await ws.manager.disconnect()
 
 
 @app.websocket("/ws")
-async def plot_updates(websocket: WebSocket):
-    await ws.connect(websocket)
+async def plot_updates(websocket: WebSocket, jwt: Optional[str] = None, db: Session = Depends(get_db)):
+    # token must be present
+    if jwt is None:
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+        return
+
+    # and valid
+    try:
+        sweeper = auth.decode_token(jwt)
+    except jwtlib.InvalidTokenError:
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+        return
+
+    await ws.connect(db, websocket, sweeper)

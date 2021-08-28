@@ -2,7 +2,7 @@ import enum
 from typing import Optional
 
 from sqlalchemy import BigInteger, Boolean, Column, DateTime, Enum, ForeignKey, ForeignKeyConstraint, Index, Integer, \
-    String, UnicodeText
+    String, UnicodeText, func
 from sqlalchemy.orm import relationship
 
 from .database import Base
@@ -35,6 +35,7 @@ class Sweeper(Base):
     id = Column(BigInteger, primary_key=True)
     name = Column(String)
     world_id = Column(Integer, ForeignKey("worlds.id"))
+    last_seen = Column(DateTime, nullable=True, server_default=func.now(), onupdate=func.now())
 
     world = relationship("World", back_populates="sweepers")
     sweeps = relationship("WardSweep", back_populates="sweeper")
@@ -79,7 +80,7 @@ class WardSweep(Base):
     sweeper_id = Column(BigInteger, ForeignKey("sweepers.id", ondelete="SET NULL"), nullable=True)
     world_id = Column(Integer, ForeignKey("worlds.id"))
     territory_type_id = Column(Integer, ForeignKey("districts.id"))
-    event_id = Column(Integer, ForeignKey("events.id", ondelete="CASCADE"), nullable=True)  # todo remove nullable after removing old data
+    event_id = Column(Integer, ForeignKey("events.id", ondelete="CASCADE"))
     ward_number = Column(Integer)
     timestamp = Column(DateTime)
 
