@@ -10,7 +10,7 @@ CREATE TABLE public.events
 (
     id          integer NOT NULL,
     sweeper_id  bigint,
-    "timestamp" timestamp without time zone,
+    "timestamp" timestamp WITHOUT TIME ZONE,
     event_type  public.eventtype,
     data        text
 );
@@ -22,7 +22,7 @@ CREATE TABLE public.plots
     territory_type_id integer,
     ward_number       integer,
     plot_number       integer,
-    "timestamp"       timestamp without time zone,
+    "timestamp"       timestamp WITHOUT TIME ZONE,
     sweep_id          integer,
     event_id          integer,
     is_owned          boolean,
@@ -50,6 +50,9 @@ CREATE INDEX ix_plots_world_id_territory_type_id_ward_number_plot_number ON publ
 ALTER TABLE ONLY public.plots
     ADD CONSTRAINT plots_event_id_fkey FOREIGN KEY (event_id) REFERENCES public.events (id) ON DELETE CASCADE;
 
+-- create additional statgen indexes
+-- todo optimize the chonky queries here
+
 -- copy data from tmp tables
 INSERT INTO events
 SELECT *
@@ -64,3 +67,4 @@ ON CONFLICT DO NOTHING;
 -- delete tmp tables
 DROP TABLE tmp_events;
 DROP TABLE tmp_plots;
+VACUUM FULL;
