@@ -19,7 +19,7 @@ ALTER TABLE plots
     DROP CONSTRAINT IF EXISTS plots_world_id_fkey;
 
 -- plots statgen indices
--- todo
+DROP INDEX IF EXISTS ix_plots_owner_name;
 
 -- events
 DROP INDEX IF EXISTS ix_events_event_type;

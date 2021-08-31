@@ -51,7 +51,7 @@ ALTER TABLE ONLY public.plots
     ADD CONSTRAINT plots_event_id_fkey FOREIGN KEY (event_id) REFERENCES public.events (id) ON DELETE CASCADE;
 
 -- create additional statgen indexes
--- todo optimize the chonky queries here
+CREATE INDEX ix_plots_owner_name ON public.plots USING btree (owner_name);
 
 -- copy data from tmp tables
 INSERT INTO events
@@ -67,4 +67,3 @@ ON CONFLICT DO NOTHING;
 -- delete tmp tables
 DROP TABLE tmp_events;
 DROP TABLE tmp_plots;
-VACUUM FULL;
