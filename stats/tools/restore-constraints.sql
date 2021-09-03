@@ -31,12 +31,25 @@ CREATE TABLE public.plots
     owner_name        character varying
 );
 
+-- create primary keys
 ALTER TABLE ONLY public.events
     ADD CONSTRAINT events_pkey PRIMARY KEY (id);
 
 ALTER TABLE ONLY public.plots
     ADD CONSTRAINT plots_pkey PRIMARY KEY (id);
 
+-- copy data from tmp tables, deduping on pk
+INSERT INTO events
+SELECT *
+FROM tmp_events
+ON CONFLICT DO NOTHING;
+
+INSERT INTO plots
+SELECT *
+FROM tmp_plots
+ON CONFLICT DO NOTHING;
+
+-- create non-primary indexes
 CREATE INDEX ix_events_event_type ON public.events USING btree (event_type);
 CREATE INDEX ix_events_sweeper_id ON public.events USING btree (sweeper_id);
 CREATE INDEX ix_events_timestamp ON public.events USING btree ("timestamp");
@@ -52,17 +65,6 @@ ALTER TABLE ONLY public.plots
 
 -- create additional statgen indexes
 CREATE INDEX ix_plots_owner_name ON public.plots USING btree (owner_name);
-
--- copy data from tmp tables
-INSERT INTO events
-SELECT *
-FROM tmp_events
-ON CONFLICT DO NOTHING;
-
-INSERT INTO plots
-SELECT *
-FROM tmp_plots
-ON CONFLICT DO NOTHING;
 
 -- delete tmp tables
 DROP TABLE tmp_events;
