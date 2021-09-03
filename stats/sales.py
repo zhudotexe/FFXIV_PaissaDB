@@ -26,6 +26,8 @@ import time
 if sys.platform != 'win32':
     os.environ['TZ'] = 'Etc/UTC'
     time.tzset()
+else:
+    input("Make sure your system clock is set to UTC! (Press enter to continue)")
 
 import csv
 import datetime
@@ -39,7 +41,7 @@ from paissadb import calc, crud, models
 from paissadb.database import SessionLocal
 
 # threading: setting this to 1 on slower systems and (num cpus) on faster systems is generally fine
-NUM_THREADS = 8
+NUM_THREADS = 4
 district_q = queue.Queue()
 sale_q = queue.Queue()
 
@@ -56,6 +58,7 @@ class PlotSale(BaseModel):
     time_sold_max: datetime.datetime
     is_relo: bool
     known_price: int
+    last_presale_data_id: int
 
 
 @contextmanager
@@ -121,7 +124,8 @@ class SaleStatGenerator:
             time_sold_min=sale_details.est_time_sold_min,
             time_sold_max=sale_details.est_time_sold_max,
             is_relo=sale_is_relo,
-            known_price=opening_details.known_price
+            known_price=opening_details.known_price,
+            last_presale_data_id=current.id
         )
 
 
@@ -158,14 +162,19 @@ def t_writer():
 
 
 def run():
+    threads = []
     queue_processing()
 
     # launch worker threads
     for _ in range(NUM_THREADS):
-        threading.Thread(target=t_processor, daemon=True).start()
+        t = threading.Thread(target=t_processor, daemon=True)
+        t.start()
+        threads.append(t)
 
     # launch writer thread
-    threading.Thread(target=t_writer, daemon=True).start()
+    t = threading.Thread(target=t_writer, daemon=True)
+    t.start()
+    threads.append(t)
 
     # wait for all tasks to complete before returning
     district_q.join()
