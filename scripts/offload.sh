@@ -1,7 +1,7 @@
 #!/bin/bash
 # Dump the plots and events tables to stdout with maximum compression, and stream that to S3
 # compression 3/9 is used because holy cpu usage batman
-# cronjobbed to run weekly on monday at 7:15am UTC to avoid primetimes, only if disk usage > 75%
+# cronjobbed to run daily at 7:15am UTC to avoid primetimes, only if disk usage > 75%
 # cron: 15 7 * * * bash scripts/offload.sh
 # shellcheck disable=SC2181
 
