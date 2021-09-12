@@ -160,7 +160,8 @@ async def disconnect_broadcast():
 async def plot_updates(websocket: WebSocket, jwt: Optional[str] = None, db: Session = Depends(get_db)):
     # token must be present
     if jwt is None:
-        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+        await ws.connect(db, websocket, None)  # fixme
+        # await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
         return
 
     # and valid
