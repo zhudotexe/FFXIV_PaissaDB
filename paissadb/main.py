@@ -13,7 +13,7 @@ from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 from sqlalchemy.orm import Session
 
-from . import auth, calc, config, crud, gamedata, models, schemas, ws
+from . import auth, calc, config, crud, gamedata, metrics, models, schemas, ws
 from .database import SessionLocal, engine, get_db
 
 models.Base.metadata.create_all(bind=engine)
@@ -40,6 +40,8 @@ app.add_middleware(
 if config.SENTRY_DSN is not None:
     sentry_sdk.init(dsn=config.SENTRY_DSN, environment=config.SENTRY_ENV, integrations=[SqlalchemyIntegration()])
     app.add_middleware(SentryAsgiMiddleware)
+# Prometheus
+metrics.register(app)
 
 
 # ==== HTTP ====
