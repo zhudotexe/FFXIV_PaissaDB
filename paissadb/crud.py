@@ -2,7 +2,7 @@ import datetime
 from typing import Iterator, List, Optional, Tuple
 
 import cachetools
-from sqlalchemy import desc, func
+from sqlalchemy import desc, func, update
 from sqlalchemy.orm import Session, aliased
 
 from . import config, models, schemas
@@ -18,6 +18,12 @@ def upsert_sweeper(db: Session, sweeper: schemas.paissa.Hello) -> models.Sweeper
     merged = db.merge(db_sweeper)
     db.commit()
     return merged
+
+
+def touch_sweeper_by_id(db: Session, sweeper_id: int):
+    stmt = update(models.Sweeper).where(models.Sweeper.id == sweeper_id)
+    db.execute(stmt)
+    db.commit()
 
 
 def get_worlds(db: Session) -> List[models.World]:

@@ -19,6 +19,3 @@ ALTER TABLE tmp_events
 
 ALTER TABLE tmp_plots
     RENAME TO plots;
-
--- clean up
-VACUUM FULL;

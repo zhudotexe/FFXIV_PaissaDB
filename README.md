@@ -64,10 +64,10 @@ For the specified world, returns:
 
 For the specified district in the specified world, returns a list of ``DistrictDetail``.
 
-#### Websocket /ws
+#### Websocket /ws?jwt={jwt}
 
 Clients connected to this websocket will receive update events each time a house changes state (owned -> open or open ->
-sold).
+sold). Connecting to the websocket requires a valid JWT.
 
 ##### Plot Opened
 
@@ -169,7 +169,7 @@ Standard [JWT spec](https://jwt.io/) using HS256 for signature verification with
 
 ```typescript
 {
-    cid: number | null; // character's content ID; may be null or omitted for anonymous contribution
+    cid: number; // character's content ID
     iss: "PaissaDB";
     aud: "PaissaHouse";
     iat: number; // JWT generation timestamp

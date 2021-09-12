@@ -2,17 +2,18 @@ import asyncio
 import datetime
 import logging
 import sys
-from typing import List
+from typing import List, Optional
 
+import jwt as jwtlib  # name conflict with jwt query param in /ws
 import sentry_sdk
 import sqlalchemy.exc
-from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, WebSocket
+from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, WebSocket, status
 from fastapi.middleware.cors import CORSMiddleware
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 from sqlalchemy.orm import Session
 
-from . import auth, calc, config, crud, gamedata, models, schemas, ws
+from . import auth, calc, config, crud, gamedata, metrics, models, schemas, ws
 from .database import SessionLocal, engine, get_db
 
 models.Base.metadata.create_all(bind=engine)
@@ -39,6 +40,8 @@ app.add_middleware(
 if config.SENTRY_DSN is not None:
     sentry_sdk.init(dsn=config.SENTRY_DSN, environment=config.SENTRY_ENV, integrations=[SqlalchemyIntegration()])
     app.add_middleware(SentryAsgiMiddleware)
+# Prometheus
+metrics.register(app)
 
 
 # ==== HTTP ====
@@ -75,6 +78,7 @@ def hello(
     log.debug("Received hello:")
     log.debug(data.json())
     crud.upsert_sweeper(db, data)
+    crud.touch_sweeper_by_id(db, sweeper.cid)
     return {"message": "OK"}
 
 
@@ -148,10 +152,23 @@ async def connect_broadcast():
 @app.on_event("shutdown")
 async def disconnect_broadcast():
     for client in ws.clients:
-        await client.close(1012)  # Service Restart
+        await client.close(status.WS_1012_SERVICE_RESTART)
     await ws.manager.disconnect()
 
 
 @app.websocket("/ws")
-async def plot_updates(websocket: WebSocket):
-    await ws.connect(websocket)
+async def plot_updates(websocket: WebSocket, jwt: Optional[str] = None, db: Session = Depends(get_db)):
+    # token must be present
+    if jwt is None:
+        await ws.connect(db, websocket, None)  # fixme
+        # await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+        return
+
+    # and valid
+    try:
+        sweeper = auth.decode_token(jwt)
+    except jwtlib.InvalidTokenError:
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+        return
+
+    await ws.connect(db, websocket, sweeper)

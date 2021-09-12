@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from typing import List
+from typing import List, Optional
 
 from broadcaster import Broadcast
 from fastapi import WebSocket
@@ -19,9 +19,12 @@ broadcast_process_queue = asyncio.Queue()
 
 
 # ==== lifecycle ====
-async def connect(websocket: WebSocket):
+async def connect(db: Session, websocket: WebSocket, user: Optional[schemas.paissa.JWTSweeper]):
     """Accepts the websocket connection and sets up its ping and broadcast listeners."""
     await websocket.accept()
+    if user is not None:
+        await asyncio.get_running_loop().run_in_executor(None, crud.touch_sweeper_by_id, db, user.cid)
+
     task = asyncio.gather(
         ping(websocket),
         listener(websocket)
