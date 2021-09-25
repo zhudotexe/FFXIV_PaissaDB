@@ -58,13 +58,12 @@ def timer(prefix, name, indent=0):
 
 def is_new_owner(db, plot, sale_details):
     """
-    Returns whether the current owner of the given plot is a new owner, or if they have owned another house within
+    Returns whether the current owner of the given plot is a new owner, i.e. if they have not owned another house within
     the last week.
     """
-    if not plot.has_built_house:
-        return True
+    # if not plot.has_built_house:  # there are cases of people buying a plot and reloing before building a house
+    #     return True
 
-    # oh boy
     # time to make a chonky query (~1500ms cold)
     owned = db.query(models.Plot) \
         .filter(models.Plot.world_id == plot.world_id) \
