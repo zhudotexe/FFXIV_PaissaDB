@@ -6,7 +6,7 @@ from cold storage for analysis.
 Note: `<host>` can be `paissadb` if running postgres locally or a postgres uri, like
 `postgresql://prism.lan:5432/paissadb`.
 
-Last data timestamp imported: `paissadb-data-1629875701.sql`
+Last data timestamp imported: `paissadb-data-1632554101.sql`
 
 ## 1st Time Import
 

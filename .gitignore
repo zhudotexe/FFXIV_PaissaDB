@@ -120,3 +120,4 @@ venv*/
 temp/
 **.DS_Store
 *.csv
+stats/data/
