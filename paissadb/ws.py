@@ -81,6 +81,10 @@ async def process_wardsweeps():
             break
         except Exception:
             log.exception("Failed to process wardsweep:")
+        finally:
+            # small delay to prevent task from hogging system resources
+            # historically this processes at ~4.3/s (0.23s/per), so this limits it to roughly 3/s
+            await asyncio.sleep(0.1)
 
 
 # ==== broadcasts ====
