@@ -7,7 +7,7 @@ from fastapi import WebSocket
 from sqlalchemy.orm import Session
 from websockets import ConnectionClosed
 
-from . import calc, config, crud, models, schemas
+from . import calc, config, crud, models, schemas, utils
 from .database import SessionLocal
 
 CHANNEL = "messages"
@@ -23,7 +23,7 @@ async def connect(db: Session, websocket: WebSocket, user: Optional[schemas.pais
     """Accepts the websocket connection and sets up its ping and broadcast listeners."""
     await websocket.accept()
     if user is not None:
-        await asyncio.get_running_loop().run_in_executor(None, crud.touch_sweeper_by_id, db, user.cid)
+        await utils.executor(crud.touch_sweeper_by_id, db, user.cid)
 
     task = asyncio.gather(
         ping(websocket),
@@ -62,8 +62,6 @@ async def listener(websocket: WebSocket):
 # ==== processing tasks ====
 async def queue_wardsweep_for_processing(wardsweep: models.WardSweep):
     await broadcast_process_queue.put(wardsweep.id)
-    if (qsize := broadcast_process_queue.qsize()) > 50:
-        log.warning(f"Broadcast process queue is getting large! ({qsize=})")
 
 
 async def process_wardsweeps():
@@ -71,12 +69,8 @@ async def process_wardsweeps():
         try:
             with SessionLocal() as db:
                 sweep_id = await broadcast_process_queue.get()
-                wardsweep = await asyncio.get_running_loop() \
-                    .run_in_executor(None, crud.get_wardsweep_by_id, db, sweep_id)
+                wardsweep = await utils.executor(crud.get_wardsweep_by_id, db, sweep_id)
                 await broadcast_changes_in_wardsweep(db, wardsweep)
-                qsize = broadcast_process_queue.qsize()
-                if qsize > 50:
-                    log.warning(f"Broadcast process queue is still large! ({qsize=})")
         except asyncio.CancelledError:
             break
         except Exception:
@@ -93,9 +87,10 @@ async def broadcast(message: str):
 
 
 async def broadcast_changes_in_wardsweep(db: Session, wardsweep: models.WardSweep):
-    plot_history = await asyncio.get_running_loop().run_in_executor(
-        None, crud.get_plot_states_before,
-        db, wardsweep.world_id, wardsweep.territory_type_id, wardsweep.ward_number, wardsweep.timestamp)
+    plot_history = await utils.executor(
+        crud.get_plot_states_before,
+        db, wardsweep.world_id, wardsweep.territory_type_id, wardsweep.ward_number, wardsweep.timestamp
+    )
     history_map = {p.plot_number: p for p in plot_history}
     for plot in wardsweep.plots:
         before = history_map.get(plot.plot_number)
