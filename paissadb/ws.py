@@ -106,12 +106,12 @@ async def broadcast_changes_in_wardsweep(db: Session, wardsweep: models.WardSwee
 
 
 async def broadcast_plot_open(db: Session, plot: models.Plot):
-    detail = calc.open_plot_detail(db, plot)
+    detail = await utils.executor(calc.open_plot_detail, db, plot)
     data = schemas.paissa.WSPlotOpened(data=detail)
     await broadcast(data.json())
 
 
 async def broadcast_plot_sold(db: Session, plot: models.Plot):
-    detail = calc.sold_plot_detail(db, plot)
+    detail = await utils.executor(calc.sold_plot_detail, db, plot)
     data = schemas.paissa.WSPlotSold(data=detail)
     await broadcast(data.json())
