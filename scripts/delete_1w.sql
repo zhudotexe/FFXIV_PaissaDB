@@ -4,4 +4,5 @@ FROM paissadb.public.events
 WHERE paissadb.public.events.timestamp < NOW() - '2 day'::interval;
 
 -- only run this in the dead of night, because it locks the db!
-VACUUM (FULL, VERBOSE) paissadb.public.events, paissadb.public.plots, paissadb.public.wardsweeps;
+VACUUM (FULL, VERBOSE) paissadb.public.events, paissadb.public.wardsweeps;
+VACUUM (FULL, VERBOSE) paissadb.public.plots;
