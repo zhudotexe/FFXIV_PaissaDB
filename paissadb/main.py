@@ -2,7 +2,7 @@ import asyncio
 import datetime
 import logging
 import sys
-from typing import List, Optional
+from typing import Optional
 
 import jwt as jwtlib  # name conflict with jwt query param in /ws
 import sentry_sdk
@@ -82,8 +82,13 @@ def hello(
     return {"message": "OK"}
 
 
-@app.get("/worlds", response_model=List[schemas.paissa.WorldSummary])
+@app.get("/worlds")  # response_model=List[schemas.paissa.WorldSummary])
 def list_worlds(db: Session = Depends(get_db)):
+    return schemas.paissa.TemporarilyDisabled(
+        message="This endpoint is temporarily disabled due to high server load.",
+        indefinite=True
+    )
+
     worlds = crud.get_worlds(db)
     districts = crud.get_districts(db)
 
@@ -111,8 +116,13 @@ def list_worlds(db: Session = Depends(get_db)):
     return out
 
 
-@app.get("/worlds/{world_id}", response_model=schemas.paissa.WorldDetail)
+@app.get("/worlds/{world_id}")  # , response_model=schemas.paissa.WorldDetail)
 def get_world(world_id: int, db: Session = Depends(get_db)):
+    return schemas.paissa.TemporarilyDisabled(
+        message="This endpoint is temporarily disabled due to high server load.",
+        indefinite=True
+    )
+
     world = crud.get_world_by_id(db, world_id)
     districts = crud.get_districts(db)
     if world is None:
@@ -131,8 +141,13 @@ def get_world(world_id: int, db: Session = Depends(get_db)):
     )
 
 
-@app.get("/worlds/{world_id}/{district_id}", response_model=schemas.paissa.DistrictDetail)
+@app.get("/worlds/{world_id}/{district_id}")  # , response_model=schemas.paissa.DistrictDetail)
 def get_district_detail(world_id: int, district_id: int, db: Session = Depends(get_db)):
+    return schemas.paissa.TemporarilyDisabled(
+        message="This endpoint is temporarily disabled due to high server load.",
+        indefinite=True
+    )
+
     world = crud.get_world_by_id(db, world_id)
     district = crud.get_district_by_id(db, district_id)
     if world is None or district is None:

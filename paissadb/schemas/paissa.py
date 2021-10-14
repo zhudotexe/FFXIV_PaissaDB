@@ -68,6 +68,13 @@ class SoldPlotDetail(BaseModel):
     est_time_sold_max: datetime.datetime
 
 
+class TemporarilyDisabled(BaseModel):
+    """Temporary response model used to indicate that an endpoint is disabled due to high load."""
+    message: Optional[str]
+    until: Optional[datetime.datetime]
+    indefinite: bool
+
+
 # ==== websocket ====
 class WSMessage(BaseModel):
     type: str
