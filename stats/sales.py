@@ -70,9 +70,9 @@ def is_new_owner(db, plot, sale_details):
         .filter(models.Plot.timestamp < sale_details.est_time_sold_min,
                 models.Plot.timestamp >= sale_details.est_time_sold_min - datetime.timedelta(days=7)) \
         .filter(models.Plot.owner_name == plot.owner_name) \
-        .first()
+        .count()
 
-    return owned is None
+    return owned == 0
 
 
 # ==== stats ====

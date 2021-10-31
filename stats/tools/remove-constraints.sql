@@ -20,6 +20,7 @@ ALTER TABLE plots
 
 -- plots statgen indices
 DROP INDEX IF EXISTS ix_plots_owner_name;
+DROP INDEX IF EXISTS ix_plots_world_id_owner_name_timestamp;
 
 -- events
 DROP INDEX IF EXISTS ix_events_event_type;

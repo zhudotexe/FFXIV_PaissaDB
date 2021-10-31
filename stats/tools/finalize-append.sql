@@ -5,6 +5,7 @@ DROP INDEX IF EXISTS ix_plots_timestamp_desc;
 DROP INDEX IF EXISTS ix_plots_ward_number_plot_number_timestamp_desc;
 DROP INDEX IF EXISTS ix_plots_world_id_territory_type_id_ward_number_plot_number;
 DROP INDEX IF EXISTS ix_plots_owner_name;
+DROP INDEX IF EXISTS ix_plots_world_id_owner_name_timestamp;
 ALTER TABLE tmp_plots
     DROP CONSTRAINT IF EXISTS plots_event_id_fkey;
 DROP INDEX IF EXISTS ix_events_event_type;
@@ -43,7 +44,8 @@ CREATE INDEX ix_plots_sweep_id_desc ON plots USING btree (sweep_id DESC);
 CREATE INDEX ix_plots_timestamp_desc ON plots USING btree ("timestamp" DESC);
 CREATE INDEX ix_plots_ward_number_plot_number_timestamp_desc ON plots USING btree (ward_number, plot_number, "timestamp" DESC);
 CREATE INDEX ix_plots_world_id_territory_type_id_ward_number_plot_number ON plots USING btree (world_id, territory_type_id, ward_number, plot_number);
-CREATE INDEX ix_plots_owner_name ON plots USING btree (owner_name);
+-- CREATE INDEX ix_plots_owner_name ON plots USING btree (owner_name);
+CREATE INDEX ix_plots_world_id_owner_name_timestamp ON plots USING btree (world_id, owner_name, "timestamp");
 
 ALTER TABLE ONLY plots
     ADD CONSTRAINT plots_event_id_fkey FOREIGN KEY (event_id) REFERENCES events (id) ON DELETE CASCADE;

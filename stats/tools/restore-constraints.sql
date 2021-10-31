@@ -64,7 +64,8 @@ ALTER TABLE ONLY public.plots
     ADD CONSTRAINT plots_event_id_fkey FOREIGN KEY (event_id) REFERENCES public.events (id) ON DELETE CASCADE;
 
 -- create additional statgen indexes
-CREATE INDEX ix_plots_owner_name ON public.plots USING btree (owner_name);
+-- CREATE INDEX ix_plots_owner_name ON public.plots USING btree (owner_name);
+CREATE INDEX ix_plots_world_id_owner_name_timestamp ON public.plots USING btree (world_id, owner_name, "timestamp");
 
 -- delete tmp tables
 DROP TABLE tmp_events;
