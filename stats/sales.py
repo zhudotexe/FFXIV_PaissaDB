@@ -41,7 +41,7 @@ from paissadb import calc, crud, models
 from paissadb.database import SessionLocal
 
 # threading: setting this to 1 on slower systems and (num cpus) on faster systems is generally fine
-NUM_THREADS = 4
+NUM_THREADS = 1
 district_q = queue.Queue()
 sale_q = queue.Queue()
 
