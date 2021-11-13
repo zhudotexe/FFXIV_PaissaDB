@@ -168,12 +168,16 @@ def plot_history(db: Session, plot: models.Plot, before: datetime.datetime = Non
 
 
 # ---- ingest ----
-def _ingest(db: Session, event: schemas.ffxiv.BaseFFXIVPacket, sweeper: Optional[schemas.paissa.JWTSweeper]):
+def _ingest(
+        db: Session,
+        event: schemas.ffxiv.BaseFFXIVPacket,
+        sweeper: Optional[schemas.paissa.JWTSweeper],
+        timestamp: Optional[datetime.datetime]) -> models.Event:
     """Logs the packet to the events table. Does not commit - ingest method that calls this should."""
     sweeper_id = sweeper.cid if sweeper is not None else None
     db_event = models.Event(
         sweeper_id=sweeper_id,
-        timestamp=datetime.datetime.now(),
+        timestamp=timestamp or datetime.datetime.now(),
         event_type=event.event_type,
         data=event.json().replace('\x00', '')  # remove any null bytes that might sneak in somehow
     )
@@ -185,13 +189,13 @@ def ingest_wardinfo(
         db: Session,
         wardinfo: schemas.ffxiv.HousingWardInfo,
         sweeper: Optional[schemas.paissa.JWTSweeper]) -> models.WardSweep:
-    event = _ingest(db, wardinfo, sweeper)
+    event = _ingest(db, wardinfo, sweeper, timestamp=wardinfo.ServerTimestamp)
     db_wardsweep = models.WardSweep(
         sweeper_id=event.sweeper_id,
         world_id=wardinfo.LandIdent.WorldId,
         territory_type_id=wardinfo.LandIdent.TerritoryTypeId,
         ward_number=wardinfo.LandIdent.WardNumber,
-        timestamp=event.timestamp,
+        timestamp=wardinfo.ServerTimestamp,
         event=event
     )
 
@@ -205,7 +209,7 @@ def ingest_wardinfo(
             territory_type_id=wardinfo.LandIdent.TerritoryTypeId,
             ward_number=wardinfo.LandIdent.WardNumber,
             plot_number=i,
-            timestamp=event.timestamp,
+            timestamp=wardinfo.ServerTimestamp,
             # plot info
             is_owned=is_owned,
             has_built_house=bool(plot.InfoFlags & schemas.ffxiv.HousingFlags.HouseBuilt),
@@ -222,7 +226,7 @@ def ingest_wardinfo(
     db.add(db_wardsweep)
     db.add_all(plots)
     db.commit()
-    db.refresh(db_wardsweep)
+    # db.refresh(db_wardsweep)  # id is populated already >:c
     # evict stale cache entry
     district_plot_cache.pop((db_wardsweep.world_id, db_wardsweep.territory_type_id), None)
     return db_wardsweep

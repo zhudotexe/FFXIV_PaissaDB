@@ -2,6 +2,7 @@
 Schemas defined by FFXIV game code.
 See https://github.com/zhudotexe/FFXIV_PaissaHouse/tree/main/Structures
 """
+import datetime
 import enum
 
 from pydantic import BaseModel, conlist, constr
@@ -42,3 +43,5 @@ class HousingWardInfo(BaseFFXIVPacket):
 
     LandIdent: LandIdent
     HouseInfoEntries: conlist(HouseInfoEntry, min_items=60, max_items=60)
+    ClientTimestamp: datetime.datetime
+    ServerTimestamp: datetime.datetime
