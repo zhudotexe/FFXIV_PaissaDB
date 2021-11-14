@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from contextvars import ContextVar
 from typing import List, Optional
 
 from fastapi import WebSocket
@@ -14,7 +15,7 @@ log = logging.getLogger(__name__)
 
 pubsub = redis.pubsub()
 clients: List[WebSocket] = []
-broadcast_process_queue = asyncio.Queue()
+broadcast_process_queue = ContextVar('broadcast_process_queue')
 
 
 # ==== lifecycle ====
@@ -46,7 +47,8 @@ async def ping(websocket: WebSocket, delay=60):
 
 # ==== processing tasks ====
 async def queue_wardsweep_for_processing(wardsweep: models.WardSweep):
-    await broadcast_process_queue.put(wardsweep.id)
+    q = broadcast_process_queue.get()
+    await q.put(wardsweep.id)
 
 
 async def broadcast_listener():
@@ -74,10 +76,12 @@ async def broadcast_listener():
 
 
 async def process_wardsweeps():
+    q = asyncio.Queue()
+    broadcast_process_queue.set(q)
     while True:
         try:
             with SessionLocal() as db:
-                sweep_id = await broadcast_process_queue.get()
+                sweep_id = await q.get()
                 wardsweep = await utils.executor(crud.get_wardsweep_by_id, db, sweep_id)
                 await broadcast_changes_in_wardsweep(db, wardsweep)
         except asyncio.CancelledError:
