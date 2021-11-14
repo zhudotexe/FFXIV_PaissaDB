@@ -47,11 +47,10 @@ metrics.register(app)
 # ==== HTTP ====
 @app.post("/wardInfo", status_code=202)
 def ingest_wardinfo(
-    wardinfo: schemas.ffxiv.HousingWardInfo,
-    background: BackgroundTasks,
-    sweeper: schemas.paissa.JWTSweeper = Depends(auth.required),
-    db: Session = Depends(get_db)
-):
+        wardinfo: schemas.ffxiv.HousingWardInfo,
+        background: BackgroundTasks,
+        sweeper: schemas.paissa.JWTSweeper = Depends(auth.required),
+        db: Session = Depends(get_db)):
     log.debug("Received wardInfo:")
     log.debug(wardinfo.json())
 
@@ -71,10 +70,9 @@ def ingest_wardinfo(
 
 @app.post("/hello")
 def hello(
-    data: schemas.paissa.Hello,
-    sweeper: schemas.paissa.JWTSweeper = Depends(auth.required),
-    db: Session = Depends(get_db)
-):
+        data: schemas.paissa.Hello,
+        sweeper: schemas.paissa.JWTSweeper = Depends(auth.required),
+        db: Session = Depends(get_db)):
     if sweeper.cid != data.cid:
         raise HTTPException(400, "Token CID and given CID do not match")
     log.debug("Received hello:")
@@ -161,6 +159,7 @@ def get_district_detail(world_id: int, district_id: int, db: Session = Depends(g
 # ==== WS ====
 @app.on_event("startup")
 async def connect_broadcast():
+    await ws.manager.connect()
     # this never gets cancelled explicitly, it's just killed when the app dies
     asyncio.create_task(ws.process_wardsweeps())
 
@@ -169,6 +168,7 @@ async def connect_broadcast():
 async def disconnect_broadcast():
     for client in ws.clients:
         await client.close(status.WS_1012_SERVICE_RESTART)
+    await ws.manager.disconnect()
 
 
 @app.websocket("/ws")
