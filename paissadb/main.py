@@ -162,6 +162,7 @@ def get_district_detail(world_id: int, district_id: int, db: Session = Depends(g
 @app.on_event("startup")
 async def connect_broadcast():
     # this never gets cancelled explicitly, it's just killed when the app dies
+    asyncio.create_task(ws.broadcast_listener())
     asyncio.create_task(ws.process_wardsweeps())
 
 

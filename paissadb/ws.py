@@ -23,18 +23,11 @@ async def connect(db: Session, websocket: WebSocket, user: Optional[schemas.pais
     await websocket.accept()
     if user is not None:
         await utils.executor(crud.touch_sweeper_by_id, db, user.cid)
-
-    task = asyncio.gather(
-        ping(websocket),
-        listener(websocket)
-    )
+    clients.append(websocket)
     try:
-        clients.append(websocket)
-        await task
-    except ConnectionClosed as e:
-        log.info(f"WS disconnected ({e.code}: {e.reason}): {websocket.client!r}")
+        await ping(websocket)
+    finally:
         clients.remove(websocket)
-        task.cancel()
 
 
 # ==== websocket tasks ====
@@ -44,30 +37,40 @@ async def ping(websocket: WebSocket, delay=60):
         try:
             await websocket.send_text('{"type": "ping"}')  # save a bit of time by having this pre-serialized
             await asyncio.sleep(delay)
+        except ConnectionClosed as e:
+            log.info(f"WS disconnected ({e.code}: {e.reason}): {websocket.client!r}")
+            return
         except asyncio.CancelledError:
-            break
+            return
 
 
-async def listener(websocket: WebSocket):
-    """Sends all messages received over the broadcast manager to the given websocket."""
+# ==== processing tasks ====
+async def queue_wardsweep_for_processing(wardsweep: models.WardSweep):
+    await broadcast_process_queue.put(wardsweep.id)
+
+
+async def broadcast_listener():
+    """Sends all messages received over the broadcast manager to all connected websockets."""
     await pubsub.subscribe(CHANNEL)
     while True:
         try:
-            await asyncio.sleep(0.01)
             message = pubsub.handle_message(
                 await pubsub.parse_response(block=True),
                 ignore_subscribe_messages=True
             )
             if message is None:
                 continue
-            await websocket.send_text(message['data'].decode())
+            data = message['data'].decode()
+            # we do this instead of iterating over the clients for concurrency and so the clients list cannot
+            # change during our iteration
+            # we don't care about bad connections here, the ping will clean those up
+            await asyncio.gather(*(websocket.send_text(data) for websocket in clients), return_exceptions=True)
         except asyncio.CancelledError:
             break
-
-
-# ==== processing tasks ====
-async def queue_wardsweep_for_processing(wardsweep: models.WardSweep):
-    await broadcast_process_queue.put(wardsweep.id)
+        except Exception:
+            log.exception("Failed to broadcast received data:")
+        finally:
+            await asyncio.sleep(0.01)
 
 
 async def process_wardsweeps():
