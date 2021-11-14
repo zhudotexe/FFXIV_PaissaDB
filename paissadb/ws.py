@@ -47,7 +47,13 @@ async def ping(websocket: WebSocket, delay=60):
 
 # ==== processing tasks ====
 async def queue_wardsweep_for_processing(wardsweep: models.WardSweep):
-    q = broadcast_process_queue.get()
+    try:
+        q = broadcast_process_queue.get()
+    except LookupError:
+        # well man idk
+        # sucks
+        log.warning("tried to queue up a wardsweep for processing but the queue isn't initialized yet")
+        return
     await q.put(wardsweep.id)
 
 
