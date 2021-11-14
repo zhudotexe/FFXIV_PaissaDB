@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from contextvars import ContextVar
+import queue
 from typing import List, Optional
 
 from fastapi import WebSocket
@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 
 pubsub = redis.pubsub()
 clients: List[WebSocket] = []
-broadcast_process_queue = ContextVar('broadcast_process_queue')
+broadcast_process_queue = queue.Queue()
 
 
 # ==== lifecycle ====
@@ -47,14 +47,7 @@ async def ping(websocket: WebSocket, delay=60):
 
 # ==== processing tasks ====
 async def queue_wardsweep_for_processing(wardsweep: models.WardSweep):
-    try:
-        q = broadcast_process_queue.get()
-    except LookupError:
-        # well man idk
-        # sucks
-        log.warning("tried to queue up a wardsweep for processing but the queue isn't initialized yet")
-        return
-    await q.put(wardsweep.id)
+    broadcast_process_queue.put(wardsweep.id, block=False)
 
 
 async def broadcast_listener():
@@ -82,16 +75,16 @@ async def broadcast_listener():
 
 
 async def process_wardsweeps():
-    q = asyncio.Queue()
-    broadcast_process_queue.set(q)
     while True:
         try:
+            sweep_id = broadcast_process_queue.get(block=False)
             with SessionLocal() as db:
-                sweep_id = await q.get()
                 wardsweep = await utils.executor(crud.get_wardsweep_by_id, db, sweep_id)
                 await broadcast_changes_in_wardsweep(db, wardsweep)
         except asyncio.CancelledError:
             break
+        except queue.Empty:
+            await asyncio.sleep(0.9)
         except Exception:
             log.exception("Failed to process wardsweep:")
         finally:
