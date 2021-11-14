@@ -1,8 +1,10 @@
+import aioredis
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
 from . import config
 
+# ==== sql ====
 engine_kwargs = {}
 
 if config.DB_TYPE == 'sqlite':
@@ -22,3 +24,7 @@ def get_db():
         yield db
     finally:
         db.close()
+
+
+# ==== redis ====
+redis = aioredis.from_url(config.REDIS_URI)

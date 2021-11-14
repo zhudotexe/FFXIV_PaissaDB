@@ -2,18 +2,17 @@ import asyncio
 import logging
 from typing import List, Optional
 
-from broadcaster import Broadcast
 from fastapi import WebSocket
 from sqlalchemy.orm import Session
 from websockets import ConnectionClosed
 
-from . import calc, config, crud, models, schemas, utils
-from .database import SessionLocal
+from . import calc, crud, models, schemas, utils
+from .database import SessionLocal, redis
 
 CHANNEL = "messages"
 log = logging.getLogger(__name__)
 
-manager = Broadcast(config.WS_BACKEND_URI)
+pubsub = redis.pubsub()
 clients: List[WebSocket] = []
 broadcast_process_queue = asyncio.Queue()
 
@@ -51,12 +50,19 @@ async def ping(websocket: WebSocket, delay=60):
 
 async def listener(websocket: WebSocket):
     """Sends all messages received over the broadcast manager to the given websocket."""
-    async with manager.subscribe(CHANNEL) as subscriber:
-        async for event in subscriber:
-            try:
-                await websocket.send_text(event.message)
-            except asyncio.CancelledError:
-                break
+    await pubsub.subscribe(CHANNEL)
+    while True:
+        try:
+            await asyncio.sleep(0.01)
+            message = pubsub.handle_message(
+                await pubsub.parse_response(block=True),
+                ignore_subscribe_messages=True
+            )
+            if message is None:
+                continue
+            await websocket.send_text(message['data'].decode())
+        except asyncio.CancelledError:
+            break
 
 
 # ==== processing tasks ====
@@ -83,7 +89,7 @@ async def process_wardsweeps():
 
 # ==== broadcasts ====
 async def broadcast(message: str):
-    await manager.publish(CHANNEL, message)
+    await redis.publish(CHANNEL, message)
 
 
 async def broadcast_changes_in_wardsweep(db: Session, wardsweep: models.WardSweep):
