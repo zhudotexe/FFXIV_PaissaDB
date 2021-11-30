@@ -134,6 +134,7 @@ def get_plot_states_before(
     #     ORDER BY plot_number, timestamp DESC;
     plot = models.Plot
     if config.DB_TYPE == 'postgresql':
+        db.execute("SET LOCAL work_mem = '32MB'")
         stmt = db.query(plot) \
             .distinct(plot.plot_number) \
             .filter(plot.world_id == world_id,

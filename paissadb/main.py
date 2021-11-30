@@ -52,9 +52,6 @@ def ingest_wardinfo(
     sweeper: schemas.paissa.JWTSweeper = Depends(auth.required),
     db: Session = Depends(get_db)
 ):
-    log.debug("Received wardInfo:")
-    log.debug(wardinfo.json())
-
     try:
         wardsweep = crud.ingest_wardinfo(db, wardinfo, sweeper)
     except sqlalchemy.exc.IntegrityError:

@@ -1,7 +1,7 @@
 #!/bin/bash
 # Dump the plots and events tables to stdout with maximum compression, and stream that to S3
 # compression 3/9 is used because holy cpu usage batman
-# cronjobbed to run daily at 7:15am UTC to avoid primetimes, only if disk usage > 60%
+# cronjobbed to run daily at 7:15am UTC to avoid primetimes, only if disk usage > 50%
 # cron: 15 7 * * * bash scripts/offload.sh
 # shellcheck disable=SC2181
 
@@ -9,7 +9,7 @@ diskUsage=$(printf "%d" $(df --output=pcent . | tail +2 | sed s/%//g))
 timestamp=$(date +%s)
 dir=$(dirname "$0")
 
-if [[ $diskUsage -lt 60 ]]; then
+if [[ $diskUsage -lt 50 ]]; then
   echo "Disk usage is at ${diskUsage}%, skipping offload"
   exit 0
 fi
