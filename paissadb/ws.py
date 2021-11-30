@@ -1,6 +1,6 @@
 import asyncio
 import logging
-import queue
+import multiprocessing
 from typing import List, Optional
 
 from fastapi import WebSocket
@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 
 pubsub = redis.pubsub()
 clients: List[WebSocket] = []
-broadcast_process_queue = queue.Queue()
+broadcast_process_queue = multiprocessing.Queue()
 
 
 # ==== lifecycle ====
@@ -74,26 +74,27 @@ async def broadcast_listener():
             await asyncio.sleep(0.01)
 
 
+# ==== multiprocessing entrypoint ====
+def sweep_processer_entrypoint():
+    asyncio.run(process_wardsweeps())
+
+
 async def process_wardsweeps():
     while True:
         try:
-            sweep_id = broadcast_process_queue.get(block=False)
+            sweep_id = broadcast_process_queue.get(block=True)
             with SessionLocal() as db:
                 wardsweep = await utils.executor(crud.get_wardsweep_by_id, db, sweep_id)
                 await broadcast_changes_in_wardsweep(db, wardsweep)
-        except asyncio.CancelledError:
+        except (asyncio.CancelledError, KeyboardInterrupt):
             break
-        except queue.Empty:
-            await asyncio.sleep(0.9)
         except Exception:
             log.exception("Failed to process wardsweep:")
         finally:
             # small delay to prevent task from hogging system resources
-            # historically this processes at ~4.3/s (0.23s/per), so this limits it to roughly 3/s
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(0.05)
 
 
-# ==== broadcasts ====
 async def broadcast(message: str):
     await redis.publish(CHANNEL, message)
 

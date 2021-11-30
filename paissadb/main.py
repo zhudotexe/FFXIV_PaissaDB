@@ -1,6 +1,7 @@
 import asyncio
 import datetime
 import logging
+import multiprocessing
 import sys
 from typing import Optional
 
@@ -160,7 +161,8 @@ def get_district_detail(world_id: int, district_id: int, db: Session = Depends(g
 async def connect_broadcast():
     # this never gets cancelled explicitly, it's just killed when the app dies
     asyncio.create_task(ws.broadcast_listener())
-    asyncio.create_task(ws.process_wardsweeps())
+    sweep_processor_process = multiprocessing.Process(target=ws.sweep_processer_entrypoint, daemon=True)
+    sweep_processor_process.start()
 
 
 @app.on_event("shutdown")
