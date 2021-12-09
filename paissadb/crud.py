@@ -1,9 +1,14 @@
+import hashlib
+import json
+import struct
 from typing import Iterator, List
 
+import aioredis.client
 from sqlalchemy import desc, func, update
 from sqlalchemy.orm import Session, aliased
 
-from common import config, models, schemas
+from common import config, models, schemas, utils
+from common.database import EVENT_QUEUE_KEY, TTL_ONE_HOUR, redis
 
 
 # ==== sweepers ====
@@ -97,7 +102,68 @@ def latest_plot_states_in_district(db: Session, world_id: int, district_id: int)
 
 
 # ==== ingest ====
-pass
+DATUM_KEY_STRUCT = struct.Struct("!IIHH32s")  # world: u32, district: u32, ward: u16, plot: u16, ownername: char[32]
+
+
+async def bulk_ingest(db: Session, data: List[schemas.ffxiv.BaseFFXIVPacket], sweeper: schemas.paissa.JWTSweeper):
+    sweeper_id = sweeper.cid if sweeper is not None else None
+    pipeline = redis.pipeline()
+
+    pipeline.multi()
+    for datum in data:
+        # add to postgres
+        db_event = models.Event(
+            sweeper_id=sweeper_id,
+            timestamp=datum.server_timestamp,
+            event_type=datum.event_type,
+            data=datum.json().replace('\x00', '')  # remove any null bytes that might sneak in somehow
+        )
+        db.add(db_event)
+
+        # add to redis - switch on event type
+        if isinstance(datum, schemas.ffxiv.HousingWardInfo):
+            await _ingest_wardinfo(pipeline, datum)
+        else:
+            raise ValueError(f"Unknown event type: {datum.event_type}")
+    await pipeline.execute()
+    await utils.executor(db.commit)
+
+
+async def _ingest_wardinfo(pipeline: aioredis.client.Pipeline, wardinfo: schemas.ffxiv.HousingWardInfo):
+    world_id = wardinfo.LandIdent.WorldId
+    district_id = wardinfo.LandIdent.TerritoryTypeId
+    ward_num = wardinfo.LandIdent.WardNumber
+    server_timestamp = wardinfo.server_timestamp
+    for plot_num, plot in enumerate(wardinfo.HouseInfoEntries):
+        is_owned = bool(plot.InfoFlags & schemas.ffxiv.HousingFlags.PlotOwned)
+        owner_name = plot.EstateOwnerName if is_owned else ""
+        key_data = DATUM_KEY_STRUCT.pack(world_id, district_id, ward_num, plot_num, owner_name.encode())
+        hashed = hashlib.sha256(key_data).hexdigest()
+        plot_data_key = f"event.wardinfo.plot:{hashed}"
+        # state_entry = schemas.paissa.PlotStateEntry(
+        #     world_id=world_id,
+        #     district_id=district_id,
+        #     ward_num=ward_num,
+        #     plot_num=plot_num,
+        #     timestamp=server_timestamp,
+        #     price=plot.HousePrice,
+        #     owner_name=owner_name or None,
+        #     is_fcfs=True
+        # )
+        # using pydantic here is really slow so we just make the dict ourselves
+        state_entry = dict(
+            world_id=world_id,
+            district_id=district_id,
+            ward_num=ward_num,
+            plot_num=plot_num,
+            timestamp=server_timestamp,
+            price=plot.HousePrice,
+            owner_name=owner_name or None,
+            is_fcfs=True
+        )
+
+        await pipeline.set(plot_data_key, json.dumps(state_entry), nx=True, ex=TTL_ONE_HOUR)
+        await pipeline.zadd(EVENT_QUEUE_KEY, {plot_data_key: server_timestamp}, nx=True)
 
 # def get_plots_by_ids(db: Session, plot_ids: List[int]) -> List[models.Plot]:
 #     return db.query(models.Plot).filter(models.Plot.id.in_(plot_ids)).all()

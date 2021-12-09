@@ -11,7 +11,7 @@ from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 from sqlalchemy.orm import Session
 
-from common import config, gamedata, models, schemas
+from common import config, gamedata, models, schemas, utils
 from common.database import SessionLocal, engine, get_db
 from . import auth, calc, crud, metrics, ws
 
@@ -48,18 +48,21 @@ metrics.register(app)
 @app.post("/wardInfo", status_code=202)
 async def ingest_wardinfo(
     wardinfo: schemas.ffxiv.HousingWardInfo,
-    sweeper: schemas.paissa.JWTSweeper = Depends(auth.required)
+    sweeper: schemas.paissa.JWTSweeper = Depends(auth.required),
+    db: Session = Depends(get_db)
 ):
     """Legacy single-ward ingest endpoint - use /ingest instead"""
-    return await bulk_ingest([wardinfo], sweeper)
+    return await bulk_ingest([wardinfo], sweeper, db)
 
 
 @app.post("/ingest", status_code=202)
 async def bulk_ingest(
     data: List[schemas.ffxiv.BaseFFXIVPacket],
-    sweeper: schemas.paissa.JWTSweeper = Depends(auth.required)
+    sweeper: schemas.paissa.JWTSweeper = Depends(auth.required),
+    db: Session = Depends(get_db)
 ):
-    await crud.bulk_ingest(data, sweeper)
+    await crud.bulk_ingest(db, data, sweeper)
+    await utils.executor(crud.touch_sweeper_by_id, db, sweeper.cid)
     return {"message": "OK", "accepted": len(data)}
 
 

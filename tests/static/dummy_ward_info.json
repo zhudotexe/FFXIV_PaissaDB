@@ -1,4 +1,7 @@
 {
+  "event_type": "HOUSING_WARD_INFO",
+  "client_timestamp": 0,
+  "server_timestamp": 0,
   "LandIdent": {
     "LandId": 0,
     "WardNumber": 0,

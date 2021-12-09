@@ -3,6 +3,7 @@ Schemas defined by FFXIV game code.
 See https://github.com/zhudotexe/FFXIV_PaissaHouse/tree/main/Structures
 """
 import enum
+from typing import Optional, Tuple
 
 from pydantic import BaseModel, conlist, constr
 

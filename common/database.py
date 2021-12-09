@@ -28,4 +28,5 @@ def get_db():
 
 # ==== redis ====
 EVENT_QUEUE_KEY = "events_pq"
+TTL_ONE_HOUR = 3600
 redis = aioredis.from_url(config.REDIS_URI)

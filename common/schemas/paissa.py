@@ -17,6 +17,20 @@ class JWTSweeper(BaseModel):
     cid: Optional[int]
 
 
+# ==== internal ====
+class PlotStateEntry(BaseModel):
+    """Model used to store some plot data in redis for later processing"""
+    world_id: int
+    district_id: int
+    ward_num: int
+    plot_num: int
+    timestamp: float
+    price: int  # todo(6.1): yeet
+    owner_name: Optional[str]
+    is_fcfs: bool
+    lotto_entries: Optional[int]
+
+
 # ==== outputs ====
 # --- summary ---
 class WorldSummary(BaseModel):
