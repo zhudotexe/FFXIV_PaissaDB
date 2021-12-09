@@ -18,32 +18,25 @@ If the transition was an opening, pair it with the next chronological sale. Use 
 * Note: This script was able to lock all 8 cores of an i9-9900K at 100% for ~20 minutes. I recommend running this on
   a very capable computer.
 """
+import multiprocessing
 import os
 import sys
 import time
 
 from stats.utils import PlotSale
 
-# set working tz to UTC, if on Windows you should do this system-wide in time settings
-if sys.platform != 'win32':
-    os.environ['TZ'] = 'Etc/UTC'
-    time.tzset()
-else:
-    input("Make sure your system clock is set to UTC! (Press enter to continue)")
-
 import csv
 import datetime
 from contextlib import contextmanager
 import threading
-import queue
 
 from paissadb import calc, crud, models
 from paissadb.database import SessionLocal
 
 # threading: setting this to 1 on slower systems and (num cpus) on faster systems is generally fine
-NUM_THREADS = 1
-district_q = queue.Queue()
-sale_q = queue.Queue()
+NUM_THREADS = 8
+district_q = multiprocessing.JoinableQueue()
+sale_q = multiprocessing.JoinableQueue()
 
 
 # ==== helpers ====
@@ -121,43 +114,51 @@ def queue_processing():
                 district_q.put((world.id, district.id))
 
 
-def t_processor():
+def t_processor(dq, sq):
+    process = multiprocessing.current_process()
     while True:
-        world_id, district_id = district_q.get()
+        world_id, district_id = dq.get()
         with SessionLocal() as db:
             district = crud.get_district_by_id(db, district_id)
             world = crud.get_world_by_id(db, world_id)
-            with timer(f'T-{threading.get_ident()}', f'{world_id}-{district_id} ({world.name}, {district.name})'):
+            with timer(f'{process.name}', f'{world_id}-{district_id} ({world.name}, {district.name})'):
                 latest_plots = crud.get_latest_plots_in_district(db, world_id, district_id)
                 for plot in latest_plots:
                     statter = SaleStatGenerator(db, plot)
                     for result in statter.do_stats():
-                        sale_q.put(result)
-        district_q.task_done()
+                        sq.put(result)
+        dq.task_done()
 
 
-def t_writer():
+def t_writer(sq):
     with open('sales.csv', 'w', newline='') as f:
         writer = csv.DictWriter(f, fieldnames=PlotSale.__fields__.keys())
         writer.writeheader()
         while True:
-            plot_sale = sale_q.get()
+            plot_sale = sq.get()
             writer.writerow(plot_sale.dict())
-            sale_q.task_done()
+            sq.task_done()
 
 
 def run():
+    # set working tz to UTC, if on Windows you should do this system-wide in time settings
+    if sys.platform != 'win32':
+        os.environ['TZ'] = 'Etc/UTC'
+        time.tzset()
+    else:
+        input("Make sure your system clock is set to UTC! (Press enter to continue)")
+
     threads = []
     queue_processing()
 
     # launch worker threads
     for _ in range(NUM_THREADS):
-        t = threading.Thread(target=t_processor, daemon=True)
+        t = multiprocessing.Process(target=t_processor, args=(district_q, sale_q), daemon=True)
         t.start()
         threads.append(t)
 
     # launch writer thread
-    t = threading.Thread(target=t_writer, daemon=True)
+    t = multiprocessing.Process(target=t_writer, args=(sale_q,), daemon=True)
     t.start()
     threads.append(t)
 
