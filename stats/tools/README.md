@@ -6,7 +6,9 @@ from cold storage for analysis.
 Note: `<host>` can be `paissadb` if running postgres locally or a postgres uri, like
 `postgresql://prism.lan:5432/paissadb`.
 
-Last data timestamp imported: `paissadb-data-1635294301.sql`
+Last data timestamp imported: `paissadb-data-1638477984.sql`
+
+Last pre-Endwalker data: `paissadb-data-1638477984.sql`
 
 ## 1st Time Import
 
@@ -27,6 +29,12 @@ Append data from new files to existing tables, deduplicating rows.
 
 ```bash
 psql <host> -1 -f prepare-append.sql
-psql <host> -1 -c 'set session_replication_role = replica;' -f paissadb-data-(...).sql
+psql <host> -1 -c "set session_replication_role = replica;" -f paissadb-data-(...).sql
 psql <host> -1 -f finalize-append.sql
+```
+
+## Big Dump
+
+```bash
+pg_dump --data-only --no-owner -t plots -t events -v -F custom -Z 9 -f paissadb-data-shadowbringers.dump paissadb
 ```
