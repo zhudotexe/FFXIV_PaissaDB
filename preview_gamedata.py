@@ -3,7 +3,7 @@ Used to preview the rows that will be upserted upon server start.
 """
 import os
 
-from paissadb import gamedata
+from common import gamedata
 
 
 def print_orm_model(o):

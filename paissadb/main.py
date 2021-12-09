@@ -1,7 +1,5 @@
 import asyncio
-import datetime
 import logging
-import multiprocessing
 import sys
 from typing import List, Optional
 
@@ -13,9 +11,11 @@ from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 from sqlalchemy.orm import Session
 
-from . import auth, calc, config, crud, gamedata, metrics, models, schemas, ws
-from .database import SessionLocal, engine, get_db
+from common import config, gamedata, models, schemas
+from common.database import SessionLocal, engine, get_db
+from . import auth, calc, crud, metrics, ws
 
+# todo move this to the worker
 models.Base.metadata.create_all(bind=engine)
 with SessionLocal() as sess:
     gamedata.upsert_all(gamedata_dir=config.GAMEDATA_DIR, db=sess)
@@ -59,7 +59,8 @@ async def bulk_ingest(
     data: List[schemas.ffxiv.BaseFFXIVPacket],
     sweeper: schemas.paissa.JWTSweeper = Depends(auth.required)
 ):
-    return {"message": "OK"}
+    await crud.bulk_ingest(data, sweeper)
+    return {"message": "OK", "accepted": len(data)}
 
 
 @app.post("/hello")
@@ -77,97 +78,46 @@ def hello(
     return {"message": "OK"}
 
 
-@app.get("/worlds")  # response_model=List[schemas.paissa.WorldSummary])
+@app.get("/worlds", response_model=List[schemas.paissa.WorldSummary])
 def list_worlds(db: Session = Depends(get_db)):
-    return schemas.paissa.TemporarilyDisabled(
-        message="This endpoint is temporarily disabled due to high server load.",
-        indefinite=True
-    )
-
-    # worlds = crud.get_worlds(db)
-    # districts = crud.get_districts(db)
-    #
-    # out = []
-    # for world in worlds:
-    #     district_summaries = []
-    #     for district in districts:
-    #         latest_plots = crud.get_latest_plots_in_district(db, world.id, district.id, use_cache=True)
-    #         num_open_plots = sum(1 for p in latest_plots if not p.is_owned)
-    #         oldest_plot_time = min(p.timestamp for p in latest_plots) \
-    #             if latest_plots else datetime.datetime.fromtimestamp(0)
-    #         district_summaries.append(
-    #             schemas.paissa.DistrictSummary(
-    #                 id=district.id,
-    #                 name=district.name,
-    #                 num_open_plots=num_open_plots,
-    #                 oldest_plot_time=oldest_plot_time
-    #             )
-    #         )
-    #     out.append(
-    #         schemas.paissa.WorldSummary(
-    #             id=world.id,
-    #             name=world.name,
-    #             districts=district_summaries,
-    #             num_open_plots=sum(d.num_open_plots for d in district_summaries),
-    #             oldest_plot_time=min(d.oldest_plot_time for d in district_summaries)
-    #         )
-    #     )
-    # return out
+    worlds = crud.get_worlds(db)
+    out = []
+    for world in worlds:
+        out.append(schemas.paissa.WorldSummary(id=world.id, name=world.name))
+    return out
 
 
-@app.get("/worlds/{world_id}")  # , response_model=schemas.paissa.WorldDetail)
+@app.get("/worlds/{world_id}", response_model=schemas.paissa.WorldDetail)
 def get_world(world_id: int, db: Session = Depends(get_db)):
-    return schemas.paissa.TemporarilyDisabled(
-        message="This endpoint is temporarily disabled due to high server load.",
-        indefinite=True
+    world = crud.get_world_by_id(db, world_id)
+    districts = crud.get_districts(db)
+    if world is None:
+        raise HTTPException(404, "World not found")
+
+    district_details = []
+    for district in districts:
+        district_details.append(calc.get_district_detail(db, world, district))
+
+    return schemas.paissa.WorldDetail(
+        id=world.id,
+        name=world.name,
+        districts=district_details,
+        num_open_plots=sum(d.num_open_plots for d in district_details),
+        oldest_plot_time=min(d.oldest_plot_time for d in district_details)
     )
 
-    # world = crud.get_world_by_id(db, world_id)
-    # districts = crud.get_districts(db)
-    # if world is None:
-    #     raise HTTPException(404, "World not found")
-    #
-    # district_details = []
-    # for district in districts:
-    #     district_details.append(calc.get_district_detail(db, world, district))
-    #
-    # return schemas.paissa.WorldDetail(
-    #     id=world.id,
-    #     name=world.name,
-    #     districts=district_details,
-    #     num_open_plots=sum(d.num_open_plots for d in district_details),
-    #     oldest_plot_time=min(d.oldest_plot_time for d in district_details)
-    # )
 
-
-@app.get("/worlds/{world_id}/{district_id}")  # , response_model=schemas.paissa.DistrictDetail)
+@app.get("/worlds/{world_id}/{district_id}", response_model=schemas.paissa.DistrictDetail)
 def get_district_detail(world_id: int, district_id: int, db: Session = Depends(get_db)):
-    return schemas.paissa.TemporarilyDisabled(
-        message="This endpoint is temporarily disabled due to high server load.",
-        indefinite=True
-    )
+    world = crud.get_world_by_id(db, world_id)
+    district = crud.get_district_by_id(db, district_id)
+    if world is None or district is None:
+        raise HTTPException(404, "World not found")
 
-    # world = crud.get_world_by_id(db, world_id)
-    # district = crud.get_district_by_id(db, district_id)
-    # if world is None or district is None:
-    #     raise HTTPException(404, "World not found")
-    #
-    # return calc.get_district_detail(db, world, district)
+    return calc.get_district_detail(db, world, district)
 
 
 # ==== WS ====
-@app.on_event("startup")
-async def connect_broadcast():
-    # this never gets cancelled explicitly, it's just killed when the app dies
-    asyncio.create_task(ws.broadcast_listener())
-
-
-@app.on_event("shutdown")
-async def disconnect_broadcast():
-    for client in ws.clients:
-        await client.close(status.WS_1012_SERVICE_RESTART)
-
-
 @app.websocket("/ws")
 async def plot_updates(websocket: WebSocket, jwt: Optional[str] = None, db: Session = Depends(get_db)):
     if jwt is None:
@@ -182,3 +132,17 @@ async def plot_updates(websocket: WebSocket, jwt: Optional[str] = None, db: Sess
         return
 
     await ws.connect(db, websocket, sweeper)
+
+
+# ==== lifecycle ====
+@app.on_event("startup")
+async def on_startup():
+    # this never gets cancelled explicitly, it's just killed when the app dies
+    asyncio.create_task(ws.broadcast_listener())
+    asyncio.create_task(metrics.event_queue_task())
+
+
+@app.on_event("shutdown")
+async def on_shutdown():
+    for client in ws.clients:
+        await client.close(status.WS_1012_SERVICE_RESTART)

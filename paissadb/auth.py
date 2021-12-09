@@ -3,7 +3,7 @@ from typing import Optional
 import jwt
 from fastapi import HTTPException, Header
 
-from . import config, schemas
+from common import config, schemas
 
 
 def maybe(authorization: Optional[str] = Header(None)) -> Optional[schemas.paissa.JWTSweeper]:
@@ -23,7 +23,9 @@ def required(authorization: str = Header(None)) -> schemas.paissa.JWTSweeper:
 
 
 def decode_token(token: str) -> schemas.paissa.JWTSweeper:
-    claim = jwt.decode(token, key=config.JWT_SECRET_PAISSAHOUSE, algorithms=['HS256'],
-                       options={'verify_aud': True, 'verify_iss': True},
-                       audience=config.JWT_AUDIENCES, issuer=config.JWT_ISSUER)
+    claim = jwt.decode(
+        token, key=config.JWT_SECRET_PAISSAHOUSE, algorithms=['HS256'],
+        options={'verify_aud': True, 'verify_iss': True},
+        audience=config.JWT_AUDIENCES, issuer=config.JWT_ISSUER
+    )
     return schemas.paissa.JWTSweeper(**claim)

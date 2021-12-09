@@ -18,20 +18,18 @@ If the transition was an opening, pair it with the next chronological sale. Use 
 * Note: This script was able to lock all 8 cores of an i9-9900K at 100% for ~20 minutes. I recommend running this on
   a very capable computer.
 """
+import csv
+import datetime
 import multiprocessing
 import os
 import sys
 import time
-
-from stats.utils import PlotSale
-
-import csv
-import datetime
 from contextlib import contextmanager
-import threading
 
-from paissadb import calc, crud, models
-from paissadb.database import SessionLocal
+from common import models
+from common.database import SessionLocal
+from paissadb import calc, crud
+from stats.utils import PlotSale
 
 # threading: setting this to 1 on slower systems and (num cpus) on faster systems is generally fine
 NUM_THREADS = 8
@@ -60,8 +58,10 @@ def is_new_owner(db, plot, sale_details):
     # time to make a chonky query (~1500ms cold)
     owned = db.query(models.Plot) \
         .filter(models.Plot.world_id == plot.world_id) \
-        .filter(models.Plot.timestamp < sale_details.est_time_sold_min,
-                models.Plot.timestamp >= sale_details.est_time_sold_min - datetime.timedelta(days=7)) \
+        .filter(
+        models.Plot.timestamp < sale_details.est_time_sold_min,
+        models.Plot.timestamp >= sale_details.est_time_sold_min - datetime.timedelta(days=7)
+    ) \
         .filter(models.Plot.owner_name == plot.owner_name) \
         .count()
 

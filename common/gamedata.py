@@ -4,7 +4,7 @@ import os
 
 from sqlalchemy.orm import Session
 
-from . import models
+from common import models
 
 log = logging.getLogger(__name__)
 
@@ -55,7 +55,7 @@ def generate_districts(gamedata_dir):
         340: 1,  # Lavender Beds
         341: 2,  # Goblet
         641: 3,  # Shirogane
-        886: 4,  # Firmament (fixme may change for 6.1?)
+        886: 4,  # Firmament todo 6.0 update me
     }
     place_names = {int(p['#']): p['Name'] for p in read_csv(os.path.join(gamedata_dir, 'PlaceName.csv'))}
 

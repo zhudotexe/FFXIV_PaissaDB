@@ -113,7 +113,7 @@ class PlotState(Base):
     plot_info = relationship("PlotInfo", viewonly=True)
 
     @property
-    def num_devals(self) -> Optional[int]:  # todo 6.1: delete me
+    def num_devals(self) -> Optional[int]:  # todo(6.1): delete me
         """
         Returns the number of price this house has devalued. If the price is unknown, returns None.
         If price>max, returns 0.

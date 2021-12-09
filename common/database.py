@@ -2,7 +2,7 @@ import aioredis
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
-from . import config
+from common import config
 
 # ==== sql ====
 engine_kwargs = {}
@@ -27,4 +27,5 @@ def get_db():
 
 
 # ==== redis ====
+EVENT_QUEUE_KEY = "events_pq"
 redis = aioredis.from_url(config.REDIS_URI)

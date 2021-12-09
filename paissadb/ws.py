@@ -6,8 +6,9 @@ from fastapi import WebSocket
 from sqlalchemy.orm import Session
 from websockets import ConnectionClosed
 
-from . import crud, schemas, utils
-from .database import redis
+from common import schemas, utils
+from common.database import redis
+from . import crud
 
 CHANNEL = "messages"
 log = logging.getLogger(__name__)
@@ -24,6 +25,9 @@ class WebsocketClient:
         if self.anonymous:
             await asyncio.sleep(120)  # 2-minute delay for anonymous clients
         await self.conn.send_text(data)
+
+    async def close(self, code=1000):
+        return await self.conn.close(code)
 
 
 clients: List[WebsocketClient] = []

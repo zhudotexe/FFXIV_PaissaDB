@@ -19,19 +19,9 @@ class JWTSweeper(BaseModel):
 
 # ==== outputs ====
 # --- summary ---
-class DistrictSummary(BaseModel):
-    id: int
-    name: str
-    num_open_plots: int
-    oldest_plot_time: float
-
-
 class WorldSummary(BaseModel):
     id: int
     name: str
-    districts: List[DistrictSummary]
-    num_open_plots: int
-    oldest_plot_time: float
 
 
 # --- detail ---
@@ -47,12 +37,18 @@ class OpenPlotDetail(BaseModel):
     est_time_open_max: float
 
 
-class DistrictDetail(DistrictSummary):
+class DistrictDetail(BaseModel):
+    id: int
+    name: str
+    num_open_plots: int
+    oldest_plot_time: float
     open_plots: List[OpenPlotDetail]
 
 
 class WorldDetail(WorldSummary):
     districts: List[DistrictDetail]
+    num_open_plots: int
+    oldest_plot_time: float
 
 
 class SoldPlotDetail(BaseModel):

@@ -6,7 +6,7 @@ import enum
 
 from pydantic import BaseModel, conlist, constr
 
-from .. import models
+from common import models
 
 
 # ---- substructures ----
