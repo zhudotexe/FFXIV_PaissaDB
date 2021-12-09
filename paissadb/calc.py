@@ -11,13 +11,14 @@ from . import crud, models, schemas
 DEVALUE_TIME = datetime.time(hour=2, tzinfo=datetime.timezone(datetime.timedelta(hours=9)))
 DEVALUE_TIME_NAIVE = datetime.datetime.combine(datetime.date.today(), DEVALUE_TIME).astimezone(None).time()
 HOURS_PER_DEVAL = 6  # after 1st deval, 1 deval every 6 hours
+SECONDS_IN_DAY = 60 * 60 * 24
 
 log = logging.getLogger(__name__)
 
 
 def get_district_detail(db: Session, world: models.World, district: models.District) -> schemas.paissa.DistrictDetail:
     """Gets the district detail for a given district in a world."""
-    latest_plots = crud.get_latest_plot_states_in_district(db, world.id, district.id)
+    latest_plots = crud.latest_plot_states_in_district(db, world.id, district.id)
     num_open_plots = sum(1 for p in latest_plots if not p.is_owned)
     oldest_plot_time = min(p.timestamp for p in latest_plots) if latest_plots else 0
     open_plots = []
@@ -40,57 +41,67 @@ def get_district_detail(db: Session, world: models.World, district: models.Distr
 def open_plot_detail(
     db: Session,
     plot: models.PlotState,
-    now: datetime.datetime = None
+    now: float = None,
+    devalue_aware=True
 ) -> schemas.paissa.OpenPlotDetail:
     """
     Gets the current plot detail for a plot given the current state of the plot (assumed to be open).
     """
-    log.debug(f"Calculating open plot detail for {plot.district.name} {plot.ward_number}-{plot.plot_number}")
-
-    last_known_price_i = (plot.house_price, plot.timestamp)
-    last_known_devals_i = (plot.num_devals, plot.timestamp)
-    est_time_open_max = plot.timestamp
     if now is None:
         now = time.time()
+    log.debug(f"Calculating open plot detail for {plot.district.name} {plot.ward_number}-{plot.plot_number}")
 
-    for ph in crud.plot_history(db, plot, before=plot.timestamp):
-        log.debug(ph.timestamp)
-        last_known_price, _ = last_known_price_i
-        # fill in any attrs that we don't know yet
-        if last_known_price is None:
-            last_known_price_i = (ph.house_price, ph.timestamp)
-            last_known_devals_i = (ph.num_devals, ph.timestamp)
+    last_known_price_i = (plot.last_seen_price, plot.last_seen)
+    last_known_devals_i = (plot.num_devals, plot.last_seen)
+    est_time_open_max = plot.last_seen
 
-        # if the house was owned then, the earliest it could be open is instantaneously after then
-        # also if the price decreases going back in history, there was a relo
-        # or if the price should have increased but didn't (some relo happened between sweeps)
-        price_decreased = last_known_price is not None \
-                          and ph.house_price is not None \
-                          and ph.house_price < last_known_price
-        price_did_not_increase = last_known_price is not None \
-                                 and ph.house_price is not None \
-                                 and ph.house_price == last_known_price \
-                                 and dt_range_contains_time(ph.timestamp, est_time_open_max, DEVALUE_TIME_NAIVE)
-        if ph.is_owned or price_decreased or price_did_not_increase:
-            est_time_open_min = ph.timestamp
+    for ph in crud.historical_plot_state(db, plot, before=plot.id, yield_per=1):
+        if devalue_aware:
+            last_known_price, _ = last_known_price_i
+            # fill in any attrs that we don't know yet
+            if last_known_price is None:
+                last_known_price_i = (ph.last_seen_price, ph.last_seen)
+                last_known_devals_i = (ph.num_devals, ph.last_seen)
+
+            # if the house was owned then, the earliest it could be open is instantaneously after then
+            # also if the price decreases going back in history, there was a relo
+            # or if the price should have increased but didn't (some relo happened between sweeps)
+            price_decreased = (last_known_price is not None
+                               and ph.last_seen_price is not None
+                               and ph.last_seen_price < last_known_price)
+            price_did_not_increase = (last_known_price is not None
+                                      and ph.last_seen_price is not None
+                                      and ph.last_seen_price == last_known_price
+                                      and dt_range_contains_time(ph.last_seen, est_time_open_max, DEVALUE_TIME_NAIVE))
+
+            if ph.is_owned or price_decreased or price_did_not_increase:
+                est_time_open_min = ph.last_seen
+                break
+        elif ph.is_owned:
+            est_time_open_min = ph.last_seen
             break
-
         # otherwise the latest it could have opened was the instant before the last time it was closed
-        est_time_open_max = ph.timestamp
+        # this should not be reachable
+        est_time_open_max = ph.first_seen
     else:
-        # the plot has been open for as long as we've known it, so could be whenever, the devalue calc will get it
-        est_time_open_min = datetime.datetime.fromtimestamp(0)
+        # the plot has been open for as long as we've known it, so could be whenever
+        est_time_open_min = 0
 
-    # add any devalues we know happened since we last got data on this plot, but haven't confirmed
-    last_known_price, _ = last_known_price_i
-    last_known_devals, last_known_devals_time = last_known_devals_i
-    est_num_devals = (last_known_devals or 0) + num_missed_devals(last_known_devals, last_known_devals_time, when=now)
+    if devalue_aware:
+        # add any devalues we know happened since we last got data on this plot, but haven't confirmed
+        last_known_price, _ = last_known_price_i
+        last_known_devals, last_known_devals_time = last_known_devals_i
+        est_num_devals = (last_known_devals or 0) + num_missed_devals(
+            last_known_devals,
+            last_known_devals_time,
+            when=now
+        )
 
-    # ensure that the min open time/max open time is sane for the number of devals
-    early = earliest_possible_open_time(est_num_devals, now)
-    late = early + datetime.timedelta(days=1)
-    est_time_open_min = max(est_time_open_min, early)
-    est_time_open_max = min(est_time_open_max, late)
+        # ensure that the min open time/max open time is sane for the number of devals
+        early = earliest_possible_open_time(est_num_devals, now)
+        late = early + SECONDS_IN_DAY
+        est_time_open_min = max(est_time_open_min, early)
+        est_time_open_max = min(est_time_open_max, late)
 
     return schemas.paissa.OpenPlotDetail(
         world_id=plot.world_id,
@@ -98,11 +109,10 @@ def open_plot_detail(
         ward_number=plot.ward_number,
         plot_number=plot.plot_number,
         size=plot.plot_info.house_size,
-        known_price=last_known_price or plot.plot_info.house_base_price,
+        last_seen_price=plot.last_seen_price or plot.plot_info.house_base_price,
         last_updated_time=plot.timestamp,
         est_time_open_min=est_time_open_min,
         est_time_open_max=est_time_open_max,
-        est_num_devals=est_num_devals
     )
 
 
@@ -128,13 +138,16 @@ def dt_range_contains_time(start: float, end: float, the_time: datetime.time) ->
     return False
 
 
-def num_missed_devals(num_devals, known_at, when=None, devalue_time=DEVALUE_TIME_NAIVE) -> int:
+def num_missed_devals(num_devals: int, known_at: float, when: float = None, devalue_time=DEVALUE_TIME_NAIVE) -> int:
     """
     Given a known number of devalues and the time it was known, calculates the number of known devals
     (if *when* is passed, at *when*, otherwise at current time).
     """
     if when is None:
         when = datetime.datetime.now()
+    else:
+        when = datetime.datetime.fromtimestamp(when)
+    known_at = datetime.datetime.fromtimestamp(known_at)
 
     if num_devals == 0:
         # if the last known devals time is before the deval time,
@@ -157,7 +170,11 @@ def num_missed_devals(num_devals, known_at, when=None, devalue_time=DEVALUE_TIME
     return n
 
 
-def earliest_possible_open_time(num_devals, known_at=None, devalue_time=DEVALUE_TIME_NAIVE) -> float:
+def earliest_possible_open_time(
+    num_devals: int,
+    known_at: float = None,
+    devalue_time: datetime.time = DEVALUE_TIME_NAIVE
+) -> float:
     """Given the number of devals at *known_at*, returns the earliest datetime the plot could have opened."""
     if known_at is None:
         known_at = datetime.datetime.now()
@@ -174,24 +191,23 @@ def earliest_possible_open_time(num_devals, known_at=None, devalue_time=DEVALUE_
         return datetime.datetime.combine(t0.date() - datetime.timedelta(days=1), devalue_time).timestamp()
 
 
-def sold_plot_detail(db: Session, plot: models.Plot):
+def sold_plot_detail(db: Session, plot: models.PlotState) -> schemas.paissa.SoldPlotDetail:
     """
-    Gets the current plot detail for a plot given the *latest* data point on the plot (assumed to be sold).
+    Gets the current plot detail for a plot given the *latest* state of the plot (assumed to be sold).
     """
     log.debug(f"Calculating sold plot detail for {plot.district.name} {plot.ward_number}-{plot.plot_number}")
 
-    est_time_sold_max = plot.timestamp
+    est_time_sold_max = plot.first_seen
 
-    for ph in crud.plot_history(db, plot, before=plot.timestamp):
-        log.debug(ph.timestamp)
-        if not ph.is_owned:
-            est_time_sold_min = ph.timestamp
+    for state in crud.historical_plot_state(db, plot, before=plot.id, yield_per=1):
+        if not state.is_owned:
+            est_time_sold_min = state.last_seen
             break
         # otherwise the latest it could have sold was the instant before the last time it was closed
-        est_time_sold_max = ph.timestamp
+        est_time_sold_max = state.first_seen
     else:
         # the plot has been sold for as long as we've known it, so could be whenever, the devalue calc will get it
-        est_time_sold_min = datetime.datetime.fromtimestamp(0)
+        est_time_sold_min = 0
 
     return schemas.paissa.SoldPlotDetail(
         world_id=plot.world_id,

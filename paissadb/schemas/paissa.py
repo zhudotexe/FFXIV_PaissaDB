@@ -41,11 +41,10 @@ class OpenPlotDetail(BaseModel):
     ward_number: int
     plot_number: int
     size: int
-    known_price: int
+    last_seen_price: int
     last_updated_time: float
     est_time_open_min: float
     est_time_open_max: float
-    est_num_devals: int
 
 
 class DistrictDetail(DistrictSummary):

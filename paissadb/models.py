@@ -137,12 +137,6 @@ Index(
     # and this is for convenience
     PlotState.last_seen.desc()
 )
-Index(
-    "ix_plot_states_ward_number_plot_number_last_seen_desc",
-    PlotState.ward_number,
-    PlotState.plot_number,
-    PlotState.last_seen.desc()
-)
 Index("ix_plot_states_last_seen_desc", PlotState.last_seen.desc())
 
 

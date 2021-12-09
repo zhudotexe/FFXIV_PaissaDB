@@ -4,13 +4,14 @@ from paissadb.calc import DEVALUE_TIME_NAIVE, dt_range_contains_time, earliest_p
 
 # *theoretically* these tests are fragile if devalue falls on a midnight locally
 # or you happen to run these tests exactly at midnight
+# todo(6.1): in 6.1 we can yeet this code
 
-ONE_SECOND = datetime.timedelta(seconds=1)
-ONE_HOUR = datetime.timedelta(hours=1)
+ONE_SECOND = 1
+ONE_HOUR = 3600
 ONE_HOUR_AND_A_BIT = ONE_HOUR + ONE_SECOND
-ONE_DAY = datetime.timedelta(days=1)
+ONE_DAY = ONE_HOUR * 24
 TODAY = datetime.date.today()
-TODAYS_DEVALUE = datetime.datetime.combine(TODAY, DEVALUE_TIME_NAIVE)
+TODAYS_DEVALUE = datetime.datetime.combine(TODAY, DEVALUE_TIME_NAIVE).timestamp()
 SOON_AFTER_DEVALUE_TIME = TODAYS_DEVALUE + ONE_SECOND
 SOON_BEFORE_DEVALUE_TIME = TODAYS_DEVALUE - ONE_SECOND
 
@@ -138,9 +139,9 @@ def test_earliest_open_time_spanning_day():
     # t0: 2021-04-21 13:32
     # devalue time: 17:00
     # should be earliest: 2021-4-20 17:00
-    k1 = datetime.datetime(year=2021, month=4, day=22, hour=1, minute=32)
+    k1 = datetime.datetime(year=2021, month=4, day=22, hour=1, minute=32).timestamp()
     d1 = datetime.time(hour=17)
-    s1 = datetime.datetime(year=2021, month=4, day=20, hour=17)
+    s1 = datetime.datetime(year=2021, month=4, day=20, hour=17).timestamp()
     assert earliest_possible_open_time(num_devals=2, known_at=k1, devalue_time=d1) == s1
 
     # now: 2021-01-02 9:00 (reset + 23h)
@@ -148,9 +149,9 @@ def test_earliest_open_time_spanning_day():
     # t0: 2021-01-01 9:00
     # devalue time: 10:00
     # should be earliest: 2020-12-31 10:00
-    k2 = datetime.datetime(year=2021, month=1, day=2, hour=9)
+    k2 = datetime.datetime(year=2021, month=1, day=2, hour=9).timestamp()
     d2 = datetime.time(hour=10)
-    s2 = datetime.datetime(year=2020, month=12, day=31, hour=10)
+    s2 = datetime.datetime(year=2020, month=12, day=31, hour=10).timestamp()
     assert earliest_possible_open_time(num_devals=4, known_at=k2, devalue_time=d2) == s2
 
     # now: 2021-04-25 19:48 (reset + 2h48m)
@@ -158,9 +159,9 @@ def test_earliest_open_time_spanning_day():
     # t0: 2021-04-25 13:32
     # devalue time: 17:00
     # should be earliest: 2021-4-24 17:00
-    k3 = datetime.datetime(year=2021, month=4, day=25, hour=19, minute=48)
+    k3 = datetime.datetime(year=2021, month=4, day=25, hour=19, minute=48).timestamp()
     d3 = datetime.time(hour=17)
-    s3 = datetime.datetime(year=2021, month=4, day=24, hour=17)
+    s3 = datetime.datetime(year=2021, month=4, day=24, hour=17).timestamp()
     assert earliest_possible_open_time(num_devals=1, known_at=k3, devalue_time=d3) == s3
 
 
@@ -168,7 +169,15 @@ def test_earliest_open_time_spanning_day():
 def test_dt_range_contains_time():
     assert dt_range_contains_time(SOON_BEFORE_DEVALUE_TIME, SOON_AFTER_DEVALUE_TIME, DEVALUE_TIME_NAIVE)
     assert dt_range_contains_time(SOON_BEFORE_DEVALUE_TIME, SOON_BEFORE_DEVALUE_TIME + ONE_DAY, DEVALUE_TIME_NAIVE)
-    assert dt_range_contains_time(SOON_BEFORE_DEVALUE_TIME, SOON_BEFORE_DEVALUE_TIME + ONE_DAY - ONE_HOUR, DEVALUE_TIME_NAIVE)
+    assert dt_range_contains_time(
+        SOON_BEFORE_DEVALUE_TIME,
+        SOON_BEFORE_DEVALUE_TIME + ONE_DAY - ONE_HOUR,
+        DEVALUE_TIME_NAIVE
+    )
     assert not dt_range_contains_time(SOON_AFTER_DEVALUE_TIME, SOON_AFTER_DEVALUE_TIME + ONE_HOUR, DEVALUE_TIME_NAIVE)
     assert not dt_range_contains_time(SOON_BEFORE_DEVALUE_TIME - ONE_HOUR, SOON_BEFORE_DEVALUE_TIME, DEVALUE_TIME_NAIVE)
-    assert not dt_range_contains_time(SOON_AFTER_DEVALUE_TIME, SOON_BEFORE_DEVALUE_TIME + ONE_DAY - ONE_HOUR, DEVALUE_TIME_NAIVE)
+    assert not dt_range_contains_time(
+        SOON_AFTER_DEVALUE_TIME,
+        SOON_BEFORE_DEVALUE_TIME + ONE_DAY - ONE_HOUR,
+        DEVALUE_TIME_NAIVE
+    )
