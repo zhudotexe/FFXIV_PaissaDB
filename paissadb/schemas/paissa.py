@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import datetime
 from typing import Any, List, Optional
 
 from pydantic import BaseModel
@@ -24,7 +23,7 @@ class DistrictSummary(BaseModel):
     id: int
     name: str
     num_open_plots: int
-    oldest_plot_time: datetime.datetime
+    oldest_plot_time: float
 
 
 class WorldSummary(BaseModel):
@@ -32,7 +31,7 @@ class WorldSummary(BaseModel):
     name: str
     districts: List[DistrictSummary]
     num_open_plots: int
-    oldest_plot_time: datetime.datetime
+    oldest_plot_time: float
 
 
 # --- detail ---
@@ -43,9 +42,9 @@ class OpenPlotDetail(BaseModel):
     plot_number: int
     size: int
     known_price: int
-    last_updated_time: datetime.datetime
-    est_time_open_min: datetime.datetime
-    est_time_open_max: datetime.datetime
+    last_updated_time: float
+    est_time_open_min: float
+    est_time_open_max: float
     est_num_devals: int
 
 
@@ -63,15 +62,15 @@ class SoldPlotDetail(BaseModel):
     ward_number: int
     plot_number: int
     size: int
-    last_updated_time: datetime.datetime
-    est_time_sold_min: datetime.datetime
-    est_time_sold_max: datetime.datetime
+    last_updated_time: float
+    est_time_sold_min: float
+    est_time_sold_max: float
 
 
 class TemporarilyDisabled(BaseModel):
     """Temporary response model used to indicate that an endpoint is disabled due to high load."""
     message: Optional[str]
-    until: Optional[datetime.datetime]
+    until: Optional[float]
     indefinite: bool
 
 

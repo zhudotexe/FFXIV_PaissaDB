@@ -7,11 +7,6 @@ from sqlalchemy.orm import Session, aliased
 
 from . import config, models, schemas
 
-# caching - todo move this to Redis or something if scaling is needed?
-# 72 worlds * 4 districts = 288
-# IMPORTANT: each ingest method has to clear the cache entry it updates
-district_plot_cache: cachetools.LRUCache[Tuple[int, int], List[int]] = cachetools.LRUCache(288)
-
 
 def upsert_sweeper(db: Session, sweeper: schemas.paissa.Hello) -> models.Sweeper:
     db_sweeper = models.Sweeper(id=sweeper.cid, name=sweeper.name, world_id=sweeper.worldId)
@@ -42,19 +37,16 @@ def get_district_by_id(db: Session, district_id: int) -> models.District:
     return db.query(models.District).filter(models.District.id == district_id).first()
 
 
-def get_wardsweep_by_id(db: Session, wardsweep_id: int) -> models.WardSweep:
-    return db.query(models.WardSweep).filter(models.WardSweep.id == wardsweep_id).first()
-
-
 def get_plots_by_ids(db: Session, plot_ids: List[int]) -> List[models.Plot]:
     return db.query(models.Plot).filter(models.Plot.id.in_(plot_ids)).all()
 
 
 def get_latest_plots_in_district(
-        db: Session,
-        world_id: int,
-        district_id: int,
-        use_cache: bool = False) -> List[models.Plot]:
+    db: Session,
+    world_id: int,
+    district_id: int,
+    use_cache: bool = False
+) -> List[models.Plot]:
     """
     Gets the latest plots in the district. Note that if *use_cache* is True, the returned objects will be
     detached.
@@ -103,11 +95,12 @@ def get_latest_plots_in_district(
 
 
 def get_plot_states_before(
-        db: Session,
-        world_id: int,
-        district_id: int,
-        ward_number: int,
-        before: datetime.datetime) -> List[models.Plot]:
+    db: Session,
+    world_id: int,
+    district_id: int,
+    ward_number: int,
+    before: datetime.datetime
+) -> List[models.Plot]:
     """
     Gets the state of plots in the ward before a given time.
     """
@@ -137,17 +130,21 @@ def get_plot_states_before(
         db.execute("SET LOCAL work_mem = '32MB'")
         stmt = db.query(plot) \
             .distinct(plot.plot_number) \
-            .filter(plot.world_id == world_id,
-                    plot.territory_type_id == district_id,
-                    plot.ward_number == ward_number,
-                    plot.timestamp < before) \
+            .filter(
+            plot.world_id == world_id,
+            plot.territory_type_id == district_id,
+            plot.ward_number == ward_number,
+            plot.timestamp < before
+            ) \
             .order_by(plot.plot_number, desc(plot.timestamp))
     else:
         subq = db.query(plot.id, func.max(plot.timestamp)) \
-            .filter(plot.world_id == world_id,
-                    plot.territory_type_id == district_id,
-                    plot.ward_number == ward_number,
-                    plot.timestamp < before) \
+            .filter(
+            plot.world_id == world_id,
+            plot.territory_type_id == district_id,
+            plot.ward_number == ward_number,
+            plot.timestamp < before
+            ) \
             .group_by(plot.plot_number) \
             .subquery()
         latest_plots = aliased(plot, subq)
@@ -158,10 +155,12 @@ def get_plot_states_before(
 
 def plot_history(db: Session, plot: models.Plot, before: datetime.datetime = None) -> Iterator[models.Plot]:
     q = db.query(models.Plot) \
-        .filter(models.Plot.world_id == plot.world_id,
-                models.Plot.territory_type_id == plot.territory_type_id,
-                models.Plot.ward_number == plot.ward_number,
-                models.Plot.plot_number == plot.plot_number)
+        .filter(
+        models.Plot.world_id == plot.world_id,
+        models.Plot.territory_type_id == plot.territory_type_id,
+        models.Plot.ward_number == plot.ward_number,
+        models.Plot.plot_number == plot.plot_number
+        )
     if before is not None:
         q = q.filter(models.Plot.timestamp < before)
     return q.order_by(desc(models.Plot.timestamp)) \
@@ -170,10 +169,11 @@ def plot_history(db: Session, plot: models.Plot, before: datetime.datetime = Non
 
 # ---- ingest ----
 def _ingest(
-        db: Session,
-        event: schemas.ffxiv.BaseFFXIVPacket,
-        sweeper: Optional[schemas.paissa.JWTSweeper],
-        timestamp: Optional[datetime.datetime]) -> models.Event:
+    db: Session,
+    event: schemas.ffxiv.BaseFFXIVPacket,
+    sweeper: Optional[schemas.paissa.JWTSweeper],
+    timestamp: Optional[datetime.datetime]
+) -> models.Event:
     """Logs the packet to the events table. Does not commit - ingest method that calls this should."""
     sweeper_id = sweeper.cid if sweeper is not None else None
     db_event = models.Event(
@@ -187,9 +187,10 @@ def _ingest(
 
 
 def ingest_wardinfo(
-        db: Session,
-        wardinfo: schemas.ffxiv.HousingWardInfo,
-        sweeper: Optional[schemas.paissa.JWTSweeper]) -> models.WardSweep:
+    db: Session,
+    wardinfo: schemas.ffxiv.HousingWardInfo,
+    sweeper: Optional[schemas.paissa.JWTSweeper]
+) -> models.WardSweep:
     event = _ingest(db, wardinfo, sweeper, timestamp=wardinfo.ServerTimestamp)
     db_wardsweep = models.WardSweep(
         sweeper_id=event.sweeper_id,

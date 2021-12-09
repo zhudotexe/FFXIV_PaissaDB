@@ -9,7 +9,7 @@ servers are not supported.
 
 You can find the Swagger docs at https://paissadb.zhu.codes/docs.
 
-**Important: All ward IDs and plot IDs returned by PaissaDB are 0-indexed, and times are in UTC!**
+**Important: All ward IDs and plot IDs returned by PaissaDB are 0-indexed!**
 
 ### Endpoints
 
@@ -25,10 +25,10 @@ Called by PaissaHouse on startup to register sweeper's world and name. Requires 
 
 ```typescript
 {
-    cid: number;
+    cid: int;
     name: string;
     world: string;
-    worldId: number;
+    worldId: int;
 }
 ```
 
@@ -38,10 +38,10 @@ Gets a list of known worlds, and for each world:
 
 ```typescript
 {
-    id: number;
+    id: int;
     name: string;
-    num_open_plots: number;
-    oldest_plot_time: string<iso8601>; // the oldest datapoint of all plots on this world
+    num_open_plots: int;
+    oldest_plot_time: float; // the oldest datapoint of all plots on this world
     districts: DistrictSummary[];
 }[];
 ```
@@ -52,10 +52,10 @@ For the specified world, returns:
 
 ```typescript
 {
-    id: number;
+    id: int;
     name: string;
-    num_open_plots: number;
-    oldest_plot_time: string<iso8601>; // the oldest datapoint of all plots on this world
+    num_open_plots: int;
+    oldest_plot_time: float; // the oldest datapoint of all plots on this world
     districts: DistrictDetail[];
 }
 ```
@@ -112,10 +112,10 @@ pings from clients with a pong); it is up to the client to choose which ping imp
 
 ```typescript
 {
-    id: number;
+    id: int;
     name: string;
-    num_open_plots: number;
-    oldest_plot_time: string<iso8601>; // the oldest datapoint of all plots in this district
+    num_open_plots: int;
+    oldest_plot_time: float; // the oldest datapoint of all plots in this district
 }
 ```
 
@@ -123,16 +123,16 @@ pings from clients with a pong); it is up to the client to choose which ping imp
 
 ```typescript
 {
-    world_id: number;
-    district_id: number;
-    ward_number: number; // 0-indexed
-    plot_number: number; // 0-indexed
-    size: number; // 0 = Small, 1 = Medium, 2 = Large
-    known_price: number;
-    last_updated_time: string<iso8601>;
-    est_time_open_min: string<iso8601>; // the earliest time this plot could have opened, given the update times and devalues
-    est_time_open_max: string<iso8601>; // the latest time this plot could have opened, given the update times and devalues
-    est_num_devals: number;  // the estimated number of devalues at the time of the request
+    world_id: int;
+    district_id: int;
+    ward_number: int; // 0-indexed
+    plot_number: int; // 0-indexed
+    size: int; // 0 = Small, 1 = Medium, 2 = Large
+    known_price: int;
+    last_updated_time: float;
+    est_time_open_min: float; // the earliest time this plot could have opened, given the update times and devalues
+    est_time_open_max: float; // the latest time this plot could have opened, given the update times and devalues
+    est_num_devals: int;  // the estimated number of devalues at the time of the request
 }
 ```
 
@@ -140,10 +140,10 @@ pings from clients with a pong); it is up to the client to choose which ping imp
 
 ```typescript
 {
-    id: number;
+    id: int;
     name: string;
-    num_open_plots: number;
-    oldest_plot_time: string<iso8601>; // the oldest datapoint of all plots in this district
+    num_open_plots: int;
+    oldest_plot_time: float; // the oldest datapoint of all plots in this district
     open_plots: OpenPlotDetail[];
 }
 ```
@@ -152,14 +152,14 @@ pings from clients with a pong); it is up to the client to choose which ping imp
 
 ```typescript
 {
-    world_id: number;
-    district_id: number;
-    ward_number: number; // 0-indexed
-    plot_number: number; // 0-indexed
-    size: number; // 0 = Small, 1 = Medium, 2 = Large
-    last_updated_time: string<iso8601>;
-    est_time_sold_min: string<iso8601>; // the earliest time this plot could have sold, given the update times
-    est_time_sold_max: string<iso8601>; // the latest time this plot could have sole, given the update times
+    world_id: int;
+    district_id: int;
+    ward_number: int; // 0-indexed
+    plot_number: int; // 0-indexed
+    size: int; // 0 = Small, 1 = Medium, 2 = Large
+    last_updated_time: float;
+    est_time_sold_min: float; // the earliest time this plot could have sold, given the update times
+    est_time_sold_max: float; // the latest time this plot could have sole, given the update times
 }
 ```
 
@@ -169,10 +169,10 @@ Standard [JWT spec](https://jwt.io/) using HS256 for signature verification with
 
 ```typescript
 {
-    cid: number; // character's content ID
+    cid: int; // character's content ID
     iss: "PaissaDB";
     aud: "PaissaHouse";
-    iat: number; // JWT generation timestamp
+    iat: float; // JWT generation timestamp
 }
 ```
 

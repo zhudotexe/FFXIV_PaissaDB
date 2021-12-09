@@ -1,5 +1,6 @@
 import datetime
 import logging
+import time
 from math import ceil
 
 from sqlalchemy.orm import Session
@@ -16,9 +17,9 @@ log = logging.getLogger(__name__)
 
 def get_district_detail(db: Session, world: models.World, district: models.District) -> schemas.paissa.DistrictDetail:
     """Gets the district detail for a given district in a world."""
-    latest_plots = crud.get_latest_plots_in_district(db, world.id, district.id)
+    latest_plots = crud.get_latest_plot_states_in_district(db, world.id, district.id)
     num_open_plots = sum(1 for p in latest_plots if not p.is_owned)
-    oldest_plot_time = min(p.timestamp for p in latest_plots) if latest_plots else datetime.datetime.fromtimestamp(0)
+    oldest_plot_time = min(p.timestamp for p in latest_plots) if latest_plots else 0
     open_plots = []
 
     for plot in latest_plots:
@@ -36,9 +37,13 @@ def get_district_detail(db: Session, world: models.World, district: models.Distr
     )
 
 
-def open_plot_detail(db: Session, plot: models.Plot, now: datetime.datetime = None) -> schemas.paissa.OpenPlotDetail:
+def open_plot_detail(
+    db: Session,
+    plot: models.PlotState,
+    now: datetime.datetime = None
+) -> schemas.paissa.OpenPlotDetail:
     """
-    Gets the current plot detail for a plot given the *latest* data point on the plot (assumed to be open).
+    Gets the current plot detail for a plot given the current state of the plot (assumed to be open).
     """
     log.debug(f"Calculating open plot detail for {plot.district.name} {plot.ward_number}-{plot.plot_number}")
 
@@ -46,7 +51,7 @@ def open_plot_detail(db: Session, plot: models.Plot, now: datetime.datetime = No
     last_known_devals_i = (plot.num_devals, plot.timestamp)
     est_time_open_max = plot.timestamp
     if now is None:
-        now = datetime.datetime.now()
+        now = time.time()
 
     for ph in crud.plot_history(db, plot, before=plot.timestamp):
         log.debug(ph.timestamp)
@@ -101,13 +106,16 @@ def open_plot_detail(db: Session, plot: models.Plot, now: datetime.datetime = No
     )
 
 
-def dt_range_contains_time(start, end, time):
+def dt_range_contains_time(start: float, end: float, the_time: datetime.time) -> bool:
     """Returns whether the datetime range defined by [start, end) contains at least one instance of the given time."""
     if end <= start:
         return False
 
+    start = datetime.datetime.fromtimestamp(start)
+    end = datetime.datetime.fromtimestamp(end)
+
     # end is after target and start is before it
-    if start.time() <= time < end.time():
+    if start.time() <= the_time < end.time():
         return True
 
     # at least 24 hours has passed
@@ -115,12 +123,12 @@ def dt_range_contains_time(start, end, time):
         return True
 
     # the start is before the time and the end is on the next day
-    if start.time() <= time and start.date() < end.date():
+    if start.time() <= the_time and start.date() < end.date():
         return True
     return False
 
 
-def num_missed_devals(num_devals, known_at, when=None, devalue_time=DEVALUE_TIME_NAIVE):
+def num_missed_devals(num_devals, known_at, when=None, devalue_time=DEVALUE_TIME_NAIVE) -> int:
     """
     Given a known number of devalues and the time it was known, calculates the number of known devals
     (if *when* is passed, at *when*, otherwise at current time).
@@ -149,19 +157,21 @@ def num_missed_devals(num_devals, known_at, when=None, devalue_time=DEVALUE_TIME
     return n
 
 
-def earliest_possible_open_time(num_devals, known_at=None, devalue_time=DEVALUE_TIME_NAIVE):
+def earliest_possible_open_time(num_devals, known_at=None, devalue_time=DEVALUE_TIME_NAIVE) -> float:
     """Given the number of devals at *known_at*, returns the earliest datetime the plot could have opened."""
     if known_at is None:
         known_at = datetime.datetime.now()
+    else:
+        known_at = datetime.datetime.fromtimestamp(known_at)
 
     # 0 devals: the most recent devalue time
     # 1+ devals: the most recent devalue time to n * 6 hours ago
     t0 = known_at - datetime.timedelta(hours=HOURS_PER_DEVAL * num_devals)  # some time when it had 0 devals
 
     if t0.time() >= devalue_time:
-        return datetime.datetime.combine(t0.date(), devalue_time)
+        return datetime.datetime.combine(t0.date(), devalue_time).timestamp()
     else:
-        return datetime.datetime.combine(t0.date() - datetime.timedelta(days=1), devalue_time)
+        return datetime.datetime.combine(t0.date() - datetime.timedelta(days=1), devalue_time).timestamp()
 
 
 def sold_plot_detail(db: Session, plot: models.Plot):

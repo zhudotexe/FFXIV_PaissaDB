@@ -3,12 +3,11 @@ import datetime
 import logging
 import multiprocessing
 import sys
-from typing import Optional
+from typing import List, Optional
 
 import jwt as jwtlib  # name conflict with jwt query param in /ws
 import sentry_sdk
-import sqlalchemy.exc
-from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, WebSocket, status
+from fastapi import Depends, FastAPI, HTTPException, WebSocket, status
 from fastapi.middleware.cors import CORSMiddleware
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
@@ -47,23 +46,19 @@ metrics.register(app)
 
 # ==== HTTP ====
 @app.post("/wardInfo", status_code=202)
-def ingest_wardinfo(
+async def ingest_wardinfo(
     wardinfo: schemas.ffxiv.HousingWardInfo,
-    background: BackgroundTasks,
-    sweeper: schemas.paissa.JWTSweeper = Depends(auth.required),
-    db: Session = Depends(get_db)
+    sweeper: schemas.paissa.JWTSweeper = Depends(auth.required)
 ):
-    try:
-        wardsweep = crud.ingest_wardinfo(db, wardinfo, sweeper)
-    except sqlalchemy.exc.IntegrityError:
-        db.rollback()
-        try:
-            wardsweep = crud.ingest_wardinfo(db, wardinfo, None)
-        except sqlalchemy.exc.IntegrityError:
-            raise HTTPException(400, "Could not ingest sweep")
+    """Legacy single-ward ingest endpoint - use /ingest instead"""
+    return await bulk_ingest([wardinfo], sweeper)
 
-    db.close()
-    background.add_task(ws.queue_wardsweep_for_processing, wardsweep)
+
+@app.post("/ingest", status_code=202)
+async def bulk_ingest(
+    data: List[schemas.ffxiv.BaseFFXIVPacket],
+    sweeper: schemas.paissa.JWTSweeper = Depends(auth.required)
+):
     return {"message": "OK"}
 
 
@@ -89,31 +84,35 @@ def list_worlds(db: Session = Depends(get_db)):
         indefinite=True
     )
 
-    worlds = crud.get_worlds(db)
-    districts = crud.get_districts(db)
-
-    out = []
-    for world in worlds:
-        district_summaries = []
-        for district in districts:
-            latest_plots = crud.get_latest_plots_in_district(db, world.id, district.id, use_cache=True)
-            num_open_plots = sum(1 for p in latest_plots if not p.is_owned)
-            oldest_plot_time = min(p.timestamp for p in latest_plots) \
-                if latest_plots else datetime.datetime.fromtimestamp(0)
-            district_summaries.append(schemas.paissa.DistrictSummary(
-                id=district.id,
-                name=district.name,
-                num_open_plots=num_open_plots,
-                oldest_plot_time=oldest_plot_time
-            ))
-        out.append(schemas.paissa.WorldSummary(
-            id=world.id,
-            name=world.name,
-            districts=district_summaries,
-            num_open_plots=sum(d.num_open_plots for d in district_summaries),
-            oldest_plot_time=min(d.oldest_plot_time for d in district_summaries)
-        ))
-    return out
+    # worlds = crud.get_worlds(db)
+    # districts = crud.get_districts(db)
+    #
+    # out = []
+    # for world in worlds:
+    #     district_summaries = []
+    #     for district in districts:
+    #         latest_plots = crud.get_latest_plots_in_district(db, world.id, district.id, use_cache=True)
+    #         num_open_plots = sum(1 for p in latest_plots if not p.is_owned)
+    #         oldest_plot_time = min(p.timestamp for p in latest_plots) \
+    #             if latest_plots else datetime.datetime.fromtimestamp(0)
+    #         district_summaries.append(
+    #             schemas.paissa.DistrictSummary(
+    #                 id=district.id,
+    #                 name=district.name,
+    #                 num_open_plots=num_open_plots,
+    #                 oldest_plot_time=oldest_plot_time
+    #             )
+    #         )
+    #     out.append(
+    #         schemas.paissa.WorldSummary(
+    #             id=world.id,
+    #             name=world.name,
+    #             districts=district_summaries,
+    #             num_open_plots=sum(d.num_open_plots for d in district_summaries),
+    #             oldest_plot_time=min(d.oldest_plot_time for d in district_summaries)
+    #         )
+    #     )
+    # return out
 
 
 @app.get("/worlds/{world_id}")  # , response_model=schemas.paissa.WorldDetail)
@@ -123,22 +122,22 @@ def get_world(world_id: int, db: Session = Depends(get_db)):
         indefinite=True
     )
 
-    world = crud.get_world_by_id(db, world_id)
-    districts = crud.get_districts(db)
-    if world is None:
-        raise HTTPException(404, "World not found")
-
-    district_details = []
-    for district in districts:
-        district_details.append(calc.get_district_detail(db, world, district))
-
-    return schemas.paissa.WorldDetail(
-        id=world.id,
-        name=world.name,
-        districts=district_details,
-        num_open_plots=sum(d.num_open_plots for d in district_details),
-        oldest_plot_time=min(d.oldest_plot_time for d in district_details)
-    )
+    # world = crud.get_world_by_id(db, world_id)
+    # districts = crud.get_districts(db)
+    # if world is None:
+    #     raise HTTPException(404, "World not found")
+    #
+    # district_details = []
+    # for district in districts:
+    #     district_details.append(calc.get_district_detail(db, world, district))
+    #
+    # return schemas.paissa.WorldDetail(
+    #     id=world.id,
+    #     name=world.name,
+    #     districts=district_details,
+    #     num_open_plots=sum(d.num_open_plots for d in district_details),
+    #     oldest_plot_time=min(d.oldest_plot_time for d in district_details)
+    # )
 
 
 @app.get("/worlds/{world_id}/{district_id}")  # , response_model=schemas.paissa.DistrictDetail)
@@ -148,12 +147,12 @@ def get_district_detail(world_id: int, district_id: int, db: Session = Depends(g
         indefinite=True
     )
 
-    world = crud.get_world_by_id(db, world_id)
-    district = crud.get_district_by_id(db, district_id)
-    if world is None or district is None:
-        raise HTTPException(404, "World not found")
-
-    return calc.get_district_detail(db, world, district)
+    # world = crud.get_world_by_id(db, world_id)
+    # district = crud.get_district_by_id(db, district_id)
+    # if world is None or district is None:
+    #     raise HTTPException(404, "World not found")
+    #
+    # return calc.get_district_detail(db, world, district)
 
 
 # ==== WS ====
@@ -161,8 +160,6 @@ def get_district_detail(world_id: int, district_id: int, db: Session = Depends(g
 async def connect_broadcast():
     # this never gets cancelled explicitly, it's just killed when the app dies
     asyncio.create_task(ws.broadcast_listener())
-    sweep_processor_process = multiprocessing.Process(target=ws.sweep_processer_entrypoint, daemon=True)
-    sweep_processor_process.start()
 
 
 @app.on_event("shutdown")
@@ -173,13 +170,11 @@ async def disconnect_broadcast():
 
 @app.websocket("/ws")
 async def plot_updates(websocket: WebSocket, jwt: Optional[str] = None, db: Session = Depends(get_db)):
-    # token must be present
     if jwt is None:
-        await ws.connect(db, websocket, None)  # fixme
-        # await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+        await ws.connect(db, websocket, None)
         return
 
-    # and valid
+    # if token is present, it must be valid
     try:
         sweeper = auth.decode_token(jwt)
     except jwtlib.InvalidTokenError:

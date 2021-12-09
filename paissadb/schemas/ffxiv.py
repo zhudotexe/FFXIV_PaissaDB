@@ -2,7 +2,6 @@
 Schemas defined by FFXIV game code.
 See https://github.com/zhudotexe/FFXIV_PaissaHouse/tree/main/Structures
 """
-import datetime
 import enum
 
 from pydantic import BaseModel, conlist, constr
@@ -36,6 +35,23 @@ class HouseInfoEntry(BaseModel):
 # ---- packets ----
 class BaseFFXIVPacket(BaseModel):
     event_type: models.EventType
+    client_timestamp: float
+    server_timestamp: float
+
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.return_effect
+
+    @classmethod
+    def return_effect(cls, values):  # https://github.com/samuelcolvin/pydantic/issues/619#issuecomment-713508861
+        try:
+            etype = values["event_type"]
+        except KeyError:
+            raise ValueError("missing 'event_type' key")
+        try:
+            return EVENT_TYPES[etype](**values)
+        except KeyError:
+            raise ValueError(f"{etype} is not a valid event type")
 
 
 class HousingWardInfo(BaseFFXIVPacket):
@@ -43,5 +59,8 @@ class HousingWardInfo(BaseFFXIVPacket):
 
     LandIdent: LandIdent
     HouseInfoEntries: conlist(HouseInfoEntry, min_items=60, max_items=60)
-    ClientTimestamp: datetime.datetime
-    ServerTimestamp: datetime.datetime
+
+
+EVENT_TYPES = {
+    models.EventType.HOUSING_WARD_INFO.value: HousingWardInfo
+}
