@@ -8,7 +8,7 @@ from common.database import EVENT_QUEUE_KEY, PUBSUB_WS_CHANNEL, SessionLocal, en
 from . import utils
 
 log = logging.getLogger("worker")
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=config.LOGLEVEL)
 
 
 class Worker:
@@ -103,5 +103,6 @@ async def run():
     """Primary entrypoint for a worker instance. Sets up the loop that processes anything in the event PQ."""
     worker = Worker()
     await worker.init()
+    log.info("Hello world, worker is listening...")
     await worker.main_loop()
     log.info("Worker is shutting down...")

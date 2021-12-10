@@ -1,0 +1,44 @@
+version: '3'
+
+# This dockerfile is meant for local testing only.
+
+services:
+  api:
+    image: paissadb-api
+    build:
+      context: .
+      dockerfile: Dockerfile-api
+    depends_on:
+      - postgres
+      - redis
+    ports:
+      - "8000:8000"
+    environment:
+      JWT_SECRET_PAISSAHOUSE: secret
+      DB_URI: "postgresql+psycopg2://paissadb:secret@postgres:5432/paissadb"
+      REDIS_URI: "redis://redis"
+
+  worker:
+    image: paissadb-worker
+    restart: on-failure
+    build:
+      context: .
+      dockerfile: Dockerfile-worker
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      JWT_SECRET_PAISSAHOUSE: secret
+      DB_URI: "postgresql+psycopg2://paissadb:secret@postgres:5432/paissadb"
+      REDIS_URI: "redis://redis"
+      LOGLEVEL: DEBUG
+
+  postgres:
+    image: postgres:13
+    restart: always
+    environment:
+      POSTGRES_USER: paissadb
+      POSTGRES_PASSWORD: secret
+
+  redis:
+    image: redis:6

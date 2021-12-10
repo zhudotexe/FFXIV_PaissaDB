@@ -12,3 +12,5 @@ DB_TYPE = urllib.parse.urlparse(DB_URI).scheme.split('+')[0]
 REDIS_URI = os.getenv("REDIS_URI", "redis://localhost")
 SENTRY_DSN = os.getenv("SENTRY_DSN")
 SENTRY_ENV = os.getenv("SENTRY_ENV", "development")
+
+LOGLEVEL = os.getenv("LOGLEVEL", "INFO")
