@@ -118,7 +118,7 @@ def latest_plot_states_in_district(db: Session, world_id: int, district_id: int)
             .filter(models.PlotState.world_id == world_id, models.PlotState.territory_type_id == district_id) \
             .order_by(models.PlotState.ward_number, models.PlotState.plot_number, desc(models.PlotState.last_seen))
     else:
-        subq = db.query(models.PlotState.id, func.max(models.PlotState.timestamp)) \
+        subq = db.query(models.PlotState.id, func.max(models.PlotState.last_seen)) \
             .filter(models.PlotState.world_id == world_id, models.PlotState.territory_type_id == district_id) \
             .group_by(models.PlotState.ward_number, models.PlotState.plot_number) \
             .subquery()

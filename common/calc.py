@@ -21,7 +21,7 @@ def get_district_detail(db: Session, world: models.World, district: models.Distr
     """Gets the district detail for a given district in a world."""
     latest_plots = crud.latest_plot_states_in_district(db, world.id, district.id)
     num_open_plots = sum(1 for p in latest_plots if not p.is_owned)
-    oldest_plot_time = min(p.timestamp for p in latest_plots) if latest_plots else 0
+    oldest_plot_time = min(p.last_seen for p in latest_plots) if latest_plots else 0
     open_plots = []
 
     for plot in latest_plots:

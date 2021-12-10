@@ -118,17 +118,17 @@ class PlotState(Base):
         Returns the number of price this house has devalued. If the price is unknown, returns None.
         If price>max, returns 0.
         """
-        if self.house_price is None:
+        if self.last_seen_price is None:
             return None
         max_price = self.plot_info.house_base_price
-        if self.house_price >= max_price:
+        if self.last_seen_price >= max_price:
             return 0
-        return round((max_price - self.house_price) / (HOUSING_DEVAL_FACTOR * max_price))
+        return round((max_price - self.last_seen_price) / (HOUSING_DEVAL_FACTOR * max_price))
 
 
 # common query indices
 Index(
-    "ix_plot_states_world_id_territory_type_id_ward_number_plot_number_last_seen_desc",
+    "ix_plot_states_loc_last_seen_desc",
     # these 4 make up the plot state's unique location
     PlotState.world_id,
     PlotState.territory_type_id,
