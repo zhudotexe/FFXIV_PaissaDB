@@ -3,7 +3,7 @@
 --
 -- ok actually just delete the db and recreate it
 
-DROP SCHEMA public;
+DROP SCHEMA public CASCADE;
 
 CREATE SCHEMA public;
 COMMENT ON SCHEMA public IS 'standard public schema';

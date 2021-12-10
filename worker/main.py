@@ -8,7 +8,7 @@ from common.database import EVENT_QUEUE_KEY, PUBSUB_WS_CHANNEL, SessionLocal, en
 from . import utils
 
 log = logging.getLogger("worker")
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 
 class Worker:
