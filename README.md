@@ -181,7 +181,7 @@ is `PaissaDB` regardless of what service generates the token.
 
 ## Updating Game Data
 
-Using [SaintCoinach.Cmd](https://github.com/ufx/SaintCoinach), run `SaintCoinach.Cmd.exe "<path to FFXIV>" rawexd`
+Using [SaintCoinach.Cmd](https://github.com/xivapi/SaintCoinach), run `SaintCoinach.Cmd.exe "<path to FFXIV>" rawexd`
 and copy the following files to `gamedata/`:
 
 - HousingLandSet.csv (used to generate `plotinfo`)

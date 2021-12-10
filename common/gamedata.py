@@ -46,7 +46,7 @@ def generate_districts(gamedata_dir):
     340/f1h1/lav beds -> landset 1
     341/w1h1/goblet -> landset 2
     641/e1h1/shiro -> landset 3
-    886/r1hx/firmament? -> landset 4?
+    886/r1h1/empyrean -> landset 4
     territoryintendeduse=13
     resident=78
     """
@@ -55,7 +55,7 @@ def generate_districts(gamedata_dir):
         340: 1,  # Lavender Beds
         341: 2,  # Goblet
         641: 3,  # Shirogane
-        886: 4,  # Firmament todo 6.0 update me
+        979: 4,  # Empyrean
     }
     place_names = {int(p['#']): p['Name'] for p in read_csv(os.path.join(gamedata_dir, 'PlaceName.csv'))}
 
