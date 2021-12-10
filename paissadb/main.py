@@ -11,14 +11,9 @@ from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 from sqlalchemy.orm import Session
 
-from common import calc, config, crud, gamedata, models, schemas
-from common.database import SessionLocal, engine, get_db
+from common import calc, config, crud, schemas
+from common.database import get_db
 from . import auth, metrics, ws
-
-# todo move this to the worker
-models.Base.metadata.create_all(bind=engine)
-with SessionLocal() as sess:
-    gamedata.upsert_all(gamedata_dir=config.GAMEDATA_DIR, db=sess)
 
 log = logging.getLogger(__name__)
 if 'debug' in sys.argv:

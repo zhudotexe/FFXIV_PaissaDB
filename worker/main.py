@@ -3,8 +3,8 @@ import logging
 
 from sqlalchemy.orm import Session
 
-from common import calc, crud, schemas
-from common.database import EVENT_QUEUE_KEY, PUBSUB_WS_CHANNEL, SessionLocal, redis
+from common import calc, config, crud, gamedata, models, schemas
+from common.database import EVENT_QUEUE_KEY, PUBSUB_WS_CHANNEL, SessionLocal, engine, redis
 from . import utils
 
 log = logging.getLogger("worker")
@@ -15,6 +15,10 @@ class Worker:
     def __init__(self):
         self.redis = redis
         self.db: Session = SessionLocal()
+
+    async def init(self):
+        models.Base.metadata.create_all(bind=engine)
+        gamedata.upsert_all(gamedata_dir=config.GAMEDATA_DIR, db=self.db)
 
     async def main_loop(self):
         while True:
@@ -98,5 +102,6 @@ class Worker:
 async def run():
     """Primary entrypoint for a worker instance. Sets up the loop that processes anything in the event PQ."""
     worker = Worker()
+    await worker.init()
     await worker.main_loop()
     log.info("Worker is shutting down...")
