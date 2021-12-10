@@ -11,9 +11,9 @@ from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 from sqlalchemy.orm import Session
 
-from common import config, gamedata, models, schemas, utils
+from common import calc, config, crud, gamedata, models, schemas
 from common.database import SessionLocal, engine, get_db
-from . import auth, calc, crud, metrics, ws
+from . import auth, metrics, ws
 
 # todo move this to the worker
 models.Base.metadata.create_all(bind=engine)
@@ -62,7 +62,6 @@ async def bulk_ingest(
     db: Session = Depends(get_db)
 ):
     await crud.bulk_ingest(db, data, sweeper)
-    await utils.executor(crud.touch_sweeper_by_id, db, sweeper.cid)
     return {"message": "OK", "accepted": len(data)}
 
 

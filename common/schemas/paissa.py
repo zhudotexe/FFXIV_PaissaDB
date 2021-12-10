@@ -25,7 +25,8 @@ class PlotStateEntry(BaseModel):
     ward_num: int
     plot_num: int
     timestamp: float
-    price: int  # todo(6.1): yeet
+    price: int
+    is_owned: bool
     owner_name: Optional[str]
     is_fcfs: bool
     lotto_entries: Optional[int]

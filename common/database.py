@@ -28,5 +28,6 @@ def get_db():
 
 # ==== redis ====
 EVENT_QUEUE_KEY = "events_pq"
+PUBSUB_WS_CHANNEL = "ws_messages"
 TTL_ONE_HOUR = 3600
-redis = aioredis.from_url(config.REDIS_URI)
+redis = aioredis.from_url(config.REDIS_URI, decode_responses=True)

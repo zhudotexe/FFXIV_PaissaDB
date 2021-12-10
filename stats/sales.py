@@ -26,9 +26,8 @@ import sys
 import time
 from contextlib import contextmanager
 
-from common import models
+from common import calc, crud, models
 from common.database import SessionLocal
-from paissadb import calc, crud
 from stats.utils import PlotSale
 
 # threading: setting this to 1 on slower systems and (num cpus) on faster systems is generally fine

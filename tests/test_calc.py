@@ -1,6 +1,6 @@
 import datetime
 
-from paissadb.calc import DEVALUE_TIME_NAIVE, dt_range_contains_time, earliest_possible_open_time, num_missed_devals
+from common.calc import DEVALUE_TIME_NAIVE, dt_range_contains_time, earliest_possible_open_time, num_missed_devals
 
 # *theoretically* these tests are fragile if devalue falls on a midnight locally
 # or you happen to run these tests exactly at midnight

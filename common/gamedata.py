@@ -4,7 +4,7 @@ import os
 
 from sqlalchemy.orm import Session
 
-from common import models
+from . import models
 
 log = logging.getLogger(__name__)
 
