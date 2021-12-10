@@ -3,9 +3,9 @@
 --
 -- ok actually just delete the db and recreate it
 
-DROP SCHEMA paissadb.public;
+DROP SCHEMA public;
 
-CREATE SCHEMA paissadb.public;
-COMMENT ON SCHEMA paissadb.public IS 'standard public schema';
-ALTER SCHEMA paissadb.public OWNER TO postgres;
-GRANT CREATE, USAGE ON SCHEMA paissadb.public TO PUBLIC;
+CREATE SCHEMA public;
+COMMENT ON SCHEMA public IS 'standard public schema';
+ALTER SCHEMA public OWNER TO postgres;
+GRANT CREATE, USAGE ON SCHEMA public TO PUBLIC;
