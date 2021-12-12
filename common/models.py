@@ -101,7 +101,6 @@ class PlotState(Base):
     first_seen = Column(Float)
 
     is_owned = Column(Boolean)
-    has_built_house = Column(Boolean)  # used to determine if a plot was reloed into or bought (not super accurate)
     last_seen_price = Column(Integer, nullable=True)  # null for unknown price
     owner_name = Column(String, nullable=True)  # "Unknown" for unknown owner (UNKNOWN_OWNER), used to build relo graph
 
