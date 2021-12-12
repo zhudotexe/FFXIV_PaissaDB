@@ -71,11 +71,16 @@ class Worker:
                     self.db.add(new_state)
                     self.db.enable_relationship_loading(new_state)
 
-                    if not new_state.is_owned:
-                        transition_detail = schemas.paissa.WSPlotOpened(data=calc.open_plot_detail(new_state, state))
-                    else:
-                        transition_detail = schemas.paissa.WSPlotSold(data=calc.sold_plot_detail(new_state, state))
-                    await self.broadcast(transition_detail.json())
+                    if state.is_owned != state.is_owned:
+                        if not new_state.is_owned:
+                            transition_detail = schemas.paissa.WSPlotOpened(
+                                data=calc.open_plot_detail(new_state, state)
+                            )
+                        else:
+                            transition_detail = schemas.paissa.WSPlotSold(
+                                data=calc.sold_plot_detail(new_state, state)
+                            )
+                        await self.broadcast(transition_detail.json())
                 break
             # elif state's last_seen  > event's timestamp > state's first_seen:
             elif state.last_seen >= plot_state_event.timestamp >= state.first_seen:
