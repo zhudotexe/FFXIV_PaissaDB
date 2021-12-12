@@ -136,7 +136,7 @@ async def plot_updates(websocket: WebSocket, jwt: Optional[str] = None, db: Sess
 async def on_startup():
     # this never gets cancelled explicitly, it's just killed when the app dies
     asyncio.create_task(ws.broadcast_listener())
-    asyncio.create_task(metrics.event_queue_task())
+    asyncio.create_task(metrics.metrics_task())
 
 
 @app.on_event("shutdown")
