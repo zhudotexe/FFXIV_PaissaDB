@@ -1,6 +1,8 @@
 import asyncio
 import logging
 
+import sentry_sdk
+from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 from sqlalchemy.orm import Session
 
 from common import calc, config, crud, gamedata, models, schemas
@@ -19,6 +21,12 @@ class Worker:
     async def init(self):
         models.Base.metadata.create_all(bind=engine)
         gamedata.upsert_all(gamedata_dir=config.GAMEDATA_DIR, db=self.db)
+        if config.SENTRY_DSN is not None:
+            sentry_sdk.init(
+                dsn=config.SENTRY_DSN,
+                environment=config.SENTRY_ENV,
+                integrations=[SqlalchemyIntegration()]
+            )
 
     async def main_loop(self):
         while True:
