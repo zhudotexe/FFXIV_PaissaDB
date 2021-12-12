@@ -39,14 +39,29 @@ async def metrics_task():
             await asyncio.sleep(AGG_METRICS_REFRESH_TIME)
 
 
+# ==== prom ====
+def register(app):
+    """Registers and exposes instrumentation on the given FastAPI instance."""
+    Instrumentator().instrument(app).expose(app, include_in_schema=False)
+
+
+event_qsize = Gauge('event_qsize', 'The size of the event processing queue')
+event_qsize.set_function(lambda: _event_queue_size)
+
+ws_conns = Gauge('ws_conns', 'The number of clients connected to the websocket')
+ws_conns.set_function(lambda: _num_ws_conns)
+
+
+# ==== agg metric primitives ====
 async def _update_agg_metrics():
     """Writes this worker's portion of the agg metrics to redis"""
-    await redis.set(
-        f"{METRICS_KEY_PREFIX}:ws_conns:{WORKER_ID}",
-        len(ws.clients),
-        ex=AGG_METRICS_REFRESH_TIME + 1
-    )
+    await _set_agg_metric("ws_conns", len(ws.clients))
     await redis.sadd(f"{METRICS_KEY_PREFIX}:members", WORKER_ID)
+
+
+async def _set_agg_metric(metric: str, data):
+    """Sets an agg metric for this worker."""
+    await redis.set(f"{METRICS_KEY_PREFIX}:{metric}:{WORKER_ID}", data, ex=AGG_METRICS_REFRESH_TIME + 1)
 
 
 async def _fetch_agg_metric(metric: str, strategy: Callable[[Dict[str, str]], T] = lambda d: d) -> T:
@@ -66,20 +81,6 @@ async def _fetch_agg_metric(metric: str, strategy: Callable[[Dict[str, str]], T]
     return strategy(data)
 
 
-# ==== prom ====
-def register(app):
-    """Registers and exposes instrumentation on the given FastAPI instance."""
-    Instrumentator().instrument(app).expose(app, include_in_schema=False)
-
-
-event_qsize = Gauge('event_qsize', 'The size of the event processing queue')
-event_qsize.set_function(lambda: _event_queue_size)
-
-ws_conns = Gauge('ws_conns', 'The number of clients connected to the websocket')
-ws_conns.set_function(lambda: _num_ws_conns)
-
-
-# ==== helpers ====
 def sum_values(data: Dict[str, str]) -> int:
     """Sum the values of a dict."""
     return sum(map(int, data.values()))
