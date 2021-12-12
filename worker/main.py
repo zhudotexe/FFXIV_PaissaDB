@@ -61,6 +61,7 @@ class Worker:
                 else:
                     new_state = utils.new_state_from_event(plot_state_event)
                     self.db.add(new_state)
+                    self.db.enable_relationship_loading(new_state)
 
                     if not new_state.is_owned:
                         transition_detail = calc.open_plot_detail(new_state, state)
