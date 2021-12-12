@@ -58,11 +58,11 @@ async def _fetch_agg_metric(metric: str, strategy: Callable[[Dict[str, str]], T]
     members = await redis.smembers(f"{METRICS_KEY_PREFIX}:members")
     data = {}
     for member_id in members:
-        worker_data = await redis.get(f"{METRICS_KEY_PREFIX}:{metric}:{WORKER_ID}")
-        if worker_data is None:
+        member_data = await redis.get(f"{METRICS_KEY_PREFIX}:{metric}:{member_id}")
+        if member_data is None:
             await redis.srem(f"{METRICS_KEY_PREFIX}:members", member_id)
         else:
-            data[member_id] = worker_data
+            data[member_id] = member_data
     return strategy(data)
 
 
