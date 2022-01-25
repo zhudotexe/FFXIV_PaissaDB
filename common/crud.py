@@ -138,6 +138,14 @@ async def bulk_ingest(db: Session, data: List[schemas.ffxiv.BaseFFXIVPacket], sw
 
     pipeline.multi()
     for datum in data:
+        # add to redis - switch on event type
+        if isinstance(datum, schemas.ffxiv.HousingWardInfo):
+            if datum.LandIdent.WorldId == 0:  # sometimes the server is borked and sends us fully null data
+                continue
+            await _ingest_wardinfo(pipeline, datum)
+        else:
+            raise ValueError(f"Unknown event type: {datum.event_type}")
+
         # add to postgres
         db_event = models.Event(
             sweeper_id=sweeper_id,
@@ -146,12 +154,6 @@ async def bulk_ingest(db: Session, data: List[schemas.ffxiv.BaseFFXIVPacket], sw
             data=datum.json().replace('\x00', '')  # remove any null bytes that might sneak in somehow
         )
         db.add(db_event)
-
-        # add to redis - switch on event type
-        if isinstance(datum, schemas.ffxiv.HousingWardInfo):
-            await _ingest_wardinfo(pipeline, datum)
-        else:
-            raise ValueError(f"Unknown event type: {datum.event_type}")
     await pipeline.execute()
     await utils.executor(db.commit)
 
