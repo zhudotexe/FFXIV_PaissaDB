@@ -3849,7 +3849,7 @@ East Shroud",0,0,1,0,1,"",0,0,0
 3795,"The Halberd's Head",1,"Halberd's Head",0,0,1,0,0,"",0,0,0
 3796,"The Halberd's Head Subdivision",1,"Halberd's Head subdivision",0,0,1,0,0,"",0,0,0
 3797,"The Fervid Limbo",1,"Fervid Limbo",0,0,1,0,0,"",0,0,0
-3798,"",0,"",0,0,0,0,0,"",0,0,0
+3798,"The Stagnant Limbo",1,"Stagnant Limbo",0,0,1,0,0,"",0,0,0
 3799,"",0,"",0,0,1,0,0,"",0,0,0
 3800,"The Studium",1,"Studium",0,0,1,0,0,"",0,1301,0
 3801,"Phenomenon",1,"Phenomenon",0,0,1,0,1,"",0,1302,0
@@ -4162,13 +4162,13 @@ East Shroud",0,0,1,0,1,"",0,0,0
 4108,"Grebuloff Pillars",0,"Grebuloff pillars",0,0,1,0,0,"",0,0,0
 4109,"Judgment Day",2,"Judgment Day",0,0,1,0,1,"",0,0,0
 4110,"The Plenty",1,"Plenty",0,0,1,0,0,"",0,0,0
-4111,"",0,"",0,0,0,0,0,"",0,0,0
-4112,"",0,"",0,0,0,0,0,"",0,0,0
-4113,"",0,"",0,0,0,0,0,"",0,0,0
-4114,"",0,"",0,0,0,0,0,"",0,0,0
-4115,"",0,"",0,0,0,0,0,"",0,0,0
-4116,"",0,"",0,0,0,0,0,"",0,0,0
-4117,"",0,"",0,0,0,0,0,"",0,0,0
+4111,"The Excitatron 6000",1,"Excitatron 6000",0,0,1,0,0,"",0,0,0
+4112,"Admissions",1,"Admissions",0,0,1,0,1,"",0,0,0
+4113,"Hyperstage 1",2,"hyperstage 1",0,0,1,0,1,"",0,0,0
+4114,"Hyperstage 2",2,"hyperstage 2",0,0,1,0,1,"",0,0,0
+4115,"Hyperstage 3",2,"hyperstage 3",0,0,1,0,1,"",0,0,0
+4116,"Hyperstage 4",2,"hyperstage 4",0,0,1,0,1,"",0,0,0
+4117,"The Hypermost Stage",2,"hypermost stage",0,0,1,0,0,"",0,0,0
 4118,"The Tower of Babil",1,"Tower of Babil",0,0,1,0,0,"",0,0,0
 4119,"Magitek Freight Depot E",1,"Magitek Freight Depot E",0,0,1,0,0,"",0,0,0
 4120,"Subterranean Sector",1,"subterranean sector",0,0,1,0,0,"",0,0,0
@@ -4186,7 +4186,7 @@ East Shroud",0,0,1,0,1,"",0,0,0
 4132,"The Chain",0,"Chain",0,0,1,0,0,"",0,0,0
 4133,"Aetherial Distortion",1,"Aetherial Distortion",0,0,1,0,0,"",0,0,0
 4134,"Anima's Dimension",1,"Anima's dimension",0,0,1,0,1,"",0,0,0
-4135,"",0,"",0,0,0,0,0,"",0,0,0
+4135,"The Sanguine Limbo",0,"Sanguine Limbo",0,0,1,0,1,"",0,0,0
 4136,"Idyllshire",1,"Idyllshire",0,0,1,0,1,"",0,0,0
 4137,"Rhalgr's Reach",1,"Rhalgr's Reach",0,0,1,0,1,"",0,0,0
 4138,"Garlemald",1,"Garlemald",0,0,1,0,1,"",0,0,0
