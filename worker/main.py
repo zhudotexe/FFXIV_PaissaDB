@@ -44,6 +44,7 @@ class Worker:
         data = await self.redis.execute_command("GETDEL", key)  # aioredis doesn't have this yet
         if data is None:
             log.warning(f"Data in key {key} is nil, skipping")
+            return 
         plot_state_event: schemas.paissa.PlotStateEntry = schemas.paissa.PlotStateEntry.parse_raw(data)
         world_id = plot_state_event.world_id
         district_id = plot_state_event.district_id
