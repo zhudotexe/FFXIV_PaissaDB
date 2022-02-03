@@ -44,7 +44,7 @@ class Worker:
         data = await self.redis.execute_command("GETDEL", key)  # aioredis doesn't have this yet
         if data is None:
             log.warning(f"Data in key {key} is nil, skipping")
-            return 
+            return
         plot_state_event: schemas.paissa.PlotStateEntry = schemas.paissa.PlotStateEntry.parse_raw(data)
         world_id = plot_state_event.world_id
         district_id = plot_state_event.district_id
@@ -52,13 +52,15 @@ class Worker:
         plot_num = plot_state_event.plot_num
 
         # get the latest state of the plot
-        for state in crud.historical_plot_state(
-                self.db,
-                plot_state_event.world_id,
-                plot_state_event.district_id,
-                plot_state_event.ward_num,
-                plot_state_event.plot_num,
-                yield_per=1
+        for i, state in enumerate(
+                crud.historical_plot_state(
+                        self.db,
+                        plot_state_event.world_id,
+                        plot_state_event.district_id,
+                        plot_state_event.ward_num,
+                        plot_state_event.plot_num,
+                        yield_per=1
+                )
         ):
             # if event's timestamp  > state's last_seen:
             if plot_state_event.timestamp > state.last_seen:
@@ -67,7 +69,7 @@ class Worker:
                 if utils.plot_state_matches_history(plot_state_event, state):
                     utils.update_historical_state_from(state, plot_state_event)
                 # else create a new state, broadcast state changes, and return
-                else:
+                elif i == 0:  # only if this is the latest state, don't broadcast updates to old states
                     new_state = utils.new_state_from_event(plot_state_event)
                     self.db.add(new_state)
                     self.db.enable_relationship_loading(new_state)
