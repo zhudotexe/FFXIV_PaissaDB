@@ -27,6 +27,7 @@ def update_historical_state_from(historical_state: models.PlotState, state_event
     - last_seen_price if latest
     - lotto_entries if latest
     - last_seen if latest
+    - purchase_system if latest
     - owner_name if was None
     """
     if state_event.timestamp > historical_state.last_seen:
@@ -34,6 +35,7 @@ def update_historical_state_from(historical_state: models.PlotState, state_event
             historical_state.last_seen_price = state_event.price
         if state_event.lotto_entries is not None:
             historical_state.lotto_entries = state_event.lotto_entries
+        historical_state.purchase_system = state_event.purchase_system
         historical_state.last_seen = state_event.timestamp
 
     if historical_state.owner_name is None and state_event.owner_name is not None:
@@ -51,6 +53,6 @@ def new_state_from_event(state_event: schemas.paissa.PlotStateEntry) -> models.P
         is_owned=state_event.is_owned,
         last_seen_price=state_event.price,
         owner_name=state_event.owner_name,
-        is_fcfs=state_event.is_fcfs,
+        purchase_system=state_event.purchase_system.value,
         lotto_entries=state_event.lotto_entries
     )

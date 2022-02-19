@@ -104,8 +104,8 @@ class PlotState(Base):
     last_seen_price = Column(Integer, nullable=True)  # null for unknown price
     owner_name = Column(String, nullable=True)  # "Unknown" for unknown owner (UNKNOWN_OWNER), used to build relo graph
 
-    is_fcfs = Column(Boolean)
-    lotto_entries = Column(Integer, nullable=True)  # null if the plot is FCFS
+    purchase_system = Column(Integer)
+    lotto_entries = Column(Integer, nullable=True)  # null if the plot is FCFS (purchase_system is even)
 
     world = relationship("World", viewonly=True)
     district = relationship("District", viewonly=True)

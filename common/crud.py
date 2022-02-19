@@ -130,6 +130,10 @@ def latest_plot_states_in_district(db: Session, world_id: int, district_id: int)
 
 # ==== ingest ====
 DATUM_KEY_STRUCT = struct.Struct("!IIHH32s")  # world: u32, district: u32, ward: u16, plot: u16, ownername: char[32]
+DEFAULT_60_PURCHASE_SYSTEM = (
+        schemas.paissa.PurchaseSystem.INDIVIDUAL |
+        schemas.paissa.PurchaseSystem.FREE_COMPANY
+).value
 
 
 async def bulk_ingest(db: Session, data: List[schemas.ffxiv.BaseFFXIVPacket], sweeper: schemas.paissa.JWTSweeper):
@@ -177,7 +181,7 @@ async def _ingest_wardinfo(pipeline: aioredis.client.Pipeline, wardinfo: schemas
         #     timestamp=server_timestamp,
         #     price=plot.HousePrice,
         #     owner_name=owner_name or None,
-        #     is_fcfs=True
+        #     purchase_system=models.PurchaseSystem.INDIVIDUAL | models.PurchaseSystem.FREE_COMPANY
         # )
         # using pydantic here is really slow so we just make the dict ourselves
         state_entry = dict(
@@ -189,7 +193,7 @@ async def _ingest_wardinfo(pipeline: aioredis.client.Pipeline, wardinfo: schemas
             price=plot.HousePrice,
             is_owned=is_owned,
             owner_name=owner_name or None,
-            is_fcfs=True
+            purchase_system=DEFAULT_60_PURCHASE_SYSTEM  # = 6
         )
 
         await pipeline.set(plot_data_key, json.dumps(state_entry), nx=True, ex=TTL_ONE_HOUR)

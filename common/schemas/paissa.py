@@ -1,8 +1,17 @@
 from __future__ import annotations
 
+import enum
 from typing import Any, List, Optional
 
 from pydantic import BaseModel
+
+
+class PurchaseSystem(enum.IntFlag):
+    # default: FREE_COMPANY | INDIVIDUAL (6)
+    # FCFS = 0  (implicit by lack of lottery tag)
+    LOTTERY = 1
+    FREE_COMPANY = 2
+    INDIVIDUAL = 4
 
 
 # ==== inputs ====
@@ -27,9 +36,9 @@ class PlotStateEntry(BaseModel):
     timestamp: float
     price: int
     is_owned: bool
-    owner_name: Optional[str]
-    is_fcfs: bool
-    lotto_entries: Optional[int]
+    owner_name: Optional[str]  # this can be None if the plot is not owned or if we do not know the owner name
+    purchase_system: PurchaseSystem
+    lotto_entries: Optional[int]  # this can be None if the ward is FCFS or we do not know the number of entries
 
 
 # ==== outputs ====
