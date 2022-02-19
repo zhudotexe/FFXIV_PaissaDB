@@ -8,5 +8,7 @@
 
 ALTER TABLE plot_states
     ADD COLUMN purchase_system INTEGER NOT NULL DEFAULT 6,
-    DROP COLUMN is_fcfs,
+    DROP COLUMN is_fcfs;
+
+ALTER TABLE plot_states
     ALTER COLUMN purchase_system DROP DEFAULT;
