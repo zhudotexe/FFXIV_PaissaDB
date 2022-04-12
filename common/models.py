@@ -14,7 +14,7 @@ from sqlalchemy import (
     Integer,
     String,
     UnicodeText,
-    func
+    func,
 )
 from sqlalchemy.orm import relationship
 
@@ -87,8 +87,7 @@ class PlotState(Base):
     __tablename__ = "plot_states"
     __table_args__ = (
         ForeignKeyConstraint(
-            ("territory_type_id", "plot_number"),
-            ("plotinfo.territory_type_id", "plotinfo.plot_number")
+            ("territory_type_id", "plot_number"), ("plotinfo.territory_type_id", "plotinfo.plot_number")
         ),
     )
 
@@ -134,7 +133,7 @@ Index(
     PlotState.ward_number,
     PlotState.plot_number,
     # and this is for convenience
-    PlotState.last_seen.desc()
+    PlotState.last_seen.desc(),
 )
 Index("ix_plot_states_last_seen_desc", PlotState.last_seen.desc())
 

@@ -61,6 +61,4 @@ class HousingWardInfo(BaseFFXIVPacket):
     HouseInfoEntries: conlist(HouseInfoEntry, min_items=60, max_items=60)
 
 
-EVENT_TYPES = {
-    models.EventType.HOUSING_WARD_INFO.value: HousingWardInfo
-}
+EVENT_TYPES = {models.EventType.HOUSING_WARD_INFO.value: HousingWardInfo}

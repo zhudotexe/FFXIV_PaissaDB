@@ -16,9 +16,9 @@ from common.database import get_db
 from . import auth, metrics, ws
 
 log = logging.getLogger(__name__)
-if 'debug' in sys.argv:
+if "debug" in sys.argv:
     # noinspection PyArgumentList
-    logging.basicConfig(stream=sys.stdout, encoding='utf-8', level=logging.DEBUG)
+    logging.basicConfig(stream=sys.stdout, encoding="utf-8", level=logging.DEBUG)
 
 app = FastAPI()
 
@@ -44,7 +44,7 @@ metrics.register(app)
 async def ingest_wardinfo(
     wardinfo: schemas.ffxiv.HousingWardInfo,
     sweeper: schemas.paissa.JWTSweeper = Depends(auth.required),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """Legacy single-ward ingest endpoint - use /ingest instead"""
     return await bulk_ingest([wardinfo], sweeper, db)
@@ -54,7 +54,7 @@ async def ingest_wardinfo(
 async def bulk_ingest(
     data: List[schemas.ffxiv.BaseFFXIVPacket],
     sweeper: schemas.paissa.JWTSweeper = Depends(auth.required),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     await crud.bulk_ingest(db, data, sweeper)
     return {"message": "OK", "accepted": len(data)}
@@ -64,7 +64,7 @@ async def bulk_ingest(
 def hello(
     data: schemas.paissa.Hello,
     sweeper: schemas.paissa.JWTSweeper = Depends(auth.required),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     if sweeper.cid != data.cid:
         raise HTTPException(400, "Token CID and given CID do not match")
@@ -100,7 +100,7 @@ def get_world(world_id: int, db: Session = Depends(get_db)):
         name=world.name,
         districts=district_details,
         num_open_plots=sum(d.num_open_plots for d in district_details),
-        oldest_plot_time=min(d.oldest_plot_time for d in district_details)
+        oldest_plot_time=min(d.oldest_plot_time for d in district_details),
     )
 
 

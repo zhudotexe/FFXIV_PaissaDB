@@ -27,14 +27,14 @@ class Sweeper(HttpUser):
             "cid": TEST_USER_ID,
             "name": "Locust Test User",
             "world": "Locust Test World",
-            "worldId": TEST_WORLD_ID
+            "worldId": TEST_WORLD_ID,
         }
         self.client.post("/hello", json=hello, headers={"Authorization": f"Bearer {generate_jwt()}"})
 
     @task
     def post_sweep(self):
         data = DUMMY_WARD_INFO.copy()
-        data['server_timestamp'] = time.time()
+        data["server_timestamp"] = time.time()
         self.client.post("/wardInfo", json=data, headers={"Authorization": f"Bearer {generate_jwt()}"})
 
 
@@ -59,10 +59,5 @@ class Sweeper(HttpUser):
 # helpers
 def generate_jwt():
     return jwt.encode(
-        {
-            "cid": TEST_USER_ID,
-            "iss": "PaissaDB",
-            "aud": "PaissaHouse",
-            "iat": time.time()
-        }, "secret", algorithm="HS256"
+        {"cid": TEST_USER_ID, "iss": "PaissaDB", "aud": "PaissaHouse", "iat": time.time()}, "secret", algorithm="HS256"
     )

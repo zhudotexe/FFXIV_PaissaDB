@@ -9,14 +9,18 @@ def plot_state_matches_history(state_event: schemas.paissa.PlotStateEntry, histo
     """
     if state_event.is_owned != historical_state.is_owned:
         return False
-    if (state_event.owner_name is not None
-            and historical_state.owner_name is not None
-            and state_event.owner_name != historical_state.owner_name):
+    if (
+        state_event.owner_name is not None
+        and historical_state.owner_name is not None
+        and state_event.owner_name != historical_state.owner_name
+    ):
         return False
-    return (state_event.world_id == historical_state.world_id
-            and state_event.district_id == historical_state.territory_type_id
-            and state_event.ward_num == historical_state.ward_number
-            and state_event.plot_num == historical_state.plot_number)
+    return (
+        state_event.world_id == historical_state.world_id
+        and state_event.district_id == historical_state.territory_type_id
+        and state_event.ward_num == historical_state.ward_number
+        and state_event.plot_num == historical_state.plot_number
+    )
 
 
 def update_historical_state_from(historical_state: models.PlotState, state_event: schemas.paissa.PlotStateEntry):
@@ -54,5 +58,5 @@ def new_state_from_event(state_event: schemas.paissa.PlotStateEntry) -> models.P
         last_seen_price=state_event.price,
         owner_name=state_event.owner_name,
         purchase_system=state_event.purchase_system.value,
-        lotto_entries=state_event.lotto_entries
+        lotto_entries=state_event.lotto_entries,
     )

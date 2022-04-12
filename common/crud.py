@@ -50,13 +50,13 @@ def historical_plot_state(
     ward_number: int,
     plot_number: int,
     before: float = None,
-    yield_per: int = 10
+    yield_per: int = 10,
 ) -> Iterator[models.PlotState]:
     q = db.query(models.PlotState).filter(
         models.PlotState.world_id == world_id,
         models.PlotState.territory_type_id == district_id,
         models.PlotState.ward_number == ward_number,
-        models.PlotState.plot_number == plot_number
+        models.PlotState.plot_number == plot_number,
     )
     if before is not None:
         q = q.filter(models.PlotState.last_seen <= before)
@@ -64,20 +64,19 @@ def historical_plot_state(
 
 
 def last_state_transition(
-    db: Session,
-    current_state: models.PlotState
+    db: Session, current_state: models.PlotState
 ) -> Tuple[Optional[models.PlotState], Optional[models.PlotState]]:
     """Get the most recent pair of states (to, from) in which a given plot transitioned to the *is_owned* state."""
     next_state = current_state
 
     for state in historical_plot_state(
-            db,
-            current_state.world_id,
-            current_state.territory_type_id,
-            current_state.ward_number,
-            current_state.plot_number,
-            before=current_state.first_seen,
-            yield_per=1
+        db,
+        current_state.world_id,
+        current_state.territory_type_id,
+        current_state.ward_number,
+        current_state.plot_number,
+        before=current_state.first_seen,
+        yield_per=1,
     ):
         if state.is_owned != current_state.is_owned:
             break
@@ -111,17 +110,21 @@ def latest_plot_states_in_district(db: Session, world_id: int, district_id: int)
     #         AND territory_type_id = ?
     #     ORDER BY ward_number, plot_number, last_seen DESC;
 
-    if config.DB_TYPE == 'postgresql':
+    if config.DB_TYPE == "postgresql":
         db.execute("SET LOCAL work_mem = '32MB'")
-        stmt = db.query(models.PlotState) \
-            .distinct(models.PlotState.ward_number, models.PlotState.plot_number) \
-            .filter(models.PlotState.world_id == world_id, models.PlotState.territory_type_id == district_id) \
+        stmt = (
+            db.query(models.PlotState)
+            .distinct(models.PlotState.ward_number, models.PlotState.plot_number)
+            .filter(models.PlotState.world_id == world_id, models.PlotState.territory_type_id == district_id)
             .order_by(models.PlotState.ward_number, models.PlotState.plot_number, desc(models.PlotState.last_seen))
+        )
     else:
-        subq = db.query(models.PlotState.id, func.max(models.PlotState.last_seen)) \
-            .filter(models.PlotState.world_id == world_id, models.PlotState.territory_type_id == district_id) \
-            .group_by(models.PlotState.ward_number, models.PlotState.plot_number) \
+        subq = (
+            db.query(models.PlotState.id, func.max(models.PlotState.last_seen))
+            .filter(models.PlotState.world_id == world_id, models.PlotState.territory_type_id == district_id)
+            .group_by(models.PlotState.ward_number, models.PlotState.plot_number)
             .subquery()
+        )
         latest_plots = aliased(models.PlotState, subq)
         stmt = db.query(models.PlotState).join(latest_plots, models.PlotState.id == latest_plots.id)
     result = stmt.all()
@@ -131,8 +134,7 @@ def latest_plot_states_in_district(db: Session, world_id: int, district_id: int)
 # ==== ingest ====
 DATUM_KEY_STRUCT = struct.Struct("!IIHH32s")  # world: u32, district: u32, ward: u16, plot: u16, ownername: char[32]
 DEFAULT_60_PURCHASE_SYSTEM = (
-        schemas.paissa.PurchaseSystem.INDIVIDUAL |
-        schemas.paissa.PurchaseSystem.FREE_COMPANY
+    schemas.paissa.PurchaseSystem.INDIVIDUAL | schemas.paissa.PurchaseSystem.FREE_COMPANY
 ).value
 
 
@@ -155,7 +157,7 @@ async def bulk_ingest(db: Session, data: List[schemas.ffxiv.BaseFFXIVPacket], sw
             sweeper_id=sweeper_id,
             timestamp=datum.server_timestamp,
             event_type=datum.event_type,
-            data=datum.json().replace('\x00', '')  # remove any null bytes that might sneak in somehow
+            data=datum.json().replace("\x00", ""),  # remove any null bytes that might sneak in somehow
         )
         db.add(db_event)
     await pipeline.execute()
@@ -193,7 +195,7 @@ async def _ingest_wardinfo(pipeline: aioredis.client.Pipeline, wardinfo: schemas
             price=plot.HousePrice,
             is_owned=is_owned,
             owner_name=owner_name or None,
-            purchase_system=DEFAULT_60_PURCHASE_SYSTEM  # = 6
+            purchase_system=DEFAULT_60_PURCHASE_SYSTEM,  # = 6
         )
 
         await pipeline.set(plot_data_key, json.dumps(state_entry), nx=True, ex=TTL_ONE_HOUR)

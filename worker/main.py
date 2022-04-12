@@ -23,9 +23,7 @@ class Worker:
         gamedata.upsert_all(gamedata_dir=config.GAMEDATA_DIR, db=self.db)
         if config.SENTRY_DSN is not None:
             sentry_sdk.init(
-                dsn=config.SENTRY_DSN,
-                environment=config.SENTRY_ENV,
-                integrations=[SqlalchemyIntegration()]
+                dsn=config.SENTRY_DSN, environment=config.SENTRY_ENV, integrations=[SqlalchemyIntegration()]
             )
 
     async def main_loop(self):
@@ -53,14 +51,14 @@ class Worker:
 
         # get the latest state of the plot
         for i, state in enumerate(
-                crud.historical_plot_state(
-                        self.db,
-                        plot_state_event.world_id,
-                        plot_state_event.district_id,
-                        plot_state_event.ward_num,
-                        plot_state_event.plot_num,
-                        yield_per=1
-                )
+            crud.historical_plot_state(
+                self.db,
+                plot_state_event.world_id,
+                plot_state_event.district_id,
+                plot_state_event.ward_num,
+                plot_state_event.plot_num,
+                yield_per=1,
+            )
         ):
             # if event's timestamp  > state's last_seen:
             if plot_state_event.timestamp > state.last_seen:
@@ -80,9 +78,7 @@ class Worker:
                                 data=calc.open_plot_detail(new_state, state)
                             )
                         else:
-                            transition_detail = schemas.paissa.WSPlotSold(
-                                data=calc.sold_plot_detail(new_state, state)
-                            )
+                            transition_detail = schemas.paissa.WSPlotSold(data=calc.sold_plot_detail(new_state, state))
                         await self.broadcast(transition_detail.json())
                 break
             # elif state's last_seen  > event's timestamp > state's first_seen:

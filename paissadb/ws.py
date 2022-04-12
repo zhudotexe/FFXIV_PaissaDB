@@ -62,13 +62,10 @@ async def broadcast_listener():
     await pubsub.subscribe(PUBSUB_WS_CHANNEL)
     while True:
         try:
-            message = pubsub.handle_message(
-                await pubsub.parse_response(block=True),
-                ignore_subscribe_messages=True
-            )
+            message = pubsub.handle_message(await pubsub.parse_response(block=True), ignore_subscribe_messages=True)
             if message is None:
                 continue
-            data = message['data']
+            data = message["data"]
             # we do this instead of iterating over the clients for concurrency and so the clients list cannot
             # change during our iteration
             # we don't care about bad connections here, the ping will clean those up

@@ -55,14 +55,16 @@ def is_new_owner(db, plot, sale_details):
     #     return True
 
     # time to make a chonky query (~1500ms cold)
-    owned = db.query(models.Plot) \
-        .filter(models.Plot.world_id == plot.world_id) \
+    owned = (
+        db.query(models.Plot)
+        .filter(models.Plot.world_id == plot.world_id)
         .filter(
-        models.Plot.timestamp < sale_details.est_time_sold_min,
-        models.Plot.timestamp >= sale_details.est_time_sold_min - datetime.timedelta(days=7)
-    ) \
-        .filter(models.Plot.owner_name == plot.owner_name) \
+            models.Plot.timestamp < sale_details.est_time_sold_min,
+            models.Plot.timestamp >= sale_details.est_time_sold_min - datetime.timedelta(days=7),
+        )
+        .filter(models.Plot.owner_name == plot.owner_name)
         .count()
+    )
 
     return owned == 0
 
@@ -102,7 +104,7 @@ class SaleStatGenerator:
             time_sold_max=sale_details.est_time_sold_max,
             is_relo=sale_is_relo,
             known_price=opening_details.known_price,
-            last_presale_data_id=current.id
+            last_presale_data_id=current.id,
         )
 
 
@@ -120,7 +122,7 @@ def t_processor(dq, sq):
         with SessionLocal() as db:
             district = crud.get_district_by_id(db, district_id)
             world = crud.get_world_by_id(db, world_id)
-            with timer(f'{process.name}', f'{world_id}-{district_id} ({world.name}, {district.name})'):
+            with timer(f"{process.name}", f"{world_id}-{district_id} ({world.name}, {district.name})"):
                 latest_plots = crud.get_latest_plots_in_district(db, world_id, district_id)
                 for plot in latest_plots:
                     statter = SaleStatGenerator(db, plot)
@@ -130,7 +132,7 @@ def t_processor(dq, sq):
 
 
 def t_writer(sq):
-    with open('sales.csv', 'w', newline='') as f:
+    with open("sales.csv", "w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=PlotSale.__fields__.keys())
         writer.writeheader()
         while True:
@@ -141,8 +143,8 @@ def t_writer(sq):
 
 def run():
     # set working tz to UTC, if on Windows you should do this system-wide in time settings
-    if sys.platform != 'win32':
-        os.environ['TZ'] = 'Etc/UTC'
+    if sys.platform != "win32":
+        os.environ["TZ"] = "Etc/UTC"
         time.tzset()
     else:
         input("Make sure your system clock is set to UTC! (Press enter to continue)")
@@ -166,6 +168,6 @@ def run():
     sale_q.join()
 
 
-if __name__ == '__main__':
-    with timer('MAIN', 'all'):
+if __name__ == "__main__":
+    with timer("MAIN", "all"):
         run()

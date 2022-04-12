@@ -7,9 +7,9 @@ from common import config
 # ==== sql ====
 engine_kwargs = {}
 
-if config.DB_TYPE == 'sqlite':
+if config.DB_TYPE == "sqlite":
     engine_kwargs.update(connect_args={"check_same_thread": False})
-elif config.DB_TYPE == 'postgresql':
+elif config.DB_TYPE == "postgresql":
     engine_kwargs.update(pool_size=10, max_overflow=20)
 
 engine = create_engine(config.DB_URI, **engine_kwargs, echo=False)

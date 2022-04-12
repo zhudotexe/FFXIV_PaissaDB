@@ -45,10 +45,10 @@ def register(app):
     Instrumentator().instrument(app).expose(app, include_in_schema=False)
 
 
-event_qsize = Gauge('event_qsize', 'The size of the event processing queue')
+event_qsize = Gauge("event_qsize", "The size of the event processing queue")
 event_qsize.set_function(lambda: _event_queue_size)
 
-ws_conns = Gauge('ws_conns', 'The number of clients connected to the websocket')
+ws_conns = Gauge("ws_conns", "The number of clients connected to the websocket")
 ws_conns.set_function(lambda: _num_ws_conns)
 
 

@@ -29,6 +29,7 @@ class JWTSweeper(BaseModel):
 # ==== internal ====
 class PlotStateEntry(BaseModel):
     """Model used to store some plot data in redis for later processing"""
+
     world_id: int
     district_id: int
     ward_num: int
@@ -88,6 +89,7 @@ class SoldPlotDetail(BaseModel):
 
 class TemporarilyDisabled(BaseModel):
     """Temporary response model used to indicate that an endpoint is disabled due to high load."""
+
     message: Optional[str]
     until: Optional[float]
     indefinite: bool
