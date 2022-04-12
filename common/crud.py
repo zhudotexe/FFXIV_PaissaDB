@@ -195,8 +195,15 @@ async def _ingest_wardinfo(pipeline: aioredis.client.Pipeline, wardinfo: schemas
             price=plot.HousePrice,
             is_owned=is_owned,
             owner_name=owner_name or None,
-            purchase_system=DEFAULT_60_PURCHASE_SYSTEM,  # = 6
+            purchase_system=_get_default_61_purchase_system(ward_num).value,
         )
 
         await pipeline.set(plot_data_key, json.dumps(state_entry), nx=True, ex=TTL_ONE_HOUR)
         await pipeline.zadd(EVENT_QUEUE_KEY, {plot_data_key: server_timestamp}, nx=True)
+
+
+def _get_default_61_purchase_system(ward_num: int) -> schemas.paissa.PurchaseSystem:
+    """In 6.1 all wards are lottery; wards 1-18 (0-17) are FC only and 19-24 (18-23) are individual only"""
+    if ward_num > 17:
+        return schemas.paissa.PurchaseSystem.INDIVIDUAL | schemas.paissa.PurchaseSystem.LOTTERY
+    return schemas.paissa.PurchaseSystem.FREE_COMPANY | schemas.paissa.PurchaseSystem.LOTTERY
