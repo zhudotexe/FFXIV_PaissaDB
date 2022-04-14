@@ -18,6 +18,16 @@ class HousingFlags(enum.IntFlag):
     OwnedByFC = 1 << 4
 
 
+class PurchaseType(enum.IntEnum):
+    FCFS = 1
+    Lottery = 2
+
+
+class TenantFlags(enum.IntFlag):
+    FreeCompany = 1 << 0
+    Personal = 1 << 1
+
+
 class LandIdent(BaseModel):
     LandId: int
     WardNumber: int
@@ -59,6 +69,8 @@ class HousingWardInfo(BaseFFXIVPacket):
 
     LandIdent: LandIdent
     HouseInfoEntries: conlist(HouseInfoEntry, min_items=60, max_items=60)
+    PurchaseType: PurchaseType
+    TenantFlags: TenantFlags
 
 
 EVENT_TYPES = {models.EventType.HOUSING_WARD_INFO.value: HousingWardInfo}

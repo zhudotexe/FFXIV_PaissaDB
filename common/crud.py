@@ -175,16 +175,7 @@ async def _ingest_wardinfo(pipeline: aioredis.client.Pipeline, wardinfo: schemas
         key_data = DATUM_KEY_STRUCT.pack(world_id, district_id, ward_num, plot_num, owner_name.encode())
         hashed = hashlib.sha256(key_data).hexdigest()
         plot_data_key = f"event.wardinfo.plot:{hashed}"
-        # state_entry = schemas.paissa.PlotStateEntry(
-        #     world_id=world_id,
-        #     district_id=district_id,
-        #     ward_num=ward_num,
-        #     plot_num=plot_num,
-        #     timestamp=server_timestamp,
-        #     price=plot.HousePrice,
-        #     owner_name=owner_name or None,
-        #     purchase_system=models.PurchaseSystem.INDIVIDUAL | models.PurchaseSystem.FREE_COMPANY
-        # )
+        purchase_system = ffxiv_purchase_info_to_paissa(wardinfo)
         # using pydantic here is really slow so we just make the dict ourselves
         state_entry = dict(
             world_id=world_id,
@@ -195,15 +186,19 @@ async def _ingest_wardinfo(pipeline: aioredis.client.Pipeline, wardinfo: schemas
             price=plot.HousePrice,
             is_owned=is_owned,
             owner_name=owner_name or None,
-            purchase_system=_get_default_61_purchase_system(ward_num).value,
+            purchase_system=purchase_system.value,
         )
 
         await pipeline.set(plot_data_key, json.dumps(state_entry), nx=True, ex=TTL_ONE_HOUR)
         await pipeline.zadd(EVENT_QUEUE_KEY, {plot_data_key: server_timestamp}, nx=True)
 
 
-def _get_default_61_purchase_system(ward_num: int) -> schemas.paissa.PurchaseSystem:
-    """In 6.1 all wards are lottery; wards 1-18 (0-17) are FC only and 19-24 (18-23) are individual only"""
-    if ward_num > 17:
-        return schemas.paissa.PurchaseSystem.INDIVIDUAL | schemas.paissa.PurchaseSystem.LOTTERY
-    return schemas.paissa.PurchaseSystem.FREE_COMPANY | schemas.paissa.PurchaseSystem.LOTTERY
+def ffxiv_purchase_info_to_paissa(wardinfo: schemas.ffxiv.HousingWardInfo) -> schemas.paissa.PurchaseSystem:
+    purchase_system = schemas.paissa.PurchaseSystem(0)
+    if wardinfo.PurchaseType == schemas.ffxiv.PurchaseType.Lottery:
+        purchase_system |= schemas.paissa.PurchaseSystem.LOTTERY
+    if wardinfo.TenantFlags & schemas.ffxiv.TenantFlags.Personal:
+        purchase_system |= schemas.paissa.PurchaseSystem.INDIVIDUAL
+    if wardinfo.TenantFlags & schemas.ffxiv.TenantFlags.FreeCompany:
+        purchase_system |= schemas.paissa.PurchaseSystem.FREE_COMPANY
+    return purchase_system
