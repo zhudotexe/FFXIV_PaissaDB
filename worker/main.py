@@ -90,7 +90,10 @@ class Worker:
         # if it matches, update last_seen and broadcast any applicable updates
         if not utils.should_create_new_state(plot_state_event, old_state):
             if (
-                (plot_state_event.lotto_entries > (old_state.lotto_entries or 0))
+                (
+                    plot_state_event.lotto_entries is not None
+                    and plot_state_event.lotto_entries > (old_state.lotto_entries or 0)
+                )
                 or (plot_state_event.lotto_phase is not None and old_state.lotto_phase is None)
             ) and is_newest:
                 await self.broadcast(
