@@ -40,16 +40,6 @@ metrics.register(app)
 
 
 # ==== HTTP ====
-@app.post("/wardInfo", status_code=202)
-async def ingest_wardinfo(
-    wardinfo: schemas.ffxiv.HousingWardInfo,
-    sweeper: schemas.paissa.JWTSweeper = Depends(auth.required),
-    db: Session = Depends(get_db),
-):
-    """Legacy single-ward ingest endpoint - use /ingest instead"""
-    return await bulk_ingest([wardinfo], sweeper, db)
-
-
 @app.post("/ingest", status_code=202)
 async def bulk_ingest(
     data: List[schemas.ffxiv.BaseFFXIVPacket],

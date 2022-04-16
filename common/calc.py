@@ -52,10 +52,14 @@ def open_plot_detail(
         ward_number=first_open_state.ward_number,
         plot_number=first_open_state.plot_number,
         size=first_open_state.plot_info.house_size,
-        last_seen_price=first_open_state.last_seen_price or first_open_state.plot_info.house_base_price,
+        price=first_open_state.last_seen_price or first_open_state.plot_info.house_base_price,
         last_updated_time=first_open_state.last_seen,
         est_time_open_min=est_time_open_min,
         est_time_open_max=est_time_open_max,
+        purchase_system=first_open_state.purchase_system,
+        lotto_entries=first_open_state.lotto_entries,
+        lotto_phase=first_open_state.lotto_phase,
+        lotto_phase_until=first_open_state.lotto_phase_until,
     )
 
 

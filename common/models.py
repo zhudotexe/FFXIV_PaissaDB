@@ -24,19 +24,7 @@ UNKNOWN_OWNER = "Unknown"
 
 class EventType(enum.Enum):
     HOUSING_WARD_INFO = "HOUSING_WARD_INFO"
-    # LAND_UPDATE (house sold, reloed, autodemoed, etc)
-    #   https://github.com/SapphireServer/Sapphire/blob/master/src/common/Network/PacketDef/Zone/ServerZoneDef.h#L1888
-    #   https://github.com/SapphireServer/Sapphire/blob/master/src/world/Manager/HousingMgr.cpp#L365
-    # LAND_SET_INITIALIZE (sent on zonein)
-    #   https://github.com/SapphireServer/Sapphire/blob/master/src/common/Network/PacketDef/Zone/ServerZoneDef.h#L1943
-    #   https://github.com/SapphireServer/Sapphire/blob/master/src/world/Territory/HousingZone.cpp#L197
-    # LAND_SET_MAP (sent on zonein, after init, probably the useful one)
-    #   https://github.com/SapphireServer/Sapphire/blob/master/src/common/Network/PacketDef/Zone/ServerZoneDef.h#L1929
-    #   https://github.com/SapphireServer/Sapphire/blob/master/src/world/Territory/HousingZone.cpp#L154
-    # other packets:
-    #   LAND_INFO_SIGN (view placard on owned house) - probably not useful, if we get this we already got a LAND_SET_MAP
-    #       and if the ward changed since then, we got a LAND_UPDATE
-    #   LAND_PRICE_UPDATE (view placard on unowned house) - similar to above, plus spammy if someone is buying a house
+    LOTTERY_INFO = "LOTTERY_INFO"
 
 
 # ==== Table defs ====
@@ -103,6 +91,8 @@ class PlotState(Base):
 
     purchase_system = Column(Integer)
     lotto_entries = Column(Integer, nullable=True)  # null if the plot is FCFS (purchase_system is even)
+    lotto_phase = Column(Integer, nullable=True)
+    lotto_phase_until = Column(Integer, nullable=True)
 
     world = relationship("World", viewonly=True)
     district = relationship("District", viewonly=True)

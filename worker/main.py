@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import signal
 
 import sentry_sdk
 from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
@@ -17,6 +18,7 @@ class Worker:
     def __init__(self):
         self.redis = redis
         self.db: Session = SessionLocal()
+        self.running = True
 
     async def init(self):
         models.Base.metadata.create_all(bind=engine)
@@ -27,7 +29,7 @@ class Worker:
             )
 
     async def main_loop(self):
-        while True:
+        while self.running:
             try:
                 _, data_key, score = await self.redis.bzpopmin(EVENT_QUEUE_KEY)
                 log.debug(f"Got {data_key} off the event PQ with score {score}")
@@ -63,36 +65,12 @@ class Worker:
             # if event's timestamp  > state's last_seen:
             if plot_state_event.timestamp > state.last_seen:
                 log.debug(f"Event {key} updates state {state.id} with new time")
-                # if it matches, update last_seen (and possibly owner name, lotto_entries) and return
-                if utils.plot_state_matches_history(plot_state_event, state):
-                    utils.update_historical_state_from(state, plot_state_event)
-                # else create a new state, broadcast state changes, and return
-                elif i == 0:  # only if this is the latest state, don't broadcast updates to old states
-                    new_state = utils.new_state_from_event(plot_state_event)
-                    self.db.add(new_state)
-                    self.db.enable_relationship_loading(new_state)
-
-                    if new_state.is_owned != state.is_owned:
-                        if not new_state.is_owned:
-                            transition_detail = schemas.paissa.WSPlotOpened(
-                                data=calc.open_plot_detail(new_state, state)
-                            )
-                        else:
-                            transition_detail = schemas.paissa.WSPlotSold(data=calc.sold_plot_detail(new_state, state))
-                        await self.broadcast(transition_detail.json())
+                await self.handle_later_state(plot_state_event, state, is_newest=i == 0)
                 break
             # elif state's last_seen  > event's timestamp > state's first_seen:
             elif state.last_seen >= plot_state_event.timestamp >= state.first_seen:
                 log.debug(f"Event {key} falls within {state.id}")
-                # if it matches, update owner name (if it's None) and return
-                if utils.plot_state_matches_history(plot_state_event, state):
-                    utils.update_historical_state_from(state, plot_state_event)
-                # otherwise cry (create 2 new states, I guess)
-                else:
-                    log.warning(
-                        f"Event falls within state history but does not match state: "
-                        f"event={plot_state_event!r}, history={state!r}"
-                    )
+                await self.handle_intermediate_state(plot_state_event, state)
                 break
             # else state's first_seen > event's timestamp
             # get the previous state and do this again (continue loop)
@@ -107,14 +85,73 @@ class Worker:
         # whatever changes we made, they're good here
         self.db.commit()
 
+    async def handle_later_state(
+        self, plot_state_event: schemas.paissa.PlotStateEntry, old_state: models.PlotState, is_newest: bool
+    ):
+        # if it matches, update last_seen and broadcast any applicable updates
+        if not utils.should_create_new_state(plot_state_event, old_state):
+            if (
+                (plot_state_event.lotto_entries > (old_state.lotto_entries or 0))
+                or (plot_state_event.lotto_phase is not None and old_state.lotto_phase is None)
+            ) and is_newest:
+                await self.broadcast(
+                    schemas.paissa.WSPlotUpdate(
+                        data=schemas.paissa.PlotUpdate(
+                            world_id=plot_state_event.world_id,
+                            district_id=plot_state_event.district_id,
+                            ward_number=plot_state_event.ward_num,
+                            plot_number=plot_state_event.plot_num,
+                            size=old_state.plot_info.house_size,
+                            price=old_state.plot_info.house_base_price,
+                            last_updated_time=plot_state_event.timestamp,
+                            purchase_system=plot_state_event.purchase_system,
+                            lotto_entries=plot_state_event.lotto_entries,
+                            lotto_phase=plot_state_event.lotto_phase,
+                            previous_lotto_phase=old_state.lotto_phase,
+                            lotto_phase_until=plot_state_event.lotto_phase_until,
+                        )
+                    ).json()
+                )
+            utils.update_historical_state_from(old_state, plot_state_event)
+        # else create a new state, broadcast state changes, and return
+        elif is_newest:  # only if this is the latest state, don't broadcast updates to old states
+            new_state = utils.new_state_from_event(plot_state_event)
+            self.db.add(new_state)
+            self.db.enable_relationship_loading(new_state)
+
+            if new_state.is_owned != old_state.is_owned:
+                if not new_state.is_owned:
+                    transition_detail = schemas.paissa.WSPlotOpened(data=calc.open_plot_detail(new_state, old_state))
+                else:
+                    transition_detail = schemas.paissa.WSPlotSold(data=calc.sold_plot_detail(new_state, old_state))
+                await self.broadcast(transition_detail.json())
+
+    @staticmethod
+    async def handle_intermediate_state(
+        plot_state_event: schemas.paissa.PlotStateEntry, previous_state: models.PlotState
+    ):
+        # if it doesn't match, cry
+        if utils.should_create_new_state(plot_state_event, previous_state):
+            log.warning(
+                f"Event falls within state history but does not match state: "
+                f"event={plot_state_event!r}, history={previous_state!r}"
+            )
+            return
+        # otherwise just save the changes to db
+        utils.update_historical_state_from(previous_state, plot_state_event)
+
     async def broadcast(self, data: str):
         """Sends some string data to the web workers to broadcast to all connected websockets."""
         await self.redis.publish(PUBSUB_WS_CHANNEL, data)
+
+    def handle_sigint(self, sig, frame):
+        self.running = False
 
 
 async def run():
     """Primary entrypoint for a worker instance. Sets up the loop that processes anything in the event PQ."""
     worker = Worker()
+    signal.signal(signal.SIGINT, worker.handle_sigint)
     await worker.init()
     log.info("Hello world, worker is listening...")
     await worker.main_loop()

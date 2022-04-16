@@ -133,9 +133,6 @@ def latest_plot_states_in_district(db: Session, world_id: int, district_id: int)
 
 # ==== ingest ====
 DATUM_KEY_STRUCT = struct.Struct("!IIHH32s")  # world: u32, district: u32, ward: u16, plot: u16, ownername: char[32]
-DEFAULT_60_PURCHASE_SYSTEM = (
-    schemas.paissa.PurchaseSystem.INDIVIDUAL | schemas.paissa.PurchaseSystem.FREE_COMPANY
-).value
 
 
 async def bulk_ingest(db: Session, data: List[schemas.ffxiv.BaseFFXIVPacket], sweeper: schemas.paissa.JWTSweeper):
@@ -149,6 +146,8 @@ async def bulk_ingest(db: Session, data: List[schemas.ffxiv.BaseFFXIVPacket], sw
             if datum.LandIdent.WorldId == 0:  # sometimes the server is borked and sends us fully null data
                 continue
             await _ingest_wardinfo(pipeline, datum)
+        elif isinstance(datum, schemas.ffxiv.LotteryInfo):
+            await _ingest_lotteryinfo(pipeline, datum)
         else:
             raise ValueError(f"Unknown event type: {datum.event_type}")
 
@@ -164,6 +163,7 @@ async def bulk_ingest(db: Session, data: List[schemas.ffxiv.BaseFFXIVPacket], sw
     await utils.executor(db.commit)
 
 
+# --- wardinfo ---
 async def _ingest_wardinfo(pipeline: aioredis.client.Pipeline, wardinfo: schemas.ffxiv.HousingWardInfo):
     world_id = wardinfo.LandIdent.WorldId
     district_id = wardinfo.LandIdent.TerritoryTypeId
@@ -175,7 +175,7 @@ async def _ingest_wardinfo(pipeline: aioredis.client.Pipeline, wardinfo: schemas
         key_data = DATUM_KEY_STRUCT.pack(world_id, district_id, ward_num, plot_num, owner_name.encode())
         hashed = hashlib.sha256(key_data).hexdigest()
         plot_data_key = f"event.wardinfo.plot:{hashed}"
-        purchase_system = ffxiv_purchase_info_to_paissa(wardinfo)
+        purchase_system = ffxiv_purchase_info_to_paissa(wardinfo.PurchaseType, wardinfo.TenantType)
         # using pydantic here is really slow so we just make the dict ourselves
         state_entry = dict(
             world_id=world_id,
@@ -187,18 +187,53 @@ async def _ingest_wardinfo(pipeline: aioredis.client.Pipeline, wardinfo: schemas
             is_owned=is_owned,
             owner_name=owner_name or None,
             purchase_system=purchase_system.value,
+            lotto_entries=None,
+            lotto_phase=None,
+            lotto_phase_until=None,
         )
 
         await pipeline.set(plot_data_key, json.dumps(state_entry), nx=True, ex=TTL_ONE_HOUR)
         await pipeline.zadd(EVENT_QUEUE_KEY, {plot_data_key: server_timestamp}, nx=True)
 
 
-def ffxiv_purchase_info_to_paissa(wardinfo: schemas.ffxiv.HousingWardInfo) -> schemas.paissa.PurchaseSystem:
+# --- lotteryinfo ---
+async def _ingest_lotteryinfo(pipeline: aioredis.client.Pipeline, lotteryinfo: schemas.ffxiv.LotteryInfo):
+    world_id = lotteryinfo.WorldId
+    district_id = lotteryinfo.DistrictId
+    ward_num = lotteryinfo.WardId
+    plot_num = lotteryinfo.PlotId
+    key_data = DATUM_KEY_STRUCT.pack(world_id, district_id, ward_num, plot_num, bytes())
+    hashed = hashlib.sha256(key_data).hexdigest()
+    plot_data_key = f"event.lotteryinfo.plot:{hashed}"
+    purchase_system = ffxiv_purchase_info_to_paissa(lotteryinfo.PurchaseType, lotteryinfo.TenantType)
+    state_entry = dict(
+        world_id=world_id,
+        district_id=district_id,
+        ward_num=ward_num,
+        plot_num=plot_num,
+        timestamp=lotteryinfo.client_timestamp,
+        price=None,
+        is_owned=False,
+        owner_name=None,
+        purchase_system=purchase_system.value,
+        lotto_entries=lotteryinfo.EntryCount,
+        lotto_phase=lotteryinfo.AvailabilityType.value,
+        lotto_phase_until=lotteryinfo.PhaseEndsAt,
+    )
+
+    await pipeline.set(plot_data_key, json.dumps(state_entry), nx=True, ex=TTL_ONE_HOUR)
+    await pipeline.zadd(EVENT_QUEUE_KEY, {plot_data_key: lotteryinfo.client_timestamp}, nx=True)
+
+
+# --- helpers ---
+def ffxiv_purchase_info_to_paissa(
+    purchase_type: schemas.ffxiv.PurchaseType, tenant_type: schemas.ffxiv.TenantType
+) -> schemas.paissa.PurchaseSystem:
     purchase_system = schemas.paissa.PurchaseSystem(0)
-    if wardinfo.PurchaseType == schemas.ffxiv.PurchaseType.Lottery:
+    if purchase_type == schemas.ffxiv.PurchaseType.Lottery:
         purchase_system |= schemas.paissa.PurchaseSystem.LOTTERY
-    if wardinfo.TenantFlags & schemas.ffxiv.TenantFlags.Personal:
+    if tenant_type == schemas.ffxiv.TenantType.Personal:
         purchase_system |= schemas.paissa.PurchaseSystem.INDIVIDUAL
-    if wardinfo.TenantFlags & schemas.ffxiv.TenantFlags.FreeCompany:
+    if tenant_type == schemas.ffxiv.TenantType.FreeCompany:
         purchase_system |= schemas.paissa.PurchaseSystem.FREE_COMPANY
     return purchase_system

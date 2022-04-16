@@ -19,13 +19,20 @@ class HousingFlags(enum.IntFlag):
 
 
 class PurchaseType(enum.IntEnum):
+    Unavailable = 0
     FCFS = 1
     Lottery = 2
 
 
-class TenantFlags(enum.IntFlag):
-    FreeCompany = 1 << 0
-    Personal = 1 << 1
+class TenantType(enum.IntEnum):
+    FreeCompany = 1
+    Personal = 2
+
+
+class LotteryPhase(enum.IntEnum):
+    Available = 1
+    Results = 2
+    Unavailable = 3
 
 
 class LandIdent(BaseModel):
@@ -46,7 +53,6 @@ class HouseInfoEntry(BaseModel):
 class BaseFFXIVPacket(BaseModel):
     event_type: models.EventType
     client_timestamp: float
-    server_timestamp: float
 
     @classmethod
     def __get_validators__(cls):
@@ -66,11 +72,29 @@ class BaseFFXIVPacket(BaseModel):
 
 class HousingWardInfo(BaseFFXIVPacket):
     event_type = models.EventType.HOUSING_WARD_INFO
+    server_timestamp: float
 
     LandIdent: LandIdent
     HouseInfoEntries: conlist(HouseInfoEntry, min_items=60, max_items=60)
     PurchaseType: PurchaseType
-    TenantFlags: TenantFlags
+    TenantType: TenantType
 
 
-EVENT_TYPES = {models.EventType.HOUSING_WARD_INFO.value: HousingWardInfo}
+class LotteryInfo(BaseFFXIVPacket):
+    event_type = models.EventType.LOTTERY_INFO
+
+    WorldId: int
+    DistrictId: int
+    WardId: int
+    PlotId: int
+    PurchaseType: PurchaseType
+    TenantType: TenantType
+    AvailabilityType: LotteryPhase
+    PhaseEndsAt: int
+    EntryCount: int
+
+
+EVENT_TYPES = {
+    models.EventType.HOUSING_WARD_INFO.value: HousingWardInfo,
+    models.EventType.LOTTERY_INFO.value: LotteryInfo,
+}

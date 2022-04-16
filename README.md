@@ -60,6 +60,17 @@ Sent each time a plot transitions from owned to opened, or is seen for the first
 }
 ```
 
+##### Plot Update
+
+Sent each time a plot with the lottery purchase system updates its entry count or lottery state.
+
+```typescript
+{
+    type: "plot_update";
+    data: PlotUpdate;
+}
+```
+
 ##### Plot Sold
 
 Sent each time a previously open plot transitions to owned.
@@ -104,11 +115,64 @@ class OpenPlotDetail:
     district_id: int
     ward_number: int
     plot_number: int
-    size: int
-    last_seen_price: int
-    last_updated_time: float
-    est_time_open_min: float
-    est_time_open_max: float
+    size: int  # 0 = small, 1 = medium, 2 = large
+    price: int
+    last_updated_time: float  # UNIX timestamp
+    est_time_open_min: float  # UNIX timestamp
+    est_time_open_max: float  # UNIX timestamp
+    purchase_system: PurchaseSystem 
+    lotto_entries: int | None  # None if unknown or FCFS
+    lotto_phase: int | None  # None if unknown or FCFS; 1 = entry, 2 = results, 3 = unavailable until next entry phase
+    lotto_phase_until: int | None  # None if unknown or FCFS; UNIX timestamp
+```
+
+#### PlotUpdate
+
+Only sent for lottery-based plots whenever the number of lottery entries increases or the lotto phase changes or is 
+resolved for the first time.
+
+```python
+class PlotUpdate:
+    world_id: int
+    district_id: int
+    ward_number: int
+    plot_number: int
+    size: int  # 0 = small, 1 = medium, 2 = large
+    price: int
+    last_updated_time: float  # UNIX timestamp
+    purchase_system: PurchaseSystem
+    lotto_entries: int
+    lotto_phase: int  # 1 = entry, 2 = results, 3 = unavailable until next entry phase
+    previous_lotto_phase: int | None  # 1 = entry, 2 = results, 3 = unavailable until next entry phase
+    lotto_phase_until: int  # UNIX timestamp
+```
+
+#### SoldPlotDetail
+
+```python
+class SoldPlotDetail:
+    world_id: int
+    district_id: int
+    ward_number: int
+    plot_number: int
+    size: int  # 0 = small, 1 = medium, 2 = large
+    last_updated_time: float  # UNIX timestamp
+    est_time_sold_min: float  # UNIX timestamp
+    est_time_sold_max: float  # UNIX timestamp
+```
+
+#### PurchaseSystem
+
+The purchase system of a plot can be determined by examining the 3 lower bits of the `purchase_system` field.
+If the lowest bit is set (`purchase_system & 1`), it is a lottery plot; otherwise, it is an FCFS plot.
+If the second lowest bit is set (`purchase_system & 2`), the plot is available for purchase by free companies.
+If the third lowest bit is set (`purchase_system & 4`), the plot is available for purchase by individuals.
+
+```python
+# FCFS = 0  (implicit by lack of lottery tag)
+LOTTERY = 1
+FREE_COMPANY = 2
+INDIVIDUAL = 4
 ```
 
 #### DistrictDetail
@@ -131,20 +195,6 @@ class WorldDetail:
     districts: List[DistrictDetail]
     num_open_plots: int
     oldest_plot_time: float
-```
-
-#### SoldPlotDetail
-
-```python
-class SoldPlotDetail:
-    world_id: int
-    district_id: int
-    ward_number: int
-    plot_number: int
-    size: int
-    last_updated_time: float
-    est_time_sold_min: float
-    est_time_sold_max: float
 ```
 
 ### PaissaHouse JWT
