@@ -83,7 +83,7 @@ class PlotUpdate(BaseModel):
     purchase_system: PurchaseSystem
     lotto_entries: int
     lotto_phase: ffxiv.LotteryPhase
-    previous_lotto_phase: ffxiv.LotteryPhase
+    previous_lotto_phase: Optional[ffxiv.LotteryPhase]
     lotto_phase_until: int
 
 

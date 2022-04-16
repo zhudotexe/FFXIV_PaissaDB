@@ -154,7 +154,7 @@ async def bulk_ingest(db: Session, data: List[schemas.ffxiv.BaseFFXIVPacket], sw
         # add to postgres
         db_event = models.Event(
             sweeper_id=sweeper_id,
-            timestamp=datum.server_timestamp,
+            timestamp=datum.timestamp,
             event_type=datum.event_type,
             data=datum.json().replace("\x00", ""),  # remove any null bytes that might sneak in somehow
         )

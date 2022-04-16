@@ -54,6 +54,10 @@ class BaseFFXIVPacket(BaseModel):
     event_type: models.EventType
     client_timestamp: float
 
+    @property
+    def timestamp(self):
+        return self.client_timestamp
+
     @classmethod
     def __get_validators__(cls):
         yield cls.return_effect
@@ -78,6 +82,10 @@ class HousingWardInfo(BaseFFXIVPacket):
     HouseInfoEntries: conlist(HouseInfoEntry, min_items=60, max_items=60)
     PurchaseType: PurchaseType
     TenantType: TenantType
+
+    @property
+    def timestamp(self):
+        return self.server_timestamp
 
 
 class LotteryInfo(BaseFFXIVPacket):

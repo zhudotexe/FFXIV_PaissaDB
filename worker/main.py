@@ -1,6 +1,5 @@
 import asyncio
 import logging
-import signal
 
 import sentry_sdk
 from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
@@ -142,16 +141,13 @@ class Worker:
 
     async def broadcast(self, data: str):
         """Sends some string data to the web workers to broadcast to all connected websockets."""
+        log.debug(f"Broadcasting message: {data}")
         await self.redis.publish(PUBSUB_WS_CHANNEL, data)
-
-    def handle_sigint(self, sig, frame):
-        self.running = False
 
 
 async def run():
     """Primary entrypoint for a worker instance. Sets up the loop that processes anything in the event PQ."""
     worker = Worker()
-    signal.signal(signal.SIGINT, worker.handle_sigint)
     await worker.init()
     log.info("Hello world, worker is listening...")
     await worker.main_loop()
