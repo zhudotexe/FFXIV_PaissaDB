@@ -20,7 +20,7 @@ def get_district_detail(db: Session, world: models.World, district: models.Distr
             continue
         # we found a plot that was last known as open, iterate over its history to find the details
         first_open_state, last_sold_state = crud.last_state_transition(db, plot)
-        open_plots.append(open_plot_detail(first_open_state, last_sold_state))
+        open_plots.append(open_plot_detail(plot, first_open_state, last_sold_state))
 
     return schemas.paissa.DistrictDetail(
         id=district.id,
@@ -32,6 +32,7 @@ def get_district_detail(db: Session, world: models.World, district: models.Distr
 
 
 def open_plot_detail(
+    latest_state: models.PlotState,
     first_open_state: models.PlotState,
     last_sold_state: Optional[models.PlotState],
 ) -> schemas.paissa.OpenPlotDetail:
@@ -46,20 +47,26 @@ def open_plot_detail(
         # the plot has been open for as long as we've known it, so could be whenever
         est_time_open_min = 0
 
+    # sometimes it shows there being entries on unavailable plots
+    if latest_state.lotto_phase == schemas.ffxiv.LotteryPhase.Unavailable:
+        lotto_entries = 0
+    else:
+        lotto_entries = latest_state.lotto_entries
+
     return schemas.paissa.OpenPlotDetail(
-        world_id=first_open_state.world_id,
-        district_id=first_open_state.territory_type_id,
-        ward_number=first_open_state.ward_number,
-        plot_number=first_open_state.plot_number,
-        size=first_open_state.plot_info.house_size,
-        price=first_open_state.last_seen_price or first_open_state.plot_info.house_base_price,
-        last_updated_time=first_open_state.last_seen,
+        world_id=latest_state.world_id,
+        district_id=latest_state.territory_type_id,
+        ward_number=latest_state.ward_number,
+        plot_number=latest_state.plot_number,
+        size=latest_state.plot_info.house_size,
+        price=latest_state.last_seen_price or latest_state.plot_info.house_base_price,
+        last_updated_time=latest_state.last_seen,
         est_time_open_min=est_time_open_min,
         est_time_open_max=est_time_open_max,
-        purchase_system=first_open_state.purchase_system,
-        lotto_entries=first_open_state.lotto_entries,
-        lotto_phase=first_open_state.lotto_phase,
-        lotto_phase_until=first_open_state.lotto_phase_until,
+        purchase_system=latest_state.purchase_system,
+        lotto_entries=lotto_entries,
+        lotto_phase=latest_state.lotto_phase,
+        lotto_phase_until=latest_state.lotto_phase_until,
     )
 
 
@@ -85,4 +92,30 @@ def sold_plot_detail(
         last_updated_time=first_sold_state.last_seen,
         est_time_sold_min=est_time_sold_min,
         est_time_sold_max=est_time_sold_max,
+    )
+
+
+def plot_update(plot_state_event: schemas.paissa.PlotStateEntry, old_state: models.PlotState):
+    """
+    Gets the update information for a plot.
+    """
+    # sometimes it shows there being entries on unavailable plots
+    if plot_state_event.lotto_phase == schemas.ffxiv.LotteryPhase.Unavailable:
+        lotto_entries = 0
+    else:
+        lotto_entries = plot_state_event.lotto_entries
+
+    return schemas.paissa.PlotUpdate(
+        world_id=plot_state_event.world_id,
+        district_id=plot_state_event.district_id,
+        ward_number=plot_state_event.ward_num,
+        plot_number=plot_state_event.plot_num,
+        size=old_state.plot_info.house_size,
+        price=old_state.plot_info.house_base_price,
+        last_updated_time=plot_state_event.timestamp,
+        purchase_system=plot_state_event.purchase_system,
+        lotto_entries=lotto_entries,
+        lotto_phase=plot_state_event.lotto_phase,
+        previous_lotto_phase=old_state.lotto_phase,
+        lotto_phase_until=plot_state_event.lotto_phase_until,
     )

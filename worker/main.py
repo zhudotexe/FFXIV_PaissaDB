@@ -96,24 +96,8 @@ class Worker:
                 )
                 or (plot_state_event.lotto_phase is not None and old_state.lotto_phase is None)
             ) and is_newest:
-                await self.broadcast(
-                    schemas.paissa.WSPlotUpdate(
-                        data=schemas.paissa.PlotUpdate(
-                            world_id=plot_state_event.world_id,
-                            district_id=plot_state_event.district_id,
-                            ward_number=plot_state_event.ward_num,
-                            plot_number=plot_state_event.plot_num,
-                            size=old_state.plot_info.house_size,
-                            price=old_state.plot_info.house_base_price,
-                            last_updated_time=plot_state_event.timestamp,
-                            purchase_system=plot_state_event.purchase_system,
-                            lotto_entries=plot_state_event.lotto_entries,
-                            lotto_phase=plot_state_event.lotto_phase,
-                            previous_lotto_phase=old_state.lotto_phase,
-                            lotto_phase_until=plot_state_event.lotto_phase_until,
-                        )
-                    ).json()
-                )
+                update = schemas.paissa.WSPlotUpdate(data=calc.plot_update(plot_state_event, old_state))
+                await self.broadcast(update.json())
             utils.update_historical_state_from(old_state, plot_state_event)
         # else create a new state, broadcast state changes, and return
         elif is_newest:  # only if this is the latest state, don't broadcast updates to old states
@@ -123,10 +107,15 @@ class Worker:
 
             if new_state.is_owned != old_state.is_owned:
                 if not new_state.is_owned:
-                    transition_detail = schemas.paissa.WSPlotOpened(data=calc.open_plot_detail(new_state, old_state))
+                    transition_detail = schemas.paissa.WSPlotOpened(
+                        data=calc.open_plot_detail(new_state, new_state, old_state)
+                    )
                 else:
                     transition_detail = schemas.paissa.WSPlotSold(data=calc.sold_plot_detail(new_state, old_state))
                 await self.broadcast(transition_detail.json())
+            else:
+                update = schemas.paissa.WSPlotUpdate(data=calc.plot_update(plot_state_event, old_state))
+                await self.broadcast(update.json())
 
     @staticmethod
     async def handle_intermediate_state(
