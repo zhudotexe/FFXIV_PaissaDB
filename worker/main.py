@@ -113,7 +113,7 @@ class Worker:
                 else:
                     transition_detail = schemas.paissa.WSPlotSold(data=calc.sold_plot_detail(new_state, old_state))
                 await self.broadcast(transition_detail.json())
-            else:
+            elif not new_state.is_owned:
                 update = schemas.paissa.WSPlotUpdate(data=calc.plot_update(plot_state_event, old_state))
                 await self.broadcast(update.json())
 
