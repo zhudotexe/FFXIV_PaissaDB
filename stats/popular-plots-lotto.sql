@@ -15,3 +15,20 @@ FROM plot_states s
          LEFT JOIN worlds w ON w.id = s.world_id
 WHERE lotto_phase_until = 1654009200
 ORDER BY total_gil_sunk DESC NULLS LAST;
+
+-- total gil spent in lottery
+SELECT SUM(s.lotto_entries * p.house_base_price::bigint) AS total_gil_in_lottery
+FROM plot_states s
+         LEFT JOIN plotinfo p ON s.territory_type_id = p.territory_type_id AND s.plot_number = p.plot_number
+WHERE lotto_phase_until = 1654009200;
+
+-- broken down by world
+SELECT w.name                                            AS world,
+       SUM(s.lotto_entries * p.house_base_price::bigint) AS total_gil_in_lottery
+FROM plot_states s
+         LEFT JOIN plotinfo p ON s.territory_type_id = p.territory_type_id AND s.plot_number = p.plot_number
+         LEFT JOIN districts d ON d.id = s.territory_type_id
+         LEFT JOIN worlds w ON w.id = s.world_id
+WHERE lotto_phase_until = 1654009200
+GROUP BY w.id
+ORDER BY total_gil_in_lottery DESC;
