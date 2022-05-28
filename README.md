@@ -213,6 +213,23 @@ Standard [JWT spec](https://jwt.io/) using HS256 for signature verification with
 This JWT should be sent as an `Authorization` bearer header to all endpoints that require it. Note that the `iss` claim
 is `PaissaDB` regardless of what service generates the token.
 
+## Developer Notes
+
+Q: How do I tell if a plot is available for purchase for the first time?
+
+A: If you receive a packet that meets any of the following conditions, the packet represents the first packet sent
+while the plot is available for purchase, and you should send notifications to interested parties:
+
+1. The `type` is `plot_open` and the `purchase_system` is FCFS (`purchase_system & 1 == 0`)
+2. The `type` is `plot_open` and the `purchase_system` is Lottery (`purchase_system & 1 == 1`), and
+   1. Its `lotto_phase` is Available (1)
+3. The `type` is `plot_update` and the `purchase_system` is Lottery (`purchase_system & 1 == 1`), and
+   1. Its `lotto_phase` is Available (1), and
+   2. Its `previous_lotto_phase` is *not* Available (1)
+
+This means that the packet that indicates whether or not a plot is available for purchase may be a `plot_open` *or*
+`plot_update` packet, and that a `plot_open` packet may not represent a plot that is available for purchase.
+
 ## Updating Game Data
 
 Using [SaintCoinach.Cmd](https://github.com/xivapi/SaintCoinach), run `SaintCoinach.Cmd.exe "<path to FFXIV>" rawexd`
