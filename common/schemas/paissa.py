@@ -108,7 +108,9 @@ class DistrictDetail(BaseModel):
     open_plots: List[OpenPlotDetail]
 
 
-class WorldDetail(WorldSummary):
+class WorldDetail(BaseModel):
+    id: int
+    name: str
     districts: List[DistrictDetail]
     num_open_plots: int
     oldest_plot_time: float
