@@ -30,11 +30,21 @@ def upsert_all(gamedata_dir, db: Session):
 
 # ==== Transient Gen ====
 def generate_worlds(gamedata_dir):
+    datacenters = {}
+    for datacenter in read_csv(os.path.join(gamedata_dir, "WorldDCGroupType.csv")):
+        datacenters[datacenter["#"]] = datacenter
+
     worlds = []
     for world in read_csv(os.path.join(gamedata_dir, "World.csv")):
-        if world["IsPublic"] != "True":
+        if world["IsPublic"] != "True" or world["DataCenter"] == "0":
             continue
-        db_world = models.World(id=int(world["#"]), name=world["Name"])
+        datacenter_name = datacenters[world["DataCenter"]]["Name"]
+        db_world = models.World(
+            id=int(world["#"]),
+            name=world["Name"],
+            datacenter_id=int(world["DataCenter"]),
+            datacenter_name=datacenter_name,
+        )
         worlds.append(db_world)
     return worlds
 

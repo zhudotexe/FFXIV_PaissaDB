@@ -45,6 +45,8 @@ class World(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(String, index=True)
+    datacenter_id = Column(Integer)
+    datacenter_name = Column(String)
 
     sweepers = relationship("Sweeper", back_populates="world")
 

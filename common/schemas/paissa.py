@@ -51,6 +51,8 @@ class PlotStateEntry(BaseModel):
 class WorldSummary(BaseModel):
     id: int
     name: str
+    datacenter_id: int
+    datacenter_name: str
 
 
 # --- detail ---

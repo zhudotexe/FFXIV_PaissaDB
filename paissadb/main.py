@@ -7,6 +7,7 @@ import jwt as jwtlib  # name conflict with jwt query param in /ws
 import sentry_sdk
 from fastapi import Depends, FastAPI, HTTPException, WebSocket, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 from sqlalchemy.orm import Session
@@ -70,7 +71,11 @@ def list_worlds(db: Session = Depends(get_db)):
     worlds = crud.get_worlds(db)
     out = []
     for world in worlds:
-        out.append(schemas.paissa.WorldSummary(id=world.id, name=world.name))
+        out.append(
+            schemas.paissa.WorldSummary(
+                id=world.id, name=world.name, datacenter_id=world.datacenter_id, datacenter_name=world.datacenter_name
+            )
+        )
     return out
 
 
@@ -102,6 +107,11 @@ def get_district_detail(world_id: int, district_id: int, db: Session = Depends(g
         raise HTTPException(404, "World not found")
 
     return calc.get_district_detail(db, world, district)
+
+
+@app.get("/")
+async def root():
+    return RedirectResponse("https://zhu.codes/paissa")
 
 
 # ==== WS ====
