@@ -1,5 +1,7 @@
 # PaissaDB
 
+[![Discord](https://img.shields.io/discord/927834873916440646?color=5865F2&label=discord&logo=discord&logoColor=white)](https://discord.gg/9rduk8aDek)
+
 PaissaDB is the companion API for the [PaissaHouse](https://github.com/zhudotexe/FFXIV_PaissaHouse) FFXIV plugin.
 
 Note that PaissaDB only supports game servers that are marked as public in the NA game client; this means that KR and CN
