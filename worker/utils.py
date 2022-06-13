@@ -5,8 +5,8 @@ def should_create_new_state(state_event: schemas.paissa.PlotStateEntry, historic
     """
     Returns whether a new state should be created because of differences between the latest state and the last state.
 
-    Returns True if the ownership state changed, the owner changed, the lotto phase changed,
-    or the purchase system changed.
+    Returns True if the ownership state changed, the owner changed, the lotto phase changed, the lotto phase end time
+    changed, or the purchase system changed.
     """
     if state_event.is_owned != historical_state.is_owned:
         return True
@@ -21,7 +21,11 @@ def should_create_new_state(state_event: schemas.paissa.PlotStateEntry, historic
     if (
         state_event.lotto_phase is not None
         and historical_state.lotto_phase is not None
-        and state_event.lotto_phase != historical_state.lotto_phase
+        and (
+            state_event.lotto_phase != historical_state.lotto_phase
+            # if no update on unclaimed plot during a results period
+            or state_event.lotto_phase_until != historical_state.lotto_phase_until
+        )
     ):
         return True
     return False

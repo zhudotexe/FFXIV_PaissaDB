@@ -124,7 +124,7 @@ class Worker:
         # if it doesn't match, cry
         if utils.should_create_new_state(plot_state_event, previous_state):
             log.warning(
-                f"Event falls within state history but does not match state: "
+                "Event falls within state history but does not match state: "
                 f"event={plot_state_event!r}, history={previous_state!r}"
             )
             return
