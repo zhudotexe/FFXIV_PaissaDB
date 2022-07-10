@@ -83,10 +83,10 @@ class PlotUpdate(BaseModel):
     price: int
     last_updated_time: float
     purchase_system: PurchaseSystem
-    lotto_entries: int
-    lotto_phase: ffxiv.LotteryPhase
+    lotto_entries: Optional[int]
+    lotto_phase: Optional[ffxiv.LotteryPhase]
     previous_lotto_phase: Optional[ffxiv.LotteryPhase]
-    lotto_phase_until: int
+    lotto_phase_until: Optional[int]
 
 
 class SoldPlotDetail(BaseModel):

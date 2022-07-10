@@ -143,10 +143,10 @@ class PlotUpdate:
     price: int
     last_updated_time: float  # UNIX timestamp
     purchase_system: PurchaseSystem
-    lotto_entries: int
-    lotto_phase: int  # 1 = entry, 2 = results, 3 = unavailable until next entry phase
+    lotto_entries: int | None
+    lotto_phase: int | None  # 1 = entry, 2 = results, 3 = unavailable until next entry phase
     previous_lotto_phase: int | None  # 1 = entry, 2 = results, 3 = unavailable until next entry phase
-    lotto_phase_until: int  # UNIX timestamp
+    lotto_phase_until: int | None  # UNIX timestamp
 ```
 
 #### SoldPlotDetail
