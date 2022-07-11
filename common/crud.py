@@ -1,6 +1,8 @@
 import hashlib
 import json
+import logging
 import struct
+import time
 from typing import Iterator, List, Optional, Tuple
 
 import aioredis.client
@@ -9,6 +11,8 @@ from sqlalchemy.orm import Session, aliased
 
 from . import config, models, schemas, utils
 from .database import EVENT_QUEUE_KEY, TTL_ONE_HOUR, redis
+
+log = logging.getLogger(__name__)
 
 
 # ==== sweepers ====
@@ -138,9 +142,16 @@ DATUM_KEY_STRUCT = struct.Struct("!IIHH32s")  # world: u32, district: u32, ward:
 async def bulk_ingest(db: Session, data: List[schemas.ffxiv.BaseFFXIVPacket], sweeper: schemas.paissa.JWTSweeper):
     sweeper_id = sweeper.cid if sweeper is not None else None
     pipeline = redis.pipeline()
+    now = time.time()
 
     pipeline.multi()
     for datum in data:
+        if datum.timestamp > now:
+            log.warning(
+                f"Skipping datum from {sweeper_id=} because client timestamp is in the future: {datum.timestamp} >"
+                f" {now}"
+            )
+            continue
         # add to redis - switch on event type
         if isinstance(datum, schemas.ffxiv.HousingWardInfo):
             if datum.LandIdent.WorldId == 0:  # sometimes the server is borked and sends us fully null data

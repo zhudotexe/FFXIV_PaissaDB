@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import sys
+import time
 from typing import List, Optional
 
 import jwt as jwtlib  # name conflict with jwt query param in /ws
@@ -63,7 +64,7 @@ def hello(
     log.debug(data.json())
     crud.upsert_sweeper(db, data)
     crud.touch_sweeper_by_id(db, sweeper.cid)
-    return {"message": "OK"}
+    return {"message": "OK", "server_time": time.time()}
 
 
 @app.get("/worlds", response_model=List[schemas.paissa.WorldSummary])
@@ -141,5 +142,6 @@ async def on_startup():
 
 @app.on_event("shutdown")
 async def on_shutdown():
-    for client in ws.clients:
-        await client.close(status.WS_1012_SERVICE_RESTART)
+    await asyncio.gather(
+        *[client.close(status.WS_1012_SERVICE_RESTART) for client in ws.clients], return_exceptions=True
+    )
