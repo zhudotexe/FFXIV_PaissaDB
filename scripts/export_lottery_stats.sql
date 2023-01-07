@@ -1,5 +1,6 @@
 -- export_lottery_stats
 -- Exports the entry stats from the most recent entry cycle, ordered by entry count descending.
+-- lottery_export
 WITH constants (lotto_cycle, cycle_mod)
          AS (VALUES (777600, 54000))
 -- ^ set to seconds in 9 days, offset within 9-day cycle (e.g. 1658674800 % 777600 = 54000)

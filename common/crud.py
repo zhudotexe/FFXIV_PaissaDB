@@ -146,10 +146,10 @@ async def bulk_ingest(db: Session, data: List[schemas.ffxiv.BaseFFXIVPacket], sw
 
     pipeline.multi()
     for datum in data:
-        if datum.timestamp > now:
+        if datum.timestamp > (now + 10):
             log.warning(
-                f"Skipping datum from {sweeper_id=} because client timestamp is in the future: {datum.timestamp} >"
-                f" {now}"
+                f"Skipping datum from {sweeper_id=} because client timestamp is too far in the future:"
+                f" {datum.timestamp} > {now} + 10"
             )
             continue
         # add to redis - switch on event type
