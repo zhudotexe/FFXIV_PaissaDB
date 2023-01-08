@@ -55,16 +55,17 @@ async def bulk_ingest(
 @app.post("/hello")
 def hello(
     data: schemas.paissa.Hello,
-    sweeper: schemas.paissa.JWTSweeper = Depends(auth.required),
+    # sweeper: schemas.paissa.JWTSweeper = Depends(auth.required),
     db: Session = Depends(get_db),
 ):
-    if sweeper.cid != data.cid:
-        raise HTTPException(400, "Token CID and given CID do not match")
+    # if sweeper.cid != data.cid:
+    #     raise HTTPException(400, "Token CID and given CID do not match")
     log.debug("Received hello:")
     log.debug(data.json())
+    session_token = auth.create_session_token(data)
     crud.upsert_sweeper(db, data)
-    crud.touch_sweeper_by_id(db, sweeper.cid)
-    return {"message": "OK", "server_time": time.time()}
+    crud.touch_sweeper_by_id(db, data.cid)
+    return {"message": "OK", "server_time": time.time(), "session_token": session_token}
 
 
 @app.get("/worlds", response_model=List[schemas.paissa.WorldSummary])

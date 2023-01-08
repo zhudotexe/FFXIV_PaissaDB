@@ -1,3 +1,4 @@
+import time
 from typing import Optional
 
 import jwt
@@ -20,6 +21,20 @@ def required(authorization: str = Header(None)) -> schemas.paissa.JWTSweeper:
         return decode_token(token)
     except jwt.InvalidTokenError as e:
         raise HTTPException(400, str(e))
+
+
+def create_session_token(hello: schemas.paissa.Hello) -> str:
+    claim = {
+        "cid": hello.cid,
+        "aud": config.JWT_AUDIENCES,
+        "iss": config.JWT_ISSUER,
+        "iat": int(time.time()),
+    }
+    return jwt.encode(
+        payload=claim,
+        key=config.JWT_SECRET_PAISSAHOUSE,
+        algorithm="HS256",
+    )
 
 
 def decode_token(token: str) -> schemas.paissa.JWTSweeper:
