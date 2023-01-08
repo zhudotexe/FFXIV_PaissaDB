@@ -24,7 +24,7 @@ PaissaHouse JWT.
 
 #### POST /hello
 
-Called by PaissaHouse on startup to register sweeper's world and name. Requires a PaissaHouse JWT.
+Called by PaissaHouse on startup to exchange sweeper's world and name for a session token.
 
 ```python
 class Hello:
@@ -212,8 +212,7 @@ Standard [JWT spec](https://jwt.io/) using HS256 for signature verification with
 }
 ```
 
-This JWT should be sent as an `Authorization` bearer header to all endpoints that require it. Note that the `iss` claim
-is `PaissaDB` regardless of what service generates the token.
+This JWT should be sent as an `Authorization` bearer header to all endpoints that require it.
 
 ## Developer Notes
 
