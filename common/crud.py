@@ -141,7 +141,6 @@ def latest_plot_states_in_district(db: Session, world_id: int, district_id: int)
 
 def last_entry_cycle_entries(db: Session) -> List[Row]:
     end_time = ((time.time() - CYCLE_OFFSET) // LOTTO_CYCLE) * LOTTO_CYCLE + CYCLE_OFFSET
-    end_time = 1650121200
     query = """
     SELECT w.name                  AS world,
        d.name                      AS district,
