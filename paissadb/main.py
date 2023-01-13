@@ -1,4 +1,6 @@
 import asyncio
+import csv
+import io
 import logging
 import sys
 import time
@@ -8,7 +10,7 @@ import jwt as jwtlib  # name conflict with jwt query param in /ws
 import sentry_sdk
 from fastapi import Depends, FastAPI, HTTPException, WebSocket, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, StreamingResponse
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 from sqlalchemy.orm import Session
@@ -42,6 +44,7 @@ metrics.register(app)
 
 
 # ==== HTTP ====
+# --- ingest ---
 @app.post("/ingest", status_code=202)
 async def bulk_ingest(
     data: List[schemas.ffxiv.BaseFFXIVPacket],
@@ -68,6 +71,7 @@ def hello(
     return {"message": "OK", "server_time": time.time(), "session_token": session_token}
 
 
+# --- API ---
 @app.get("/worlds", response_model=List[schemas.paissa.WorldSummary])
 def list_worlds(db: Session = Depends(get_db)):
     worlds = crud.get_worlds(db)
@@ -111,6 +115,31 @@ def get_district_detail(world_id: int, district_id: int, db: Session = Depends(g
     return calc.get_district_detail(db, world, district)
 
 
+# --- CSV export ---
+@app.get("/csv/entries")
+def get_entries_csv(db: Session = Depends(get_db)):
+    """
+    Exports the entry stats from the most recent complete entry cycle, ordered by entry count descending.
+    """
+    csvbuf = io.StringIO()
+
+    writer = csv.DictWriter(
+        csvbuf, fieldnames=("world", "district", "ward_number", "plot_number", "house_size", "lotto_entries", "price")
+    )
+    writer.writeheader()
+    for row in crud.last_entry_cycle_entries(db):
+        writer.writerow(row._asdict())
+
+    csvbuf.seek(0)
+    response = StreamingResponse(
+        csvbuf,
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=export.csv"},
+    )
+    return response
+
+
+# --- misc ---
 @app.get("/")
 async def root():
     return RedirectResponse("https://zhu.codes/paissa")

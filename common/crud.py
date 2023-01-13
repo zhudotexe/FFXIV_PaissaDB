@@ -6,13 +6,17 @@ import time
 from typing import Iterator, List, Optional, Tuple
 
 import aioredis.client
-from sqlalchemy import desc, func, update
+from sqlalchemy import desc, func, update, text
+from sqlalchemy.engine import Row
 from sqlalchemy.orm import Session, aliased
 
 from . import config, models, schemas, utils
 from .database import EVENT_QUEUE_KEY, TTL_ONE_HOUR, redis
 
 log = logging.getLogger(__name__)
+
+LOTTO_CYCLE = 777600
+CYCLE_OFFSET = 54000
 
 
 # ==== sweepers ====
@@ -133,6 +137,32 @@ def latest_plot_states_in_district(db: Session, world_id: int, district_id: int)
         stmt = db.query(models.PlotState).join(latest_plots, models.PlotState.id == latest_plots.id)
     result = stmt.all()
     return result
+
+
+def last_entry_cycle_entries(db: Session) -> List[Row]:
+    end_time = ((time.time() - CYCLE_OFFSET) // LOTTO_CYCLE) * LOTTO_CYCLE + CYCLE_OFFSET
+    end_time = 1650121200
+    query = """
+    SELECT w.name                  AS world,
+       d.name                      AS district,
+       ward_number + 1             AS ward_number,
+       s.plot_number + 1           AS plot_number,
+       CASE p.house_size
+           WHEN 0 THEN 'SMALL'
+           WHEN 1 THEN 'MEDIUM'
+           WHEN 2 THEN 'LARGE' END AS house_size,
+       s.lotto_entries             AS lotto_entries,
+       s.last_seen_price           AS price
+    FROM plot_states s
+             LEFT JOIN plotinfo p ON s.territory_type_id = p.territory_type_id AND s.plot_number = p.plot_number
+             LEFT JOIN districts d ON d.id = s.territory_type_id
+             LEFT JOIN worlds w ON w.id = s.world_id
+    WHERE lotto_phase_until = :end_time
+    ORDER BY lotto_entries DESC NULLS LAST;
+    """
+    stmt = text(query).bindparams(end_time=end_time)
+    result = db.execute(stmt)
+    return result.all()
 
 
 # ==== ingest ====
