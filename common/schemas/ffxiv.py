@@ -25,6 +25,7 @@ class PurchaseType(enum.IntEnum):
 
 
 class TenantType(enum.IntEnum):
+    Unrestricted = 0
     FreeCompany = 1
     Personal = 2
 

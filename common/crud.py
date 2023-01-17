@@ -276,4 +276,6 @@ def ffxiv_purchase_info_to_paissa(
         purchase_system |= schemas.paissa.PurchaseSystem.INDIVIDUAL
     if tenant_type == schemas.ffxiv.TenantType.FreeCompany:
         purchase_system |= schemas.paissa.PurchaseSystem.FREE_COMPANY
+    if tenant_type == schemas.ffxiv.TenantType.Unrestricted:
+        purchase_system |= schemas.paissa.PurchaseSystem.FREE_COMPANY | schemas.paissa.PurchaseSystem.INDIVIDUAL
     return purchase_system
