@@ -120,8 +120,8 @@ class OpenPlotDetail:
     size: int  # 0 = small, 1 = medium, 2 = large
     price: int
     last_updated_time: float  # UNIX timestamp
-    est_time_open_min: float  # UNIX timestamp
-    est_time_open_max: float  # UNIX timestamp
+    est_time_open_min: float  # UNIX timestamp; 0 for non-lottery plots
+    est_time_open_max: float  # UNIX timestamp; 0 for non-lottery plots
     purchase_system: PurchaseSystem 
     lotto_entries: int | None  # None if unknown or FCFS
     lotto_phase: int | None  # None if unknown or FCFS; 1 = entry, 2 = results, 3 = unavailable until next entry phase

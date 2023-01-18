@@ -8,7 +8,9 @@ from . import crud, models, schemas
 log = logging.getLogger(__name__)
 
 
-def get_district_detail(db: Session, world: models.World, district: models.District) -> schemas.paissa.DistrictDetail:
+def get_district_detail(
+    db: Session, world: models.World, district: models.District, include_time_estimates=True
+) -> schemas.paissa.DistrictDetail:
     """Gets the district detail for a given district in a world."""
     latest_plots = crud.latest_plot_states_in_district(db, world.id, district.id)
     num_open_plots = sum(1 for p in latest_plots if not p.is_owned)
@@ -18,9 +20,12 @@ def get_district_detail(db: Session, world: models.World, district: models.Distr
     for plot in latest_plots:
         if plot.is_owned:
             continue
-        # we found a plot that was last known as open, iterate over its history to find the details
-        first_open_state, last_sold_state = crud.last_state_transition(db, plot)
-        open_plots.append(open_plot_detail(plot, first_open_state, last_sold_state))
+        if include_time_estimates and plot.purchase_system & schemas.paissa.PurchaseSystem.LOTTERY:
+            # we found a plot that was last known as open, iterate over its history to find the details
+            first_open_state, last_sold_state = crud.last_state_transition(db, plot)
+            open_plots.append(open_plot_detail(plot, first_open_state, last_sold_state))
+        else:
+            open_plots.append(open_plot_detail(plot))
 
     return schemas.paissa.DistrictDetail(
         id=district.id,
@@ -33,13 +38,13 @@ def get_district_detail(db: Session, world: models.World, district: models.Distr
 
 def open_plot_detail(
     latest_state: models.PlotState,
-    first_open_state: models.PlotState,
-    last_sold_state: Optional[models.PlotState],
+    first_open_state: models.PlotState = None,
+    last_sold_state: Optional[models.PlotState] = None,
 ) -> schemas.paissa.OpenPlotDetail:
     """
     Gets the details of a plot's opening given the transition pair of states.
     """
-    est_time_open_max = first_open_state.first_seen
+    est_time_open_max = first_open_state.first_seen if first_open_state is not None else 0
 
     if last_sold_state is not None:
         est_time_open_min = last_sold_state.last_seen
