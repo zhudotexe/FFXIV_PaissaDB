@@ -20,8 +20,8 @@ class WebsocketClient:
         self.anonymous = anonymous
 
     async def send_text(self, data: str):
-        if self.anonymous:
-            await asyncio.sleep(120)  # 2-minute delay for anonymous clients
+        # if self.anonymous:
+        #     await asyncio.sleep(120)  # 2-minute delay for anonymous clients
         await self.conn.send_text(data)
 
     async def close(self, code=1000):
