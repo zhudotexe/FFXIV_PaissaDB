@@ -192,15 +192,17 @@ async def bulk_ingest(db: Session, data: List[schemas.ffxiv.BaseFFXIVPacket], sw
             raise ValueError(f"Unknown event type: {datum.event_type}")
 
         # add to postgres
-        db_event = models.Event(
-            sweeper_id=sweeper_id,
-            timestamp=datum.timestamp,
-            event_type=datum.event_type,
-            data=datum.json().replace("\x00", ""),  # remove any null bytes that might sneak in somehow
-        )
-        db.add(db_event)
+        if not config.EMERGENCY_LOAD_PREVENTION:
+            db_event = models.Event(
+                sweeper_id=sweeper_id,
+                timestamp=datum.timestamp,
+                event_type=datum.event_type,
+                data=datum.json().replace("\x00", ""),  # remove any null bytes that might sneak in somehow
+            )
+            db.add(db_event)
     await pipeline.execute()
-    await utils.executor(db.commit)
+    if not config.EMERGENCY_LOAD_PREVENTION:
+        await utils.executor(db.commit)
 
 
 # --- wardinfo ---
