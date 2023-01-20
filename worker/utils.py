@@ -1,5 +1,3 @@
-from sqlalchemy import insert
-
 from common import models, schemas
 
 
@@ -85,6 +83,8 @@ def new_state_from_event(state_event: schemas.paissa.PlotStateEntry) -> models.P
 
 
 def upsert_latest_state_stmt(state: models.PlotState):
+    from sqlalchemy.dialects.postgresql import insert
+
     stmt = (
         insert(models.LatestPlotState)
         .values(
