@@ -138,6 +138,9 @@ class LatestPlotState(Base):
     state = relationship("PlotState", viewonly=True)
 
 
+Index("ix_latest_plot_states_loc", LatestPlotState.world_id, LatestPlotState.territory_type_id)
+
+
 # store of all ingested events for later analysis (e.g. FC/player ownership, relocation/resell graphs, etc)
 class Event(Base):
     __tablename__ = "events"

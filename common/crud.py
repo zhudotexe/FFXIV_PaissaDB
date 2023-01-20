@@ -6,11 +6,11 @@ import time
 from typing import Iterator, List, Optional, Tuple
 
 import aioredis.client
-from sqlalchemy import desc, func, update, text
+from sqlalchemy import desc, update, text
 from sqlalchemy.engine import Row
-from sqlalchemy.orm import Session, aliased
+from sqlalchemy.orm import Session
 
-from . import config, models, schemas, utils
+from . import models, schemas, utils
 from .database import EVENT_QUEUE_KEY, TTL_ONE_HOUR, redis
 
 log = logging.getLogger(__name__)
@@ -94,49 +94,67 @@ def last_state_transition(
     return next_state, state
 
 
+# def latest_plot_states_in_district(db: Session, world_id: int, district_id: int) -> List[models.PlotState]:
+#     """
+#     Gets the latest plot states in the district.
+#     """
+#     # sqlite:
+#     # SELECT * FROM plot_states
+#     # JOIN (
+#     #     SELECT plot_states.id AS id, max(plot_states.last_seen) AS max_1
+#     #     FROM plot_states
+#     #     WHERE plot_states.world_id = ?
+#     #         AND plot_states.territory_type_id = ?
+#     #     GROUP BY plot_states.ward_number, plot_states.plot_number
+#     # ) AS latest_plots
+#     #     ON plot_states.id = latest_plots.id;
+#     #
+#     # postgres:
+#     # note that running this query in a postgres connection "upgrades" the transaction to 32MB work mem
+#     # SET LOCAL work_mem = '32MB';
+#     # SELECT DISTINCT ON (ward_number, plot_number) *
+#     #     FROM plot_states
+#     #     WHERE world_id = ?
+#     #         AND territory_type_id = ?
+#     #     ORDER BY ward_number, plot_number, last_seen DESC;
+#
+#     if config.DB_TYPE == "postgresql":
+#         db.execute("SET LOCAL work_mem = '32MB'")
+#         stmt = (
+#             db.query(models.PlotState)
+#             .distinct(models.PlotState.ward_number, models.PlotState.plot_number)
+#             .filter(models.PlotState.world_id == world_id, models.PlotState.territory_type_id == district_id)
+#             .order_by(models.PlotState.ward_number, models.PlotState.plot_number, desc(models.PlotState.last_seen))
+#         )
+#     else:
+#         subq = (
+#             db.query(models.PlotState.id, func.max(models.PlotState.last_seen))
+#             .filter(models.PlotState.world_id == world_id, models.PlotState.territory_type_id == district_id)
+#             .group_by(models.PlotState.ward_number, models.PlotState.plot_number)
+#             .subquery()
+#         )
+#         latest_plots = aliased(models.PlotState, subq)
+#         stmt = db.query(models.PlotState).join(latest_plots, models.PlotState.id == latest_plots.id)
+#     result = stmt.all()
+#     return result
+
+
 def latest_plot_states_in_district(db: Session, world_id: int, district_id: int) -> List[models.PlotState]:
     """
     Gets the latest plot states in the district.
     """
-    # sqlite:
-    # SELECT * FROM plot_states
-    # JOIN (
-    #     SELECT plot_states.id AS id, max(plot_states.last_seen) AS max_1
-    #     FROM plot_states
-    #     WHERE plot_states.world_id = ?
-    #         AND plot_states.territory_type_id = ?
-    #     GROUP BY plot_states.ward_number, plot_states.plot_number
-    # ) AS latest_plots
-    #     ON plot_states.id = latest_plots.id;
-    #
-    # postgres:
-    # note that running this query in a postgres connection "upgrades" the transaction to 32MB work mem
-    # SET LOCAL work_mem = '32MB';
-    # SELECT DISTINCT ON (ward_number, plot_number) *
-    #     FROM plot_states
-    #     WHERE world_id = ?
-    #         AND territory_type_id = ?
-    #     ORDER BY ward_number, plot_number, last_seen DESC;
-
-    if config.DB_TYPE == "postgresql":
-        db.execute("SET LOCAL work_mem = '32MB'")
-        stmt = (
-            db.query(models.PlotState)
-            .distinct(models.PlotState.ward_number, models.PlotState.plot_number)
-            .filter(models.PlotState.world_id == world_id, models.PlotState.territory_type_id == district_id)
-            .order_by(models.PlotState.ward_number, models.PlotState.plot_number, desc(models.PlotState.last_seen))
-        )
-    else:
-        subq = (
-            db.query(models.PlotState.id, func.max(models.PlotState.last_seen))
-            .filter(models.PlotState.world_id == world_id, models.PlotState.territory_type_id == district_id)
-            .group_by(models.PlotState.ward_number, models.PlotState.plot_number)
-            .subquery()
-        )
-        latest_plots = aliased(models.PlotState, subq)
-        stmt = db.query(models.PlotState).join(latest_plots, models.PlotState.id == latest_plots.id)
+    # SELECT *
+    # FROM latest_plot_states ls
+    #          JOIN plot_states ps on ls.state_id = ps.id
+    # WHERE ls.world_id = ?
+    #   AND ls.territory_type_id = ?;
+    stmt = (
+        db.query(models.LatestPlotState)
+        .join(models.LatestPlotState.state)
+        .filter(models.LatestPlotState.world_id == world_id, models.LatestPlotState.territory_type_id == district_id)
+    )
     result = stmt.all()
-    return result
+    return [r.state for r in result]
 
 
 def last_entry_cycle_entries(db: Session) -> List[Row]:
@@ -192,17 +210,15 @@ async def bulk_ingest(db: Session, data: List[schemas.ffxiv.BaseFFXIVPacket], sw
             raise ValueError(f"Unknown event type: {datum.event_type}")
 
         # add to postgres
-        if not config.EMERGENCY_LOAD_PREVENTION:
-            db_event = models.Event(
-                sweeper_id=sweeper_id,
-                timestamp=datum.timestamp,
-                event_type=datum.event_type,
-                data=datum.json().replace("\x00", ""),  # remove any null bytes that might sneak in somehow
-            )
-            db.add(db_event)
+        db_event = models.Event(
+            sweeper_id=sweeper_id,
+            timestamp=datum.timestamp,
+            event_type=datum.event_type,
+            data=datum.json().replace("\x00", ""),  # remove any null bytes that might sneak in somehow
+        )
+        db.add(db_event)
     await pipeline.execute()
-    if not config.EMERGENCY_LOAD_PREVENTION:
-        await utils.executor(db.commit)
+    await utils.executor(db.commit)
 
 
 # --- wardinfo ---
