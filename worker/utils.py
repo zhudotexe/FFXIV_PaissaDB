@@ -97,6 +97,7 @@ def upsert_latest_state_stmt(state: models.PlotState):
         .on_conflict_do_update(
             constraint="uc_latest_plot_states",
             set_=dict(state_id=state.id),
+            where=models.LatestPlotState.state_id < state.id
         )
     )
     return stmt
