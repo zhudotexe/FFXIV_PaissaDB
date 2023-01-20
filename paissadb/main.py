@@ -15,7 +15,7 @@ from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 from sqlalchemy.orm import Session
 
-from common import calc, config, crud, schemas
+from common import calc, config, crud, schemas, models
 from common.database import get_db
 from . import auth, metrics, ws
 
@@ -85,13 +85,19 @@ def list_worlds(db: Session = Depends(get_db)):
     return out
 
 
+def ban_new_worlds(world: models.World):
+    if world.datacenter_id == 9 or world.datacenter_id == 11 or world.id >= 400:
+        raise HTTPException(400, "This world is currently not available for PaissaDB lookup due to extreme load")
+
+
 @app.get("/worlds/{world_id}", response_model=schemas.paissa.WorldDetail)
 def get_world(world_id: int, db: Session = Depends(get_db)):
     world = crud.get_world_by_id(db, world_id)
     if world is None:
         raise HTTPException(404, "World not found")
+    ban_new_worlds(world)
 
-    return calc.get_district_detail(db, world)
+    return calc.get_world_detail(db, world)
 
 
 @app.get("/worlds/{world_id}/{district_id}", response_model=schemas.paissa.DistrictDetail)
@@ -100,6 +106,7 @@ def get_district_detail(world_id: int, district_id: int, db: Session = Depends(g
     district = crud.get_district_by_id(db, district_id)
     if world is None or district is None:
         raise HTTPException(404, "World not found")
+    ban_new_worlds(world)
 
     return calc.get_district_detail(db, world, district)
 
