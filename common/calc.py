@@ -9,7 +9,7 @@ from . import crud, models, schemas
 log = logging.getLogger(__name__)
 
 
-def get_world_detail(db: Session, world: models.World, include_time_estimates=True) -> schemas.paissa.WorldDetail:
+def get_world_detail(db: Session, world: models.World, include_time_estimates=False) -> schemas.paissa.WorldDetail:
     """Gets the district detail for a given district in a world."""
     latest_plots = crud.latest_plot_states_in_world(db, world.id)
     district_open_plots = collections.defaultdict(list)
@@ -17,7 +17,7 @@ def get_world_detail(db: Session, world: models.World, include_time_estimates=Tr
     for plot in latest_plots:
         if plot.is_owned:
             continue
-        if include_time_estimates and plot.purchase_system & schemas.paissa.PurchaseSystem.LOTTERY:
+        if include_time_estimates and plot.is_fcfs:
             # we found a plot that was last known as open, iterate over its history to find the details
             first_open_state, last_sold_state = crud.last_state_transition(db, plot)
             district_open_plots[plot.territory_type_id].append(
@@ -30,9 +30,7 @@ def get_world_detail(db: Session, world: models.World, include_time_estimates=Tr
     district_details = []
     for district in districts:
         num_open_plots = len(district_open_plots[district.id])
-        oldest_plot_time = (
-            min(p.last_seen for p in district_open_plots[district.id]) if district_open_plots[district.id] else 0
-        )
+        oldest_plot_time = min(p for p in district_open_plots[district.id]) if district_open_plots[district.id] else 0
         district_details.append(
             schemas.paissa.DistrictDetail(
                 id=district.id,
@@ -53,7 +51,7 @@ def get_world_detail(db: Session, world: models.World, include_time_estimates=Tr
 
 
 def get_district_detail(
-    db: Session, world: models.World, district: models.District, include_time_estimates=True
+    db: Session, world: models.World, district: models.District, include_time_estimates=False
 ) -> schemas.paissa.DistrictDetail:
     """Gets the district detail for a given district in a world."""
     latest_plots = crud.latest_plot_states_in_district(db, world.id, district.id)
@@ -64,7 +62,7 @@ def get_district_detail(
     for plot in latest_plots:
         if plot.is_owned:
             continue
-        if include_time_estimates and plot.purchase_system & schemas.paissa.PurchaseSystem.LOTTERY:
+        if include_time_estimates and plot.is_fcfs:
             # we found a plot that was last known as open, iterate over its history to find the details
             first_open_state, last_sold_state = crud.last_state_transition(db, plot)
             open_plots.append(open_plot_detail(plot, first_open_state, last_sold_state))

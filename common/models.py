@@ -101,6 +101,10 @@ class PlotState(Base):
     district = relationship("District", viewonly=True)
     plot_info = relationship("PlotInfo", viewonly=True)
 
+    @property
+    def is_fcfs(self):
+        return self.purchase_system % 2 == 0
+
 
 # common query indices
 Index(
