@@ -3,6 +3,7 @@ import json
 import logging
 import struct
 import time
+from collections import namedtuple
 from typing import Iterator, List, Optional, Tuple
 
 import aioredis.client
@@ -138,6 +139,9 @@ def last_state_transition(
 #     result = stmt.all()
 #     return result
 
+# manually optimized queries for maximum nyoom
+LatestStateTuple = namedtuple("LatestStateTuple", "state plotinfo")
+
 
 def latest_plot_states_in_district(db: Session, world_id: int, district_id: int) -> List[models.PlotState]:
     """
@@ -148,13 +152,37 @@ def latest_plot_states_in_district(db: Session, world_id: int, district_id: int)
     #          JOIN plot_states ps on ls.state_id = ps.id
     # WHERE ls.world_id = ?
     #   AND ls.territory_type_id = ?;
-    stmt = (
-        db.query(models.LatestPlotState)
-        .join(models.LatestPlotState.state)
-        .filter(models.LatestPlotState.world_id == world_id, models.LatestPlotState.territory_type_id == district_id)
-    )
-    result = stmt.all()
-    return [r.state for r in result]
+    # stmt = (
+    #     db.query(models.LatestPlotState)
+    #     .join(models.LatestPlotState.state)
+    #     .filter(models.LatestPlotState.world_id == world_id, models.LatestPlotState.territory_type_id == district_id)
+    # )
+    # result = stmt.all()
+    # return [r.state for r in result]
+    query = """SELECT ps.id,
+       ps.world_id,
+       ps.territory_type_id,
+       ps.ward_number,
+       ps.plot_number,
+       last_seen,
+       first_seen,
+       is_owned,
+       last_seen_price,
+       owner_name,
+       lotto_entries,
+       purchase_system,
+       lotto_phase,
+       lotto_phase_until,
+       house_size,
+       house_base_price
+    FROM latest_plot_states ls
+         JOIN plot_states ps on ls.state_id = ps.id
+         JOIN plotinfo p on ls.territory_type_id = p.territory_type_id and ls.plot_number = p.plot_number
+    WHERE ls.world_id = :world_id
+      AND ls.territory_type_id = :district_id"""
+    stmt = text(query).bindparams(world_id=world_id, district_id=district_id)
+    result = db.execute(stmt)
+    return [_row_to_plotstate(row) for row in result]
 
 
 def latest_plot_states_in_world(db: Session, world_id: int) -> List[models.PlotState]:
@@ -165,13 +193,61 @@ def latest_plot_states_in_world(db: Session, world_id: int) -> List[models.PlotS
     # FROM latest_plot_states ls
     #          JOIN plot_states ps on ls.state_id = ps.id
     # WHERE ls.world_id = ?;
-    stmt = (
-        db.query(models.LatestPlotState)
-        .join(models.LatestPlotState.state)
-        .filter(models.LatestPlotState.world_id == world_id)
+    # stmt = (
+    #     db.query(models.LatestPlotState)
+    #     .join(models.LatestPlotState.state)
+    #     .filter(models.LatestPlotState.world_id == world_id)
+    # )
+    # result = stmt.all()
+    # return [r.state for r in result]
+    query = """SELECT ps.id,
+       ps.world_id,
+       ps.territory_type_id,
+       ps.ward_number,
+       ps.plot_number,
+       last_seen,
+       first_seen,
+       is_owned,
+       last_seen_price,
+       owner_name,
+       lotto_entries,
+       purchase_system,
+       lotto_phase,
+       lotto_phase_until,
+       house_size,
+       house_base_price
+    FROM latest_plot_states ls
+         JOIN plot_states ps on ls.state_id = ps.id
+         JOIN plotinfo p on ls.territory_type_id = p.territory_type_id and ls.plot_number = p.plot_number
+    WHERE ls.world_id = :world_id"""
+    stmt = text(query).bindparams(world_id=world_id)
+    result = db.execute(stmt)
+    return [_row_to_plotstate(row) for row in result]
+
+
+def _row_to_plotstate(row):
+    return models.PlotState(
+        id=row.id,
+        world_id=row.world_id,
+        territory_type_id=row.territory_type_id,
+        ward_number=row.ward_number,
+        plot_number=row.plot_number,
+        last_seen=row.last_seen,
+        first_seen=row.first_seen,
+        is_owned=row.is_owned,
+        last_seen_price=row.last_seen_price,
+        owner_name=row.owner_name,
+        purchase_system=row.purchase_system,
+        lotto_entries=row.lotto_entries,
+        lotto_phase=row.lotto_phase,
+        lotto_phase_until=row.lotto_phase_until,
+        plot_info=models.PlotInfo(
+            territory_type_id=row.territory_type_id,
+            plot_number=row.plot_number,
+            house_size=row.house_size,
+            house_base_price=row.house_base_price,
+        ),
     )
-    result = stmt.all()
-    return [r.state for r in result]
 
 
 def last_entry_cycle_entries(db: Session) -> List[Row]:
