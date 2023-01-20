@@ -3,7 +3,6 @@ import json
 import logging
 import struct
 import time
-from collections import namedtuple
 from typing import Iterator, List, Optional, Tuple
 
 import aioredis.client
@@ -140,9 +139,6 @@ def last_state_transition(
 #     return result
 
 # manually optimized queries for maximum nyoom
-LatestStateTuple = namedtuple("LatestStateTuple", "state plotinfo")
-
-
 def latest_plot_states_in_district(db: Session, world_id: int, district_id: int) -> List[models.PlotState]:
     """
     Gets the latest plot states in the district.
