@@ -46,7 +46,7 @@ def get_world_detail(db: Session, world: models.World, include_time_estimates=Fa
         name=world.name,
         districts=district_details,
         num_open_plots=sum(d.num_open_plots for d in district_details),
-        oldest_plot_time=min(d.oldest_plot_time for d in latest_plots),
+        oldest_plot_time=min(d.oldest_plot_time for d in district_details),
     )
 
 
