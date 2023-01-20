@@ -157,6 +157,23 @@ def latest_plot_states_in_district(db: Session, world_id: int, district_id: int)
     return [r.state for r in result]
 
 
+def latest_plot_states_in_world(db: Session, world_id: int) -> List[models.PlotState]:
+    """
+    Gets the latest plot states in the district.
+    """
+    # SELECT *
+    # FROM latest_plot_states ls
+    #          JOIN plot_states ps on ls.state_id = ps.id
+    # WHERE ls.world_id = ?;
+    stmt = (
+        db.query(models.LatestPlotState)
+        .join(models.LatestPlotState.state)
+        .filter(models.LatestPlotState.world_id == world_id)
+    )
+    result = stmt.all()
+    return [r.state for r in result]
+
+
 def last_entry_cycle_entries(db: Session) -> List[Row]:
     end_time = ((time.time() - CYCLE_OFFSET) // LOTTO_CYCLE) * LOTTO_CYCLE + CYCLE_OFFSET
     query = """

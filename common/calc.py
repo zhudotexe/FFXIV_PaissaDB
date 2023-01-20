@@ -1,3 +1,4 @@
+import collections
 import logging
 from typing import Optional
 
@@ -6,6 +7,49 @@ from sqlalchemy.orm import Session
 from . import crud, models, schemas
 
 log = logging.getLogger(__name__)
+
+
+def get_world_detail(db: Session, world: models.World, include_time_estimates=True) -> schemas.paissa.WorldDetail:
+    """Gets the district detail for a given district in a world."""
+    latest_plots = crud.latest_plot_states_in_world(db, world.id)
+    district_open_plots = collections.defaultdict(list)
+
+    for plot in latest_plots:
+        if plot.is_owned:
+            continue
+        if include_time_estimates and plot.purchase_system & schemas.paissa.PurchaseSystem.LOTTERY:
+            # we found a plot that was last known as open, iterate over its history to find the details
+            first_open_state, last_sold_state = crud.last_state_transition(db, plot)
+            district_open_plots[plot.territory_type_id].append(
+                open_plot_detail(plot, first_open_state, last_sold_state)
+            )
+        else:
+            district_open_plots[plot.territory_type_id].append(open_plot_detail(plot))
+
+    districts = crud.get_districts(db)
+    district_details = []
+    for district in districts:
+        num_open_plots = len(district_open_plots[district.id])
+        oldest_plot_time = (
+            min(p.last_seen for p in district_open_plots[district.id]) if district_open_plots[district.id] else 0
+        )
+        district_details.append(
+            schemas.paissa.DistrictDetail(
+                id=district.id,
+                name=district.name,
+                num_open_plots=num_open_plots,
+                oldest_plot_time=oldest_plot_time,
+                open_plots=district_open_plots[district.id],
+            )
+        )
+
+    return schemas.paissa.WorldDetail(
+        id=world.id,
+        name=world.name,
+        districts=district_details,
+        num_open_plots=sum(d.num_open_plots for d in district_details),
+        oldest_plot_time=min(d.oldest_plot_time for d in latest_plots),
+    )
 
 
 def get_district_detail(

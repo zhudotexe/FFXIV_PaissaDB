@@ -88,21 +88,10 @@ def list_worlds(db: Session = Depends(get_db)):
 @app.get("/worlds/{world_id}", response_model=schemas.paissa.WorldDetail)
 def get_world(world_id: int, db: Session = Depends(get_db)):
     world = crud.get_world_by_id(db, world_id)
-    districts = crud.get_districts(db)
     if world is None:
         raise HTTPException(404, "World not found")
 
-    district_details = []
-    for district in districts:
-        district_details.append(calc.get_district_detail(db, world, district))
-
-    return schemas.paissa.WorldDetail(
-        id=world.id,
-        name=world.name,
-        districts=district_details,
-        num_open_plots=sum(d.num_open_plots for d in district_details),
-        oldest_plot_time=min(d.oldest_plot_time for d in district_details),
-    )
+    return calc.get_district_detail(db, world)
 
 
 @app.get("/worlds/{world_id}/{district_id}", response_model=schemas.paissa.DistrictDetail)
