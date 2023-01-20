@@ -14,6 +14,7 @@ from sqlalchemy import (
     String,
     UnicodeText,
     func,
+    UniqueConstraint,
 )
 from sqlalchemy.orm import relationship
 
@@ -113,6 +114,28 @@ Index(
     PlotState.last_seen.desc(),
 )
 Index("ix_plot_states_last_seen_desc", PlotState.last_seen.desc())
+
+
+class LatestPlotState(Base):
+    __tablename__ = "latest_plot_states"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ("territory_type_id", "plot_number"), ("plotinfo.territory_type_id", "plotinfo.plot_number")
+        ),
+        UniqueConstraint("world_id", "territory_type_id", "ward_number", "plot_number", name="uc_latest_plot_states"),
+    )
+
+    id = Column(Integer, primary_key=True)
+    world_id = Column(Integer, ForeignKey("worlds.id"))
+    territory_type_id = Column(Integer, ForeignKey("districts.id"))
+    ward_number = Column(Integer)
+    plot_number = Column(Integer)
+    state_id = Column(Integer, ForeignKey("plot_states.id"))
+
+    world = relationship("World", viewonly=True)
+    district = relationship("District", viewonly=True)
+    plot_info = relationship("PlotInfo", viewonly=True)
+    state = relationship("PlotState", viewonly=True)
 
 
 # store of all ingested events for later analysis (e.g. FC/player ownership, relocation/resell graphs, etc)

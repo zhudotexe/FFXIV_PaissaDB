@@ -1,3 +1,5 @@
+from sqlalchemy import insert
+
 from common import models, schemas
 
 
@@ -80,3 +82,21 @@ def new_state_from_event(state_event: schemas.paissa.PlotStateEntry) -> models.P
         lotto_phase=state_event.lotto_phase,
         lotto_phase_until=state_event.lotto_phase_until,
     )
+
+
+def upsert_latest_state_stmt(state: models.PlotState):
+    stmt = (
+        insert(models.LatestPlotState)
+        .values(
+            world_id=state.world_id,
+            territory_type_id=state.territory_type_id,
+            ward_number=state.ward_number,
+            plot_number=state.plot_number,
+            state_id=state.id,
+        )
+        .on_conflict_do_update(
+            constraint="uc_latest_plot_states",
+            set_=dict(state_id=state.id),
+        )
+    )
+    return stmt

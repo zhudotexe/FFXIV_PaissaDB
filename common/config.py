@@ -14,4 +14,3 @@ SENTRY_DSN = os.getenv("SENTRY_DSN")
 SENTRY_ENV = os.getenv("SENTRY_ENV", "development")
 
 LOGLEVEL = os.getenv("LOGLEVEL", "INFO")
-EMERGENCY_LOAD_PREVENTION = False

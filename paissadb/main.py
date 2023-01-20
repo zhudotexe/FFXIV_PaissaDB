@@ -148,9 +148,6 @@ async def root():
 # ==== WS ====
 @app.websocket("/ws")
 async def plot_updates(websocket: WebSocket, jwt: Optional[str] = None, db: Session = Depends(get_db)):
-    if config.EMERGENCY_LOAD_PREVENTION:
-        await websocket.close(code=status.WS_1013_TRY_AGAIN_LATER)
-        return
     if jwt is None:
         await ws.connect(db, websocket, None)
         return
