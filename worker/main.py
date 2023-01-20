@@ -51,6 +51,9 @@ class Worker:
         plot_num = plot_state_event.plot_num
 
         # get the latest state of the plot
+        previous_state = None
+        is_intermediate = False
+        i = 0
         for i, state in enumerate(
             crud.historical_plot_state(
                 self.db,
@@ -64,15 +67,23 @@ class Worker:
             # if event's timestamp  > state's last_seen:
             if plot_state_event.timestamp > state.last_seen:
                 log.debug(f"Event {key} updates state {state.id} with new time")
-                await self.handle_later_state(plot_state_event, state, is_newest=i == 0)
+                previous_state = state
                 break
             # elif state's last_seen  > event's timestamp > state's first_seen:
             elif state.last_seen >= plot_state_event.timestamp >= state.first_seen:
                 log.debug(f"Event {key} falls within {state.id}")
-                await self.handle_intermediate_state(plot_state_event, state)
+                previous_state = state
+                is_intermediate = True
                 break
             # else state's first_seen > event's timestamp
             # get the previous state and do this again (continue loop)
+
+        # this is wacky and not inside the loop to close the yield_per cursor
+        if previous_state is not None:
+            if not is_intermediate:
+                await self.handle_later_state(plot_state_event, previous_state, is_newest=i == 0)
+            else:
+                await self.handle_intermediate_state(plot_state_event, previous_state)
         else:
             log.debug(f"Event {key} is the first state for its plot")
             log.info(f"Found new state for world {world_id} district {district_id}: {ward_num}-{plot_num}")
