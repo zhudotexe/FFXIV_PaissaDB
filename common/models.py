@@ -126,7 +126,7 @@ class LatestPlotState(Base):
     )
 
     id = Column(Integer, primary_key=True)
-    world_id = Column(Integer, ForeignKey("worlds.id"))
+    world_id = Column(Integer, ForeignKey("worlds.id"), index=True)
     territory_type_id = Column(Integer, ForeignKey("districts.id"))
     ward_number = Column(Integer)
     plot_number = Column(Integer)
