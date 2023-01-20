@@ -30,7 +30,7 @@ def get_world_detail(db: Session, world: models.World, include_time_estimates=Fa
     district_details = []
     for district in districts:
         num_open_plots = len(district_open_plots[district.id])
-        oldest_plot_time = min(p for p in district_open_plots[district.id]) if district_open_plots[district.id] else 0
+        oldest_plot_time = min(p.last_seen for p in latest_plots if p.territory_type_id == district.id)
         district_details.append(
             schemas.paissa.DistrictDetail(
                 id=district.id,
