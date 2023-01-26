@@ -48,6 +48,11 @@ def update_historical_state_from(historical_state: models.PlotState, state_event
     - lotto_phase if was None
     - owner_name if was None
     """
+    if did_update_owner := historical_state.owner_name is None and state_event.owner_name is not None:
+        historical_state.owner_name = state_event.owner_name
+    if historical_state.lotto_phase is None and state_event.lotto_phase is not None:
+        historical_state.lotto_phase = state_event.lotto_phase
+
     if state_event.timestamp > historical_state.last_seen:
         if state_event.price is not None:
             historical_state.last_seen_price = state_event.price
@@ -56,12 +61,11 @@ def update_historical_state_from(historical_state: models.PlotState, state_event
         if state_event.lotto_phase_until is not None:
             historical_state.lotto_phase_until = state_event.lotto_phase_until
         historical_state.purchase_system = state_event.purchase_system
-        historical_state.last_seen = state_event.timestamp
 
-    if historical_state.owner_name is None and state_event.owner_name is not None:
-        historical_state.owner_name = state_event.owner_name
-    if historical_state.lotto_phase is None and state_event.lotto_phase is not None:
-        historical_state.lotto_phase = state_event.lotto_phase
+        # only update timestamp for placard events
+        # aetheryte events only change purchase system (creates new state) or owner
+        if (state_event.lotto_phase is not None) or did_update_owner:
+            historical_state.last_seen = state_event.timestamp
 
 
 def new_state_from_event(state_event: schemas.paissa.PlotStateEntry) -> models.PlotState:
@@ -97,7 +101,7 @@ def upsert_latest_state_stmt(state: models.PlotState):
         .on_conflict_do_update(
             constraint="uc_latest_plot_states",
             set_=dict(state_id=state.id),
-            where=models.LatestPlotState.state_id < state.id
+            where=models.LatestPlotState.state_id < state.id,
         )
     )
     return stmt
