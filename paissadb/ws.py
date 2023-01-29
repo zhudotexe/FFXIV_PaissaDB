@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import time
 from typing import List, Optional
 
 from fastapi import WebSocket
@@ -11,6 +12,7 @@ from common.database import PUBSUB_WS_CHANNEL, redis
 
 log = logging.getLogger(__name__)
 
+ONE_DAY = 60 * 60 * 24
 pubsub = redis.pubsub()
 
 
@@ -18,10 +20,9 @@ class WebsocketClient:
     def __init__(self, conn: WebSocket, anonymous: bool):
         self.conn = conn
         self.anonymous = anonymous
+        self.connected_at = time.time()
 
     async def send_text(self, data: str):
-        # if self.anonymous:
-        #     await asyncio.sleep(120)  # 2-minute delay for anonymous clients
         await self.conn.send_text(data)
 
     async def close(self, code=1000):
@@ -39,19 +40,24 @@ async def connect(db: Session, websocket: WebSocket, user: Optional[schemas.pais
     client = WebsocketClient(websocket, user is not None)
     clients.append(client)
     try:
-        await ping(websocket)
+        await ping(client, delay=90)
     finally:
         clients.remove(client)
 
 
-async def ping(websocket: WebSocket, delay=60):
+async def ping(websocket: WebsocketClient, delay=60):
     """Naively sends a ping message to the given websocket every 60 seconds."""
     while True:
         try:
             await websocket.send_text('{"type": "ping"}')  # save a bit of time by having this pre-serialized
             await asyncio.sleep(delay)
+            # disconnect anonymous clients who have been connected for >24h
+            if websocket.anonymous and time.time() - websocket.connected_at > ONE_DAY:
+                log.info(f"WS disconnect anonymous >1d: {websocket.conn.client!r}")
+                await websocket.close()
+                return
         except ConnectionClosed as e:
-            log.info(f"WS disconnected ({e.code}: {e.reason}): {websocket.client!r}")
+            log.info(f"WS disconnected ({e.code}: {e.reason}): {websocket.conn.client!r}")
             return
         except asyncio.CancelledError:
             return
