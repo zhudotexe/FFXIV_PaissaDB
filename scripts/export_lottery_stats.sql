@@ -1,5 +1,6 @@
 -- export_lottery_stats
 -- Exports the entry stats from the most recent entry cycle, ordered by entry count descending.
+-- FIXME this does not account for plots not seen from placard
 -- lottery_export
 WITH constants (lotto_cycle, cycle_mod)
          AS (VALUES (777600, 54000))

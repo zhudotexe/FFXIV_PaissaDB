@@ -16,7 +16,8 @@ from .database import EVENT_QUEUE_KEY, TTL_ONE_HOUR, redis
 log = logging.getLogger(__name__)
 
 LOTTO_CYCLE = 777600
-CYCLE_OFFSET = 54000
+CYCLE_ENTRY_END_OFFSET = 54000
+ENTRY_TIME = 432000
 
 
 # ==== sweepers ====
@@ -138,6 +139,7 @@ def last_state_transition(
 #     result = stmt.all()
 #     return result
 
+
 # manually optimized queries for maximum nyoom
 def latest_plot_states_in_district(db: Session, world_id: int, district_id: int) -> List[models.PlotState]:
     """
@@ -172,8 +174,8 @@ def latest_plot_states_in_district(db: Session, world_id: int, district_id: int)
        house_size,
        house_base_price
     FROM latest_plot_states ls
-         JOIN plot_states ps on ls.state_id = ps.id
-         JOIN plotinfo p on ls.territory_type_id = p.territory_type_id and ls.plot_number = p.plot_number
+         JOIN plot_states ps ON ls.state_id = ps.id
+         JOIN plotinfo p ON ls.territory_type_id = p.territory_type_id AND ls.plot_number = p.plot_number
     WHERE ls.world_id = :world_id
       AND ls.territory_type_id = :district_id"""
     stmt = text(query).bindparams(world_id=world_id, district_id=district_id)
@@ -213,8 +215,8 @@ def latest_plot_states_in_world(db: Session, world_id: int) -> List[models.PlotS
        house_size,
        house_base_price
     FROM latest_plot_states ls
-         JOIN plot_states ps on ls.state_id = ps.id
-         JOIN plotinfo p on ls.territory_type_id = p.territory_type_id and ls.plot_number = p.plot_number
+         JOIN plot_states ps ON ls.state_id = ps.id
+         JOIN plotinfo p ON ls.territory_type_id = p.territory_type_id AND ls.plot_number = p.plot_number
     WHERE ls.world_id = :world_id"""
     stmt = text(query).bindparams(world_id=world_id)
     result = db.execute(stmt)
@@ -247,7 +249,7 @@ def _row_to_plotstate(row):
 
 
 def last_entry_cycle_entries(db: Session) -> List[Row]:
-    end_time = ((time.time() - CYCLE_OFFSET) // LOTTO_CYCLE) * LOTTO_CYCLE + CYCLE_OFFSET
+    entry_end_time = ((time.time() - CYCLE_ENTRY_END_OFFSET) // LOTTO_CYCLE) * LOTTO_CYCLE + CYCLE_ENTRY_END_OFFSET
     query = """
     SELECT w.name                  AS world,
        d.name                      AS district,
@@ -263,10 +265,12 @@ def last_entry_cycle_entries(db: Session) -> List[Row]:
              LEFT JOIN plotinfo p ON s.territory_type_id = p.territory_type_id AND s.plot_number = p.plot_number
              LEFT JOIN districts d ON d.id = s.territory_type_id
              LEFT JOIN worlds w ON w.id = s.world_id
-    WHERE lotto_phase_until = :end_time
+    WHERE (lotto_phase_until = :end_time
+        OR (last_seen >= :start_time AND first_seen < :end_time))
+      AND is_owned = FALSE
     ORDER BY lotto_entries DESC NULLS LAST;
     """
-    stmt = text(query).bindparams(end_time=end_time)
+    stmt = text(query).bindparams(end_time=entry_end_time, start_time=entry_end_time - ENTRY_TIME)
     result = db.execute(stmt)
     return result.all()
 
