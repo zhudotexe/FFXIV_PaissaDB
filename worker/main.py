@@ -91,10 +91,6 @@ class Worker:
             # we must be the very first state, create a state and commit it so we can reference it in latest state
             new_state = utils.new_state_from_event(plot_state_event)
             self.db.add(new_state)
-            self.db.commit()
-            # create new latest state
-            stmt = utils.upsert_latest_state_stmt(new_state)
-            self.db.execute(stmt)
 
         # whatever changes we made, they're good here
         self.db.commit()
@@ -119,10 +115,6 @@ class Worker:
             new_state = utils.new_state_from_event(plot_state_event)
             self.db.add(new_state)
             self.db.enable_relationship_loading(new_state)
-            self.db.commit()
-            # create new latest state
-            stmt = utils.upsert_latest_state_stmt(new_state)
-            self.db.execute(stmt)
 
             if new_state.is_owned != old_state.is_owned:
                 if not new_state.is_owned:

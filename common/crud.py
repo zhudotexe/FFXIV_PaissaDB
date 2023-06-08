@@ -10,7 +10,7 @@ from sqlalchemy import desc, update, text
 from sqlalchemy.engine import Row
 from sqlalchemy.orm import Session
 
-from . import models, schemas, utils
+from . import config, models, schemas, utils
 from .database import EVENT_QUEUE_KEY, TTL_ONE_HOUR, redis
 
 log = logging.getLogger(__name__)
@@ -145,80 +145,17 @@ def latest_plot_states_in_district(db: Session, world_id: int, district_id: int)
     """
     Gets the latest plot states in the district.
     """
-    # SELECT *
-    # FROM latest_plot_states ls
-    #          JOIN plot_states ps on ls.state_id = ps.id
-    # WHERE ls.world_id = ?
-    #   AND ls.territory_type_id = ?;
-    # stmt = (
-    #     db.query(models.LatestPlotState)
-    #     .join(models.LatestPlotState.state)
-    #     .filter(models.LatestPlotState.world_id == world_id, models.LatestPlotState.territory_type_id == district_id)
-    # )
-    # result = stmt.all()
-    # return [r.state for r in result]
-    query = """SELECT ps.id,
-       ps.world_id,
-       ps.territory_type_id,
-       ps.ward_number,
-       ps.plot_number,
-       last_seen,
-       first_seen,
-       is_owned,
-       last_seen_price,
-       owner_name,
-       lotto_entries,
-       purchase_system,
-       lotto_phase,
-       lotto_phase_until,
-       house_size,
-       house_base_price
-    FROM latest_plot_states ls
-         JOIN plot_states ps ON ls.state_id = ps.id
-         JOIN plotinfo p ON ls.territory_type_id = p.territory_type_id AND ls.plot_number = p.plot_number
-    WHERE ls.world_id = :world_id
-      AND ls.territory_type_id = :district_id"""
+    query = """
+    SELECT DISTINCT ON (ward_number, ps.plot_number) ps.*,
+        p.house_size,
+        p.house_base_price
+    FROM plot_states ps
+        JOIN plotinfo p ON ps.territory_type_id = p.territory_type_id AND ps.plot_number = p.plot_number
+    WHERE ps.world_id = :world_id
+      AND ps.territory_type_id = :district_id
+    ORDER BY ward_number, ps.plot_number, last_seen DESC;
+    """
     stmt = text(query).bindparams(world_id=world_id, district_id=district_id)
-    result = db.execute(stmt)
-    return [_row_to_plotstate(row) for row in result]
-
-
-def latest_plot_states_in_world(db: Session, world_id: int) -> List[models.PlotState]:
-    """
-    Gets the latest plot states in the district.
-    """
-    # SELECT *
-    # FROM latest_plot_states ls
-    #          JOIN plot_states ps on ls.state_id = ps.id
-    # WHERE ls.world_id = ?;
-    # stmt = (
-    #     db.query(models.LatestPlotState)
-    #     .join(models.LatestPlotState.state)
-    #     .filter(models.LatestPlotState.world_id == world_id)
-    # )
-    # result = stmt.all()
-    # return [r.state for r in result]
-    query = """SELECT ps.id,
-       ps.world_id,
-       ps.territory_type_id,
-       ps.ward_number,
-       ps.plot_number,
-       last_seen,
-       first_seen,
-       is_owned,
-       last_seen_price,
-       owner_name,
-       lotto_entries,
-       purchase_system,
-       lotto_phase,
-       lotto_phase_until,
-       house_size,
-       house_base_price
-    FROM latest_plot_states ls
-         JOIN plot_states ps ON ls.state_id = ps.id
-         JOIN plotinfo p ON ls.territory_type_id = p.territory_type_id AND ls.plot_number = p.plot_number
-    WHERE ls.world_id = :world_id"""
-    stmt = text(query).bindparams(world_id=world_id)
     result = db.execute(stmt)
     return [_row_to_plotstate(row) for row in result]
 
