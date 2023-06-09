@@ -64,7 +64,11 @@ def update_historical_state_from(historical_state: models.PlotState, state_event
 
         # only update timestamp for placard events
         # aetheryte events only change purchase system (creates new state) or owner
-        if (state_event.lotto_phase is not None) or did_update_owner:
+        # or if the update occurs after the old lotto_end_time (or we didn't/don't know the old lotto_end_time)
+        update_lotto_timestamp = historical_state.lotto_phase_until is None or (
+            state_event.timestamp > historical_state.lotto_phase_until
+        )
+        if (state_event.lotto_phase is not None) or did_update_owner or update_lotto_timestamp:
             historical_state.last_seen = state_event.timestamp
 
 
