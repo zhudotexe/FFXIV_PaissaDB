@@ -64,6 +64,7 @@ class OpenPlotDetail(BaseModel):
     size: int
     price: int
     last_updated_time: float
+    first_seen_time: float
     est_time_open_min: float
     est_time_open_max: float
     purchase_system: PurchaseSystem
@@ -82,6 +83,7 @@ class PlotUpdate(BaseModel):
     size: int
     price: int
     last_updated_time: float
+    first_seen_time: float
     purchase_system: PurchaseSystem
     lotto_entries: Optional[int]
     lotto_phase: Optional[ffxiv.LotteryPhase]

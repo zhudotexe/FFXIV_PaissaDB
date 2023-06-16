@@ -120,6 +120,7 @@ class OpenPlotDetail:
     size: int  # 0 = small, 1 = medium, 2 = large
     price: int
     last_updated_time: float  # UNIX timestamp
+    first_seen_time: float    # UNIX timestamp
     est_time_open_min: float  # UNIX timestamp; 0 for non-lottery plots
     est_time_open_max: float  # UNIX timestamp; 0 for non-lottery plots
     purchase_system: PurchaseSystem 
@@ -142,6 +143,7 @@ class PlotUpdate:
     size: int  # 0 = small, 1 = medium, 2 = large
     price: int
     last_updated_time: float  # UNIX timestamp
+    first_seen_time: float    # UNIX timestamp
     purchase_system: PurchaseSystem
     lotto_entries: int | None
     lotto_phase: int | None  # 1 = entry, 2 = results, 3 = unavailable until next entry phase
