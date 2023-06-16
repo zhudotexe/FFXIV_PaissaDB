@@ -161,6 +161,7 @@ class SoldPlotDetail:
     plot_number: int
     size: int  # 0 = small, 1 = medium, 2 = large
     last_updated_time: float  # UNIX timestamp
+    first_seen_time: float    # UNIX timestamp
     est_time_sold_min: float  # UNIX timestamp
     est_time_sold_max: float  # UNIX timestamp
 ```

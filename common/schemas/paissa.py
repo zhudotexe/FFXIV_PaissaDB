@@ -98,6 +98,7 @@ class SoldPlotDetail(BaseModel):
     plot_number: int
     size: int
     last_updated_time: float
+    first_seen_time: float
     est_time_sold_min: float
     est_time_sold_max: float
 

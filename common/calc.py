@@ -97,6 +97,7 @@ def sold_plot_detail(
         plot_number=first_sold_state.plot_number,
         size=first_sold_state.plot_info.house_size,
         last_updated_time=first_sold_state.last_seen,
+        first_seen_time=last_open_state.first_seen,
         est_time_sold_min=est_time_sold_min,
         est_time_sold_max=est_time_sold_max,
     )
