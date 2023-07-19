@@ -1,10 +1,11 @@
 -- export_lottery_stats
 -- Exports the entry stats from the most recent entry cycle, ordered by entry count descending.
 -- lottery_export
-WITH constants (lotto_cycle, cycle_mod, entry_time)
-         AS (VALUES (777600, 54000, 432000)),
+WITH constants (lotto_cycle, cycle_mod, entry_time, cycles_offset)
+         AS (VALUES (777600, 54000, 432000, 1)),
      times (end_time)
-         AS (SELECT FLOOR((EXTRACT(EPOCH FROM NOW()) - constants.cycle_mod) / constants.lotto_cycle) *
+         AS (SELECT (FLOOR((EXTRACT(EPOCH FROM NOW()) - constants.cycle_mod) / constants.lotto_cycle) -
+                     constants.cycles_offset) *
                     constants.lotto_cycle +
                     constants.cycle_mod
              FROM constants)
