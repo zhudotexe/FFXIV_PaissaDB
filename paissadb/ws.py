@@ -5,7 +5,7 @@ from typing import List, Optional
 
 from fastapi import WebSocket
 from sqlalchemy.orm import Session
-from websockets import ConnectionClosed
+from websockets import ConnectionClosed, broadcast
 
 from common import crud, schemas, utils
 from common.database import PUBSUB_WS_CHANNEL, redis
@@ -13,7 +13,7 @@ from common.database import PUBSUB_WS_CHANNEL, redis
 log = logging.getLogger(__name__)
 
 ONE_DAY = 60 * 60 * 24
-pubsub = redis.pubsub()
+pubsub = redis.pubsub(ignore_subscribe_messages=True)
 
 
 class WebsocketClient:
@@ -66,18 +66,11 @@ async def ping(websocket: WebsocketClient, delay=60):
 async def broadcast_listener():
     """Sends all messages received over the broadcast manager to all connected websockets."""
     await pubsub.subscribe(PUBSUB_WS_CHANNEL)
-    while True:
+    async for message in pubsub.listen():
         try:
-            message = pubsub.handle_message(await pubsub.parse_response(block=True), ignore_subscribe_messages=True)
-            if message is None:
-                continue
             data = message["data"]
-            # we do this instead of iterating over the clients for concurrency and so the clients list cannot
-            # change during our iteration
             # we don't care about bad connections here, the ping will clean those up
-            asyncio.ensure_future(
-                asyncio.gather(*(websocket.send_text(data) for websocket in clients), return_exceptions=True)
-            )
+            asyncio.ensure_future(broadcast((c.conn for c in clients), data))
         except asyncio.CancelledError:
             break
         except Exception:

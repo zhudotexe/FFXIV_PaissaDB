@@ -1,4 +1,4 @@
-import aioredis
+import redis.asyncio as redis_lib
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
@@ -31,4 +31,4 @@ EVENT_QUEUE_KEY = "events_pq"
 METRICS_KEY_PREFIX = "metrics"
 PUBSUB_WS_CHANNEL = "ws_messages"
 TTL_ONE_HOUR = 3600
-redis = aioredis.from_url(config.REDIS_URI, decode_responses=True)
+redis = redis_lib.from_url(config.REDIS_URI, decode_responses=True)

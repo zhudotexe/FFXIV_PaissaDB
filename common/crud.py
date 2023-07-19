@@ -5,12 +5,12 @@ import struct
 import time
 from typing import Iterator, List, Optional, Tuple
 
-import aioredis.client
+import redis.asyncio as redis_lib
 from sqlalchemy import desc, update, text
 from sqlalchemy.engine import Row
 from sqlalchemy.orm import Session
 
-from . import config, models, schemas, utils
+from . import models, schemas, utils
 from .database import EVENT_QUEUE_KEY, TTL_ONE_HOUR, redis
 
 log = logging.getLogger(__name__)
@@ -218,10 +218,9 @@ DATUM_KEY_STRUCT = struct.Struct("!IIHH32s")  # world: u32, district: u32, ward:
 
 async def bulk_ingest(db: Session, data: List[schemas.ffxiv.BaseFFXIVPacket], sweeper: schemas.paissa.JWTSweeper):
     sweeper_id = sweeper.cid if sweeper is not None else None
-    pipeline = redis.pipeline()
+    pipeline = redis.pipeline(transaction=True)
     now = time.time()
 
-    pipeline.multi()
     for datum in data:
         if datum.timestamp > (now + 10):
             log.warning(
@@ -252,7 +251,7 @@ async def bulk_ingest(db: Session, data: List[schemas.ffxiv.BaseFFXIVPacket], sw
 
 
 # --- wardinfo ---
-async def _ingest_wardinfo(pipeline: aioredis.client.Pipeline, wardinfo: schemas.ffxiv.HousingWardInfo):
+async def _ingest_wardinfo(pipeline: redis_lib.client.Pipeline, wardinfo: schemas.ffxiv.HousingWardInfo):
     world_id = wardinfo.LandIdent.WorldId
     district_id = wardinfo.LandIdent.TerritoryTypeId
     ward_num = wardinfo.LandIdent.WardNumber
@@ -285,7 +284,7 @@ async def _ingest_wardinfo(pipeline: aioredis.client.Pipeline, wardinfo: schemas
 
 
 # --- lotteryinfo ---
-async def _ingest_lotteryinfo(pipeline: aioredis.client.Pipeline, lotteryinfo: schemas.ffxiv.LotteryInfo):
+async def _ingest_lotteryinfo(pipeline: redis_lib.client.Pipeline, lotteryinfo: schemas.ffxiv.LotteryInfo):
     world_id = lotteryinfo.WorldId
     district_id = lotteryinfo.DistrictId
     ward_num = lotteryinfo.WardId

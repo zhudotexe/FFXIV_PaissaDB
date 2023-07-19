@@ -40,7 +40,7 @@ class Worker:
                 self.db.rollback()
 
     async def process_plot_from_key(self, key: str):
-        data = await self.redis.execute_command("GETDEL", key)  # aioredis doesn't have this yet
+        data = await self.redis.getdel(key)
         if data is None:
             log.warning(f"Data in key {key} is nil, skipping")
             return
