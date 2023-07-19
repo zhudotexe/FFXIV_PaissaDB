@@ -5,7 +5,7 @@ from typing import List, Optional
 
 from fastapi import WebSocket
 from sqlalchemy.orm import Session
-from websockets import ConnectionClosed, broadcast
+from websockets import ConnectionClosed
 
 from common import crud, schemas, utils
 from common.database import PUBSUB_WS_CHANNEL, redis
@@ -69,8 +69,12 @@ async def broadcast_listener():
     async for message in pubsub.listen():
         try:
             data = message["data"]
+            # we do this instead of iterating over the clients for concurrency and so the clients list cannot
+            # change during our iteration
             # we don't care about bad connections here, the ping will clean those up
-            asyncio.ensure_future(broadcast((c.conn for c in clients), data))
+            asyncio.ensure_future(
+                asyncio.gather(*(websocket.send_text(data) for websocket in clients), return_exceptions=True)
+            )
         except asyncio.CancelledError:
             break
         except Exception:
