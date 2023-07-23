@@ -24,13 +24,15 @@ def should_create_new_state(state_event: schemas.paissa.PlotStateEntry, historic
     return False
 
 
-def update_historical_state_from(historical_state: models.PlotState, state_event: schemas.paissa.PlotStateEntry):
+def update_historical_state_from(
+    historical_state: models.PlotState, state_event: schemas.paissa.PlotStateEntry
+) -> bool:
     """
     Updates the historical state's keys from the newly seen state in place.
 
     Updated keys:
     - last_seen_price if latest
-    - lotto_entries if latest and greater
+    - lotto_entries if latest
     - lotto_phase_until if latest
     - last_seen if latest
     - purchase_system if latest
@@ -38,19 +40,31 @@ def update_historical_state_from(historical_state: models.PlotState, state_event
     - lotto_phase_until if latest
     - owner_name if was None
     """
+    should_broadcast = False
+    # set previously unpopulated owner name
     if did_update_owner := historical_state.owner_name is None and state_event.owner_name is not None:
         historical_state.owner_name = state_event.owner_name
+    # set previously unpopulated lotto phase
     if historical_state.lotto_phase is None and state_event.lotto_phase is not None:
         historical_state.lotto_phase = state_event.lotto_phase
+        should_broadcast = True
 
     if state_event.timestamp > historical_state.last_seen:
+        # update price
         if state_event.price is not None:
+            should_broadcast = should_broadcast or (historical_state.last_seen_price != state_event.price)
             historical_state.last_seen_price = state_event.price
-        if state_event.lotto_entries is not None and state_event.lotto_entries > (historical_state.lotto_entries or 0):
+        # update lotto entries
+        if state_event.lotto_entries is not None:
+            should_broadcast = should_broadcast or (historical_state.lotto_entries != state_event.lotto_entries)
             historical_state.lotto_entries = state_event.lotto_entries
+        # update lotto phase end time
         if state_event.lotto_phase_until is not None:
+            should_broadcast = should_broadcast or (historical_state.lotto_phase_until != state_event.lotto_phase_until)
             historical_state.lotto_phase_until = state_event.lotto_phase_until
+        # update lotto phase
         if state_event.lotto_phase is not None:
+            should_broadcast = should_broadcast or (historical_state.lotto_phase != state_event.lotto_phase)
             historical_state.lotto_phase = state_event.lotto_phase
         historical_state.purchase_system = state_event.purchase_system
 
@@ -62,6 +76,7 @@ def update_historical_state_from(historical_state: models.PlotState, state_event
         )
         if (state_event.lotto_phase is not None) or did_update_owner or update_lotto_timestamp:
             historical_state.last_seen = state_event.timestamp
+    return should_broadcast
 
 
 def new_state_from_event(state_event: schemas.paissa.PlotStateEntry) -> models.PlotState:

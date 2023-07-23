@@ -89,16 +89,10 @@ class Worker:
     ):
         # if it matches, update last_seen and broadcast any applicable updates
         if not utils.should_create_new_state(plot_state_event, old_state):
-            if (
-                (
-                    plot_state_event.lotto_entries is not None
-                    and plot_state_event.lotto_entries > (old_state.lotto_entries or 0)
-                )
-                or (plot_state_event.lotto_phase is not None and old_state.lotto_phase is None)
-            ) and is_newest:
+            should_broadcast = utils.update_historical_state_from(old_state, plot_state_event)
+            if should_broadcast and is_newest:
                 update = schemas.paissa.WSPlotUpdate(data=calc.plot_update(plot_state_event, old_state))
                 await self.broadcast(update.json())
-            utils.update_historical_state_from(old_state, plot_state_event)
         # else create a new state, broadcast state changes, and return
         elif is_newest:  # only if this is the latest state, don't broadcast updates to old states
             new_state = utils.new_state_from_event(plot_state_event)
