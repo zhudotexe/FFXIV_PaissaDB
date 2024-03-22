@@ -1,15 +1,6 @@
--- export_lottery_stats
--- Exports the entry stats from the most recent entry cycle, ordered by entry count descending.
--- lottery_export
-WITH constants (lotto_cycle, cycle_mod, entry_time, cycles_offset)
-         AS (VALUES (777600, 54000, 432000, 1)),
-     times (end_time)
-         AS (SELECT (FLOOR((EXTRACT(EPOCH FROM NOW()) - constants.cycle_mod) / constants.lotto_cycle) -
-                     constants.cycles_offset) *
-                    constants.lotto_cycle +
-                    constants.cycle_mod
-             FROM constants)
--- ^ set to seconds in 9 days, offset within 9-day cycle (e.g. 1658674800 % 777600 = 54000)
+-- export_all_states
+-- Exports all plot states ever seen.
+-- all_states
 SELECT s.id                        AS id,
        w.name                      AS world,
        d.name                      AS district,
@@ -23,15 +14,12 @@ SELECT s.id                        AS id,
        s.last_seen_price           AS price,
        s.first_seen                AS first_seen,
        s.last_seen                 AS last_seen,
+       s.is_owned                  AS is_owned,
+       MD5(s.owner_name)           AS owner_name_hash,
        s.lotto_phase               AS lotto_phase,
        s.lotto_phase_until         AS lotto_phase_until
 FROM plot_states s
          LEFT JOIN plotinfo p ON s.territory_type_id = p.territory_type_id AND s.plot_number = p.plot_number
          LEFT JOIN districts d ON d.id = s.territory_type_id
          LEFT JOIN worlds w ON w.id = s.world_id
-         JOIN constants ON TRUE
-         JOIN times ON TRUE
-WHERE (lotto_phase_until = times.end_time
-    OR (last_seen >= times.end_time - constants.entry_time AND first_seen < times.end_time))
-  AND is_owned = FALSE
-ORDER BY lotto_entries DESC NULLS LAST;
+ORDER BY id DESC;
