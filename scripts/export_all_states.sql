@@ -16,6 +16,7 @@ SELECT s.id                        AS id,
        s.last_seen                 AS last_seen,
        s.is_owned                  AS is_owned,
        MD5(s.owner_name)           AS owner_name_hash,
+       s.owner_name LIKE '% %'     AS owner_name_has_space,
        s.lotto_phase               AS lotto_phase,
        s.lotto_phase_until         AS lotto_phase_until
 FROM plot_states s
