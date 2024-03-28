@@ -121,3 +121,4 @@ temp/
 **.DS_Store
 *.csv
 stats/data/
+_csv_cache/
