@@ -6,8 +6,7 @@ import time
 from typing import Iterator, List, Optional, Tuple
 
 import redis.asyncio as redis_lib
-from sqlalchemy import desc, update, text
-from sqlalchemy.engine import Row
+from sqlalchemy import desc, text, update
 from sqlalchemy.orm import Session
 
 from . import models, schemas, utils
@@ -185,31 +184,31 @@ def _row_to_plotstate(row):
     )
 
 
-def last_entry_cycle_entries(db: Session) -> List[Row]:
-    entry_end_time = ((time.time() - CYCLE_ENTRY_END_OFFSET) // LOTTO_CYCLE) * LOTTO_CYCLE + CYCLE_ENTRY_END_OFFSET
-    query = """
-    SELECT w.name                  AS world,
-       d.name                      AS district,
-       ward_number + 1             AS ward_number,
-       s.plot_number + 1           AS plot_number,
-       CASE p.house_size
-           WHEN 0 THEN 'SMALL'
-           WHEN 1 THEN 'MEDIUM'
-           WHEN 2 THEN 'LARGE' END AS house_size,
-       s.lotto_entries             AS lotto_entries,
-       s.last_seen_price           AS price
-    FROM plot_states s
-             LEFT JOIN plotinfo p ON s.territory_type_id = p.territory_type_id AND s.plot_number = p.plot_number
-             LEFT JOIN districts d ON d.id = s.territory_type_id
-             LEFT JOIN worlds w ON w.id = s.world_id
-    WHERE (lotto_phase_until = :end_time
-        OR (last_seen >= :start_time AND first_seen < :end_time))
-      AND is_owned = FALSE
-    ORDER BY lotto_entries DESC NULLS LAST;
-    """
-    stmt = text(query).bindparams(end_time=entry_end_time, start_time=entry_end_time - ENTRY_TIME)
-    result = db.execute(stmt)
-    return result.all()
+# def last_entry_cycle_entries(db: Session) -> List[Row]:
+#     entry_end_time = ((time.time() - CYCLE_ENTRY_END_OFFSET) // LOTTO_CYCLE) * LOTTO_CYCLE + CYCLE_ENTRY_END_OFFSET
+#     query = """
+#     SELECT w.name                  AS world,
+#        d.name                      AS district,
+#        ward_number + 1             AS ward_number,
+#        s.plot_number + 1           AS plot_number,
+#        CASE p.house_size
+#            WHEN 0 THEN 'SMALL'
+#            WHEN 1 THEN 'MEDIUM'
+#            WHEN 2 THEN 'LARGE' END AS house_size,
+#        s.lotto_entries             AS lotto_entries,
+#        s.last_seen_price           AS price
+#     FROM plot_states s
+#              LEFT JOIN plotinfo p ON s.territory_type_id = p.territory_type_id AND s.plot_number = p.plot_number
+#              LEFT JOIN districts d ON d.id = s.territory_type_id
+#              LEFT JOIN worlds w ON w.id = s.world_id
+#     WHERE (lotto_phase_until = :end_time
+#         OR (last_seen >= :start_time AND first_seen < :end_time))
+#       AND is_owned = FALSE
+#     ORDER BY lotto_entries DESC NULLS LAST;
+#     """
+#     stmt = text(query).bindparams(end_time=entry_end_time, start_time=entry_end_time - ENTRY_TIME)
+#     result = db.execute(stmt)
+#     return result.all()
 
 
 # ==== ingest ====

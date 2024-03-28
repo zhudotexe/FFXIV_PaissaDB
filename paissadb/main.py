@@ -116,27 +116,27 @@ def get_district_detail(world_id: int, district_id: int, db: Session = Depends(g
 
 
 # --- CSV export ---
-@app.get("/csv/entries")
-def get_entries_csv(db: Session = Depends(get_db)):
-    """
-    Exports the entry stats from the most recent complete entry cycle, ordered by entry count descending.
-    """
-    csvbuf = io.StringIO()
-
-    writer = csv.DictWriter(
-        csvbuf, fieldnames=("world", "district", "ward_number", "plot_number", "house_size", "lotto_entries", "price")
-    )
-    writer.writeheader()
-    for row in crud.last_entry_cycle_entries(db):
-        writer.writerow(row._asdict())
-
-    csvbuf.seek(0)
-    response = StreamingResponse(
-        csvbuf,
-        media_type="text/csv",
-        headers={"Content-Disposition": "attachment; filename=export.csv"},
-    )
-    return response
+# @app.get("/csv/entries")
+# def get_entries_csv(db: Session = Depends(get_db)):
+#     """
+#     Exports the entry stats from the most recent complete entry cycle, ordered by entry count descending.
+#     """
+#     csvbuf = io.StringIO()
+#
+#     writer = csv.DictWriter(
+#         csvbuf, fieldnames=("world", "district", "ward_number", "plot_number", "house_size", "lotto_entries", "price")
+#     )
+#     writer.writeheader()
+#     for row in crud.last_entry_cycle_entries(db):
+#         writer.writerow(row._asdict())
+#
+#     csvbuf.seek(0)
+#     response = StreamingResponse(
+#         csvbuf,
+#         media_type="text/csv",
+#         headers={"Content-Disposition": "attachment; filename=export.csv"},
+#     )
+#     return response
 
 
 # --- misc ---
