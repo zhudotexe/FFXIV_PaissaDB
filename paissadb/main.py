@@ -3,6 +3,7 @@ import csv
 import datetime
 import logging
 import sys
+import threading
 import time
 from typing import List, Optional
 
@@ -142,7 +143,7 @@ def get_district_detail(world_id: int, district_id: int, db: Session = Depends(g
 CSV_CACHE = REPO_ROOT / "_csv_cache"
 CSV_CACHE.mkdir(exist_ok=True)
 
-csv_dump_lock = asyncio.Lock()
+csv_dump_lock = threading.Lock()
 
 
 @app.get("/csv/dump")
@@ -155,42 +156,42 @@ async def get_csv_dump(db: Session = Depends(get_db)):
     if csv_dump_lock.locked():
         return "Dump in progress, please wait..."
 
-    async with csv_dump_lock:
-        if not fp.exists():
-            asyncio.create_task(executor(_do_csv_dump, fp, db))
-            return "Beginning dump, please refresh in ~2 minutes..."
+    if not fp.exists():
+        asyncio.create_task(executor(_do_csv_dump, fp, db))
+        return "Beginning dump, please refresh in ~2 minutes..."
 
     return FileResponse(fp, filename=fp.name)
 
 
 def _do_csv_dump(fp, db):
-    for old_fp in CSV_CACHE.glob("*.csv"):
-        old_fp.unlink(missing_ok=True)
+    with csv_dump_lock:
+        for old_fp in CSV_CACHE.glob("*.csv"):
+            old_fp.unlink(missing_ok=True)
 
-    with open(fp, "w") as f:
-        writer = csv.DictWriter(
-            f,
-            fieldnames=(
-                "id",
-                "world",
-                "district",
-                "ward_number",
-                "plot_number",
-                "house_size",
-                "lotto_entries",
-                "price",
-                "first_seen",
-                "last_seen",
-                "is_owned",
-                "owner_name_hash",
-                "owner_name_has_space",
-                "lotto_phase",
-                "lotto_phase_until",
-            ),
-        )
-        writer.writeheader()
-        for row in crud.do_csv_state_dump(db):
-            writer.writerow(row._mapping)
+        with open(fp, "w") as f:
+            writer = csv.DictWriter(
+                f,
+                fieldnames=(
+                    "id",
+                    "world",
+                    "district",
+                    "ward_number",
+                    "plot_number",
+                    "house_size",
+                    "lotto_entries",
+                    "price",
+                    "first_seen",
+                    "last_seen",
+                    "is_owned",
+                    "owner_name_hash",
+                    "owner_name_has_space",
+                    "lotto_phase",
+                    "lotto_phase_until",
+                ),
+            )
+            writer.writeheader()
+            for row in crud.do_csv_state_dump(db):
+                writer.writerow(row._mapping)
 
 
 # --- misc ---
