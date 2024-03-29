@@ -3,13 +3,13 @@ import csv
 import datetime
 import logging
 import sys
-import threading
 import time
+import uuid
 from typing import List, Optional
 
 import jwt as jwtlib  # name conflict with jwt query param in /ws
 import sentry_sdk
-from fastapi import Depends, FastAPI, HTTPException, WebSocket, status
+from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, WebSocket, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, RedirectResponse
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
@@ -17,7 +17,7 @@ from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 from sqlalchemy.orm import Session
 
 from common import calc, config, crud, schemas
-from common.database import get_db
+from common.database import get_db, redis
 from common.utils import REPO_ROOT, executor
 from . import auth, metrics, ws
 
@@ -143,28 +143,26 @@ def get_district_detail(world_id: int, district_id: int, db: Session = Depends(g
 CSV_CACHE = REPO_ROOT / "_csv_cache"
 CSV_CACHE.mkdir(exist_ok=True)
 
-csv_dump_lock = threading.Lock()
-
 
 @app.get("/csv/dump")
-async def get_csv_dump(db: Session = Depends(get_db)):
+async def get_csv_dump(bg: BackgroundTasks, db: Session = Depends(get_db)):
     """Exports the latest db state dump."""
     today = datetime.date.today()
     fp = CSV_CACHE / f"{today.isoformat()}-export.csv"
 
     # clear the dir and create the file if not exists
-    if csv_dump_lock.locked():
+    if await redis.exists("csv_dump_lock"):
         return "Dump in progress, please wait..."
 
     if not fp.exists():
-        asyncio.create_task(executor(_do_csv_dump, fp, db))
+        bg.add_task(_do_csv_dump, fp, db)
         return "Beginning dump, please refresh in ~2 minutes..."
 
     return FileResponse(fp, filename=fp.name)
 
 
-def _do_csv_dump(fp, db):
-    with csv_dump_lock:
+async def _do_csv_dump(fp, db):
+    def _run():
         for old_fp in CSV_CACHE.glob("*.csv"):
             old_fp.unlink(missing_ok=True)
 
@@ -192,6 +190,18 @@ def _do_csv_dump(fp, db):
             writer.writeheader()
             for row in crud.do_csv_state_dump(db):
                 writer.writerow(row._mapping)
+
+    rv = str(uuid.uuid4())
+    # acquire lock
+    resp = await redis.set("csv_dump_lock", rv, nx=True, ex=300)
+    if resp is None:
+        return
+    # run
+    await executor(_run)
+    await asyncio.sleep(10)
+    # unlock
+    if (await redis.get("csv_dump_lock")) == rv:
+        await redis.delete("csv_dump_lock")
 
 
 # --- misc ---
