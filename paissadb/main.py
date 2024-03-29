@@ -3,7 +3,6 @@ import csv
 import datetime
 import logging
 import sys
-import threading
 import time
 from typing import List, Optional
 
@@ -18,7 +17,7 @@ from sqlalchemy.orm import Session
 
 from common import calc, config, crud, schemas
 from common.database import get_db
-from common.utils import REPO_ROOT
+from common.utils import REPO_ROOT, executor
 from . import auth, metrics, ws
 
 log = logging.getLogger(__name__)
@@ -143,47 +142,55 @@ def get_district_detail(world_id: int, district_id: int, db: Session = Depends(g
 CSV_CACHE = REPO_ROOT / "_csv_cache"
 CSV_CACHE.mkdir(exist_ok=True)
 
-csv_dump_lock = threading.Lock()
+csv_dump_lock = asyncio.Lock()
 
 
 @app.get("/csv/dump")
-def get_csv_dump(db: Session = Depends(get_db)):
+async def get_csv_dump(db: Session = Depends(get_db)):
     """Exports the latest db state dump."""
     today = datetime.date.today()
     fp = CSV_CACHE / f"{today.isoformat()}-export.csv"
 
     # clear the dir and create the file if not exists
-    with csv_dump_lock:
-        if not fp.exists():
-            for old_fp in CSV_CACHE.glob("*.csv"):
-                old_fp.unlink(missing_ok=True)
+    if csv_dump_lock.locked():
+        return "Dump in progress, please wait..."
 
-            with open(fp, "w") as f:
-                writer = csv.DictWriter(
-                    f,
-                    fieldnames=(
-                        "id",
-                        "world",
-                        "district",
-                        "ward_number",
-                        "plot_number",
-                        "house_size",
-                        "lotto_entries",
-                        "price",
-                        "first_seen",
-                        "last_seen",
-                        "is_owned",
-                        "owner_name_hash",
-                        "owner_name_has_space",
-                        "lotto_phase",
-                        "lotto_phase_until",
-                    ),
-                )
-                writer.writeheader()
-                for row in crud.do_csv_state_dump(db):
-                    writer.writerow(row._mapping)
+    async with csv_dump_lock:
+        if not fp.exists():
+            asyncio.create_task(executor(_do_csv_dump, fp, db))
+            return "Beginning dump, please refresh in ~2 minutes..."
 
     return FileResponse(fp, filename=fp.name)
+
+
+def _do_csv_dump(fp, db):
+    for old_fp in CSV_CACHE.glob("*.csv"):
+        old_fp.unlink(missing_ok=True)
+
+    with open(fp, "w") as f:
+        writer = csv.DictWriter(
+            f,
+            fieldnames=(
+                "id",
+                "world",
+                "district",
+                "ward_number",
+                "plot_number",
+                "house_size",
+                "lotto_entries",
+                "price",
+                "first_seen",
+                "last_seen",
+                "is_owned",
+                "owner_name_hash",
+                "owner_name_has_space",
+                "lotto_phase",
+                "lotto_phase_until",
+            ),
+        )
+        writer.writeheader()
+        for row in crud.do_csv_state_dump(db):
+            writer.writerow(row._mapping)
 
 
 # --- misc ---
