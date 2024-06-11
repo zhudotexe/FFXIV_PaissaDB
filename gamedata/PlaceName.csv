@@ -698,14 +698,14 @@ East Shroud",0,0,1,0,1,"",0,0,0
 660,"Wauling Pond",0,"Wauling Pond",0,0,1,0,1,"",0,0,0
 661,"Empty Room",1,"Empty Room",0,0,1,0,0,"",0,0,0
 662,"The Cattery",1,"Cattery",0,0,1,0,0,"",0,0,0
-663,"The Rambade",0,"Rambade",0,0,1,0,0,"",0,0,0
+663,"The First Rambade",0,"first rambade",0,0,1,0,0,"",0,0,0
 664,"Rowers' Quarters",1,"Rowers' Quarters",0,0,1,0,0,"",0,0,0
 665,"Exit",0,"exit",0,0,1,0,0,"",0,0,0
 666,"Navigator's Quarters",1,"Navigator's Quarters",0,0,1,0,0,"",0,0,0
 667,"Deckhands' Quarters",1,"Deckhands' Quarters",0,0,1,0,0,"",0,0,0
 668,"Captain's Quarters",1,"Captain's Quarters",0,0,1,0,0,"",0,0,0
 669,"The Hole",1,"Hole",0,0,1,0,0,"",0,0,0
-670,"The Rambade",0,"Rambade",0,0,1,0,0,"",0,0,0
+670,"The Second Rambade",0,"second rambade",0,0,1,0,0,"",0,0,0
 671,"Waverider Gate",0,"Waverider Gate",0,0,1,0,1,"",0,0,0
 672,"The Sultana's Lap",0,"Sultana's Lap",0,0,1,0,0,"",0,0,0
 673,"Shaft A1",1,"shaft A1",0,0,1,0,1,"",0,0,0
@@ -1396,7 +1396,7 @@ East Shroud",0,0,1,0,1,"",0,0,0
 1344,"Halcyon Court",0,"Halcyon Court",0,0,1,0,1,"",0,0,0
 1345,"Tower of White",0,"Tower of White",0,0,1,0,0,"",0,0,0
 1346,"Dream Gate",0,"Dream Gate",0,0,1,0,0,"",0,0,0
-1347,"The Arrested Darkness",1,"Arrested Darkness",0,0,1,0,0,"",0,0,0
+1347,"The Sanctum of Dreams",1,"Sanctum of Dreams",0,0,1,0,0,"",0,0,0
 1348,"The Waking Nightmare",1,"Waking Nightmare",0,0,1,0,0,"",0,0,0
 1349,"Swiftmake Checkgate",0,"Swiftmake Checkgate",0,0,1,0,0,"",0,0,0
 1350,"The Solar",0,"solar",0,0,1,0,0,"",0,0,0
@@ -2425,7 +2425,7 @@ East Shroud",0,0,1,0,1,"",0,0,0
 2371,"The <Emphasis>Prima Vista</Emphasis> Bridge",2,"<Emphasis>Prima Vista</Emphasis> bridge",0,0,1,0,0,"",0,0,0
 2372,"The Royal City of Rabanastre",1,"Royal City of Rabanastre",0,0,1,0,0,"",0,0,0
 2373,"Charred Ruins",1,"Charred Ruins",0,0,1,0,0,"",0,0,0
-2374,"Garamsythe Waterway",0,"Garamsythe Waterway",0,0,1,0,1,"",0,0,0
+2374,"Garamsythe Waterway",0,"Garamsythe Waterway",0,0,1,0,0,"",0,0,0
 2375,"The Royal City of Lesalia",1,"Royal City of Lesalia",0,0,1,0,0,"",0,0,0
 2376,"Dalmasca Estersand",0,"Dalmasca Estersand",0,0,1,0,0,"",0,0,0
 2377,"Crumbling Bridge",2,"Crumbling Bridge",0,0,1,0,0,"",0,0,0
@@ -2579,8 +2579,8 @@ East Shroud",0,0,1,0,1,"",0,0,0
 2525,"Loch Seld Central Lakebed",2,"Loch Seld central lakebed",0,0,1,0,0,"",0,1,0
 2526,"Loch Seld Southeastern Lakebed",2,"Loch Seld southeastern lakebed",0,0,1,0,0,"",0,1,0
 2527,"The Falling City of Nym",1,"Falling City of Nym",0,0,1,0,0,"",0,0,0
-2528,"",0,"",0,0,1,0,0,"",0,0,0
-2529,"",0,"",0,0,1,0,0,"",0,0,0
+2528,"Sylphstep",0,"Sylphstep",0,0,1,0,1,"",0,0,0
+2529,"Eureka Orthos",1,"Eureka Orthos",0,0,1,0,1,"",0,0,0
 2530,"Eureka Pyros",1,"Eureka Pyros",0,0,1,0,1,"",0,0,0
 2531,"Northpoint",0,"Northpoint",0,0,1,0,1,"",0,0,0
 2532,"Flurry",0,"Flurry",0,0,1,0,1,"",0,0,0
@@ -2621,14 +2621,29 @@ East Shroud",0,0,1,0,1,"",0,0,0
 2567,"",0,"",0,0,0,0,0,"",0,0,0
 2568,"",0,"",0,0,0,0,0,"",0,0,0
 2569,"",0,"",0,0,0,0,0,"",0,0,0
-2570,"",0,"",0,0,0,0,0,"",0,0,0
-2571,"",0,"",0,0,0,0,0,"",0,0,0
-2572,"",0,"",0,0,0,0,0,"",0,0,0
-2573,"",0,"",0,0,0,0,0,"",0,0,0
-2574,"",0,"",0,0,0,0,0,"",0,0,0
-2575,"",0,"",0,0,0,0,0,"",0,0,0
-2576,"",0,"",0,0,0,0,0,"",0,0,0
-2577,"",0,"",0,0,0,0,0,"",0,0,0
+2570,"The Forbidden Land, Eureka
+(Field Entry)",0,"Forbidden Land, Eureka
+(Field Entry)",0,0,1,0,0,"",0,0,0
+2571,"Save the Queen
+(Field Entry)",0,"Save the Queen
+(Field Entry)",0,0,1,0,1,"",0,0,0
+2572,"The Palace of the Dead
+(Dungeon Entry)",0,"Palace of the Dead
+(Dungeon Entry)",0,0,1,0,0,"",0,0,0
+2573,"Heaven-on-High
+(Dungeon Entry)",0,"Heaven-on-High
+(Dungeon Entry)",0,0,1,0,1,"",0,0,0
+2574,"Eureka Orthos
+(Dungeon Entry)",0,"Eureka Orthos
+(Dungeon Entry)",0,0,1,0,1,"",0,0,0
+2575,"The Sil'dihn Subterrane
+(Dungeon Entry)",0,"Sil'dihn Subterrane
+(Dungeon Entry)",0,0,1,0,0,"",0,0,0
+2576,"Mount Rokkon
+(Dungeon Entry)",0,"Mount Rokkon
+(Dungeon Entry)",0,0,1,0,1,"",0,0,0
+2577,"Aloalo Island
+(Dungeon Entry)",0,"",0,0,1,0,0,"",0,0,0
 2578,"",0,"",0,0,0,0,0,"",0,0,0
 2579,"",0,"",0,0,0,0,0,"",0,0,0
 2580,"",0,"",0,0,0,0,0,"",0,0,0
@@ -4086,21 +4101,21 @@ East Shroud",0,0,1,0,1,"",0,0,0
 4032,"The Porta Decumana",0,"Porta Decumana",0,0,1,0,0,"",0,0,0
 4033,"The Gates of Pandæmonium",0,"Gates of Pandæmonium",0,0,1,0,0,"",0,0,0
 4034,"Restricted Archives",1,"restricted archives",0,0,1,0,0,"",0,0,0
-4035,"Alzadaal's Legacy",0,"Alzadaal's Legacy",0,0,1,0,1,"",0,0,0
-4036,"The Fell Court of Troia",0,"Fell Court of Troia",0,0,1,0,0,"",0,0,0
+4035,"Alzadaal's Legacy",1,"Alzadaal's Legacy",0,0,1,0,1,"",0,0,0
+4036,"The Fell Court of Troia",1,"Fell Court of Troia",0,0,1,0,0,"",0,0,0
 4037,"The Aitiascope",1,"Aitiascope",0,0,1,0,0,"",0,0,0
-4038,"Zero's Domain",0,"Zero's domain",0,0,1,0,1,"",0,0,0
-4039,"Meghaduta Guest Chambers",0,"Meghaduta guest chambers",0,0,1,0,0,"",0,0,0
-4040,"Sneaky Hollow",0,"Sneaky Hollow",0,0,1,0,1,"",0,0,0
-4041,"A-4 Research",0,"A-4 Research",0,0,1,0,1,"",0,0,0
-4042,"Elysion",0,"Elysion",0,0,1,0,1,"",0,0,0
+4038,"Zero's Domain",1,"Zero's domain",0,0,1,0,1,"",0,0,0
+4039,"Meghaduta Guest Chambers",1,"Meghaduta guest chambers",0,0,1,0,0,"",0,0,0
+4040,"Sneaky Hollow",1,"Sneaky Hollow",0,0,1,0,1,"",0,0,0
+4041,"A-4 Research",1,"A-4 Research",0,0,1,0,1,"",0,0,0
+4042,"Elysion",1,"Elysion",0,0,1,0,1,"",0,0,0
 4043,"Unnamed Island",2,"unnamed island",0,0,1,0,0,"",0,0,0
 4044,"The High Crucible of Al-Kimiya",1,"High Crucible of Al-Kimiya",0,0,1,0,0,"",0,0,0
 4045,"Storm's Crown",2,"Storm's Crown",0,0,1,0,1,"",0,0,0
-4046,"Zero's Hideout",0,"Zero's hideout",0,0,1,0,1,"",0,0,0
-4047,"Ramshackle Square",0,"ramshackle square",0,0,1,0,0,"",0,0,0
-4048,"The Last Dregs",1,"Last Dregs",0,0,1,0,0,"",0,0,0
-4049,"Elysian Fields",0,"Elysian fields",0,0,1,0,0,"",0,0,0
+4046,"Zero's Hideout",1,"Zero's hideout",0,0,1,0,1,"",0,0,0
+4047,"Ramshackle Square",1,"ramshackle square",0,0,1,0,0,"",0,0,0
+4048,"The Last Dregs",0,"Last Dregs",0,0,1,0,0,"",0,0,0
+4049,"Elysian Fields",1,"Elysian fields",0,0,1,0,0,"",0,0,0
 4050,"Scholar's Harbor",1,"Scholar's Harbor",0,0,1,0,1,"",0,0,0
 4051,"Oinops",1,"Oinops",0,0,1,0,1,"",0,0,0
 4052,"Reflecting Pool",1,"reflecting pool",0,0,1,0,0,"",0,0,0
@@ -4138,14 +4153,14 @@ East Shroud",0,0,1,0,1,"",0,0,0
 4084,"Central Aerial Artifice",2,"central aerial artifice",0,0,1,0,0,"",0,0,0
 4085,"Upper Aerial Artifice",2,"upper aerial artifice",0,0,1,0,0,"",0,0,0
 4086,"Prime Artifice",2,"prime artifice",0,0,1,0,0,"",0,0,0
-4087,"Elysian Seas",0,"Elysian seas",0,0,1,0,0,"",0,0,0
+4087,"Elysian Seas",1,"Elysian seas",0,0,1,0,0,"",0,0,0
 4088,"Elysian Playgrounds",1,"Elysian Playgrounds",0,0,1,0,0,"",0,0,0
-4089,"Elysian Groves",0,"Elysian groves",0,0,1,0,0,"",0,0,0
-4090,"The Palaistra",1,"Palaistra",0,0,1,0,0,"",0,0,0
-4091,"The Volcanic Heart",0,"Volcanic Heart",0,0,1,0,0,"",0,0,0
+4089,"Elysian Groves",1,"Elysian groves",0,0,1,0,0,"",0,0,0
+4090,"The Palaistra",0,"Palaistra",0,0,1,0,0,"",0,0,0
+4091,"The Volcanic Heart",1,"Volcanic Heart",0,0,1,0,0,"",0,0,0
 4092,"Cloud Nine",2,"Cloud Nine",0,0,1,0,1,"",0,0,0
-4093,"",0,"",0,0,1,0,0,"",0,0,0
-4094,"",0,"",0,0,1,0,0,"",0,0,0
+4093,"The Clockwork Castletown",1,"Clockwork Castletown",0,0,1,0,0,"",0,0,0
+4094,"The Red Sands",2,"Red Sands",0,0,1,0,0,"",0,0,0
 4095,"",0,"",0,0,1,0,0,"",0,0,0
 4096,"",0,"",0,0,1,0,0,"",0,0,0
 4097,"",0,"",0,0,1,0,0,"",0,0,0
@@ -4231,25 +4246,25 @@ East Shroud",0,0,1,0,1,"",0,0,0
 4177,"Circle of Inquiry",1,"Circle of Inquiry",0,0,1,0,0,"",0,0,0
 4178,"The Twin Halls",1,"Twin Halls",0,0,1,0,0,"",0,0,0
 4179,"Loch Seld Southwestern Lakebed",1,"Loch Seld southwestern lakebed",0,0,1,0,0,"",0,1,0
-4180,"The Fell Court of Troia",0,"Fell Court of Troia",0,0,1,0,0,"",0,0,0
-4181,"Carcere IV",0,"carcere IV",0,0,1,0,1,"",0,0,0
-4182,"Troia Keep",0,"Troia Keep",0,0,1,0,1,"",0,0,0
+4180,"The Fell Court of Troia",1,"Fell Court of Troia",0,0,1,0,0,"",0,0,0
+4181,"Carcere IV",1,"carcere IV",0,0,1,0,1,"",0,0,0
+4182,"Troia Keep",1,"Troia Keep",0,0,1,0,1,"",0,0,0
 4183,"Hydromantic Terraces",2,"hydromantic terraces",0,0,1,0,0,"",0,0,0
-4184,"Penitence",0,"Penitence",0,0,1,0,1,"",0,0,0
-4185,"Seat of the Foremost",1,"Seat of the Foremost",0,0,1,0,0,"",0,0,0
-4186,"The Garden of Epopts",0,"Garden of Epopts",0,0,1,0,0,"",0,0,0
+4184,"Penitence",1,"Penitence",0,0,1,0,1,"",0,0,0
+4185,"Seat of the Foremost",0,"Seat of the Foremost",0,0,1,0,0,"",0,0,0
+4186,"The Garden of Epopts",1,"Garden of Epopts",0,0,1,0,0,"",0,0,0
 4187,"Pilgrim's Ascent",2,"pilgrim's ascent",0,0,1,0,0,"",0,0,0
-4188,"Carcere IV",0,"carcere IV",0,0,1,0,1,"",0,0,0
-4189,"Troia Keep",0,"Troia Keep",0,0,1,0,1,"",0,0,0
+4188,"Carcere IV",1,"carcere IV",0,0,1,0,1,"",0,0,0
+4189,"Troia Keep",1,"Troia Keep",0,0,1,0,1,"",0,0,0
 4190,"Hydromantic Terraces",2,"hydromantic terraces",0,0,1,0,0,"",0,0,0
-4191,"Elysian Fields",0,"Elysian Fields",0,0,1,0,0,"",0,0,0
-4192,"Elysian Seas α",0,"Elysian Seas α",0,0,1,0,1,"",0,0,0
-4193,"Elysian Seas β",0,"Elysian Seas β",0,0,1,0,1,"",0,0,0
-4194,"Elysian Playgrounds α",0,"Elysian Playgrounds α",0,0,1,0,1,"",0,0,0
-4195,"Elysian Playgrounds β",0,"Elysian Playgrounds β",0,0,1,0,1,"",0,0,0
-4196,"The Pestilent Purgatory",0,"Pestilent Purgatory",0,0,1,0,0,"",0,0,0
+4191,"Elysian Fields",1,"Elysian Fields",0,0,1,0,0,"",0,0,0
+4192,"Elysian Seas α",1,"Elysian Seas α",0,0,1,0,1,"",0,0,0
+4193,"Elysian Seas β",1,"Elysian Seas β",0,0,1,0,1,"",0,0,0
+4194,"Elysian Playgrounds α",1,"Elysian Playgrounds α",0,0,1,0,1,"",0,0,0
+4195,"Elysian Playgrounds β",1,"Elysian Playgrounds β",0,0,1,0,1,"",0,0,0
+4196,"The Pestilent Purgatory",1,"Pestilent Purgatory",0,0,1,0,0,"",0,0,0
 4197,"Storm's Crown",2,"Storm's Crown",0,0,1,0,1,"",0,0,0
-4198,"The Hollow Purgatory",0,"Hollow Purgatory",0,0,1,0,0,"",0,0,0
+4198,"The Hollow Purgatory",1,"Hollow Purgatory",0,0,1,0,0,"",0,0,0
 4199,"The Sil'dihn Subterrane",0,"Sil'dihn Subterrane",0,0,1,0,0,"",0,0,0
 4200,"Silt Pump",1,"silt pump",0,0,1,0,0,"",0,0,0
 4201,"Forgotten Forecourt",0,"forgotten forecourt",0,0,1,0,0,"",0,0,0
@@ -4261,7 +4276,7 @@ East Shroud",0,0,1,0,1,"",0,0,0
 4207,"Ceremonial Stores",0,"ceremonial stores",0,0,1,0,0,"",0,0,0
 4208,"Sifting Site",1,"sifting site",0,0,1,0,0,"",0,0,0
 4209,"The Cornice of Favor",2,"Cornice of Favor",0,0,1,0,0,"",0,0,0
-4210,"Royal Bedchambers",0,"royal chambers",0,0,1,0,0,"",0,0,0
+4210,"Royal Bedchambers",0,"royal bedchambers",0,0,1,0,0,"",0,0,0
 4211,"The Sultan's Table",1,"sultan's table",0,0,1,0,0,"",0,0,0
 4212,"Audience Chamber",0,"audience chamber",0,0,1,0,0,"",0,0,0
 4213,"Prosperity",0,"Prosperity",0,0,1,0,1,"",0,0,0
@@ -4300,15 +4315,249 @@ East Shroud",0,0,1,0,1,"",0,0,0
 4246,"Peak Point",1,"peak point",0,0,1,0,0,"",0,0,0
 4247,"Northward Stream",1,"northward stream",0,0,1,0,0,"",0,0,0
 4248,"Eastward Stream",1,"eastward stream",0,0,1,0,0,"",0,0,0
-4249,"The Caustic Purgatory",0,"Caustic Purgatory",0,0,1,0,0,"",0,0,0
-4250,"Stygian Insenescence Cells",1,"Stygian insenescence cells",0,0,1,0,0,"",0,0,0
-4251,"Elysion",0,"Elysion",0,0,1,0,1,"",0,0,0
-4252,"Elysion",0,"Elysion",0,0,1,0,1,"",0,0,0
-4253,"Elysion",0,"Elysion",0,0,1,0,1,"",0,0,0
-4254,"Elysion",0,"Elysion",0,0,1,0,1,"",0,0,0
-4255,"Elysion",0,"Elysion",0,0,1,0,1,"",0,0,0
-4256,"Elysion",0,"Elysion",0,0,1,0,1,"",0,0,0
-4257,"The Halberd's Head Subdivision",0,"Halberd's Head subdivision",0,0,1,0,0,"",0,0,0
-4258,"",0,"",0,0,1,0,0,"",0,0,0
-4259,"",0,"",0,0,1,0,0,"",0,0,0
-4260,"",0,"",0,0,1,0,0,"",0,0,0
+4249,"The Caustic Purgatory",1,"Caustic Purgatory",0,0,1,0,0,"",0,0,0
+4250,"Stygian Insenescence Cells",0,"Stygian insenescence cells",0,0,1,0,0,"",0,0,0
+4251,"Elysion",1,"Elysion",0,0,1,0,1,"",0,0,0
+4252,"Elysion",1,"Elysion",0,0,1,0,1,"",0,0,0
+4253,"Elysion",1,"Elysion",0,0,1,0,1,"",0,0,0
+4254,"Elysion",1,"Elysion",0,0,1,0,1,"",0,0,0
+4255,"Elysion",1,"Elysion",0,0,1,0,1,"",0,0,0
+4256,"Elysion",1,"Elysion",0,0,1,0,1,"",0,0,0
+4257,"The Halberd's Head Subdivision",1,"Halberd's Head subdivision",0,0,1,0,0,"",0,0,0
+4258,"Euphrosyne",1,"Euphrosyne",0,0,1,0,1,"",0,0,0
+4259,"Heaven of Earth",1,"Heaven of Earth",0,0,1,0,0,"",0,0,0
+4260,"Heaven of Ice",1,"Heaven of Ice",0,0,1,0,0,"",0,0,0
+4261,"Hall of the Spear",1,"Hall of the Spear",0,0,1,0,0,"",0,0,0
+4262,"Arete",2,"Arete",0,0,1,0,1,"",0,0,0
+4263,"Heaven of Earth",1,"Heaven of Earth",0,0,1,0,0,"",0,0,0
+4264,"Heaven of Ice",1,"Heaven of Ice",0,0,1,0,0,"",0,0,0
+4265,"Fertile Plains",2,"fertile plains",0,0,1,0,0,"",0,0,0
+4266,"The Roots",0,"Roots",0,0,1,0,0,"",0,0,0
+4267,"The Bole",0,"Bole",0,0,1,0,0,"",0,0,0
+4268,"Hanging Tributary",0,"hanging tributary",0,0,1,0,0,"",0,0,0
+4269,"The Barbs",0,"Barbs",0,0,1,0,0,"",0,0,0
+4270,"Lapis Manalis",1,"Lapis Manalis",0,0,1,0,1,"",0,0,0
+4271,"Mons Albus",0,"Mons Albus",0,0,1,0,1,"",0,0,0
+4272,"Vicus Messorum",1,"vicus messorum",0,0,1,0,0,"",0,0,0
+4273,"Fons Manalis",0,"Fons Manalis",0,0,1,0,1,"",0,0,0
+4274,"The Silvan Throne",0,"Silvan Throne",0,0,1,0,0,"",0,0,0
+4275,"Forum Messorum",1,"forum messorum",0,0,1,0,0,"",0,0,0
+4276,"Deepspine",1,"Deepspine",0,0,1,0,1,"",0,0,0
+4277,"Lar",0,"Lar",0,0,1,0,1,"",0,0,0
+4278,"Mons Albus",0,"Mons Albus",0,0,1,0,1,"",0,0,0
+4279,"Vicus Messorum",1,"vicus messorum",0,0,1,0,0,"",0,0,0
+4280,"Fons Manalis",0,"Fons Manalis",0,0,1,0,1,"",0,0,0
+4281,"Southwestern Isle of Ken",0,"southwestern Isle of Ken",0,0,1,0,0,"",0,1,0
+4282,"The House of the First Light",0,"House of the First Light",0,0,1,0,0,"",0,1,0
+4283,"Northeast Bronze Lake Depths",1,"northeast Bronze Lake depths",0,0,1,0,1,"",0,1,0
+4284,"The Chamber of Revolutions",1,"Chamber of Revolutions",0,0,1,0,0,"",0,0,0
+4285,"Via Nivalis XLVII",2,"via nivalis XLVII",0,0,1,0,1,"",0,0,0
+4286,"Tyrannis",1,"Tyrannis",0,0,1,0,1,"",0,0,0
+4287,"The Shifting Gymnasion Agonon",1,"Shifting Gymnasion Agonon",0,0,1,0,0,"",0,0,0
+4288,"The Interdimensional Rift",1,"Interdimensional Rift",0,0,1,0,0,"",0,0,0
+4289,"Mount Ordeals",2,"Mount Ordeals",0,0,1,0,1,"",0,0,0
+4290,"Hoper's Hold",1,"Hoper's Hold",0,0,1,0,1,"",0,0,0
+4291,"Pes Albus",0,"Pes Albus",0,0,1,0,1,"",0,0,0
+4292,"Pes Albus",0,"Pes Albus",0,0,1,0,1,"",0,0,0
+4293,"Khadga",0,"Khadga",0,0,1,0,1,"",0,0,0
+4294,"Magitek Snowcraft ",2,"magitek snowcraft",0,0,1,0,0,"",0,0,0
+4295,"Lapis Manalis",1,"Lapis Manalis",0,0,1,0,1,"",0,0,0
+4296,"The Voidcast Dais",2,"Voidcast Dais",0,0,1,0,0,"",0,0,0
+4297,"The Aetherfont",0,"Aetherfont",0,0,1,0,0,"",0,0,0
+4298,"Ice Field",1,"ice field",0,0,1,0,0,"",0,0,0
+4299,"Isle of Haam",2,"Isle of Haam",0,0,1,0,0,"",0,0,0
+4300,"The Aetherfont",0,"Aetherfont",0,0,1,0,0,"",0,0,0
+4301,"Landfast Floe",2,"landfast floe",0,0,1,0,0,"",0,0,0
+4302,"Cyancap Cavern",1,"Cyancap Cavern",0,0,1,0,1,"",0,0,0
+4303,"The Deep Below",1,"Deep Below",0,0,1,0,0,"",0,0,0
+4304,"Ice Field",1,"ice field",0,0,1,0,0,"",0,0,0
+4305,"Isle of Haam",2,"Isle of Haam",0,0,1,0,0,"",0,0,0
+4306,"The Aetherfont",0,"Aetherfont",0,0,1,0,0,"",0,0,0
+4307,"The Chamber of Fourteen",1,"Chamber of Fourteen",0,0,1,0,0,"",0,0,0
+4308,"Mount Rokkon",2,"Mount Rokkon",0,0,1,0,1,"",0,0,0
+4309,"Mountain Base",0,"mountain base",0,0,1,0,0,"",0,0,0
+4310,"Shaded Approach",2,"shaded approach",0,0,1,0,0,"",0,0,0
+4311,"Lower Pagoda",1,"lower pagoda",0,0,1,0,0,"",0,0,0
+4312,"Upper Pagoda",1,"upper pagoda",0,0,1,0,0,"",0,0,0
+4313,"Fifth Story",1,"fifth story",0,0,1,0,0,"",0,0,0
+4314,"Pilgrim's Road",2,"pilgrim's road",0,0,1,0,0,"",0,0,0
+4315,"Ascetic's Climb",2,"ascetic's climb",0,0,1,0,0,"",0,0,0
+4316,"Last Glimpse",1,"Last Glimpse",0,0,1,0,1,"",0,0,0
+4317,"Hall of Temptation",1,"Hall of Temptation",0,0,1,0,0,"",0,0,0
+4318,"Autumn Rivers' End",0,"Autumn Rivers' End",0,0,1,0,1,"",0,0,0
+4319,"Hall of the Unseen",1,"Hall of the Unseen",0,0,1,0,0,"",0,0,0
+4320,"Hall of Becoming",1,"Hall of Becoming",0,0,1,0,0,"",0,0,0
+4321,"Stone's Silence",0,"Stone's Silence",0,0,1,0,1,"",0,0,0
+4322,"Pond of Spring Rain",0,"Pond of Spring Rain",0,0,1,0,0,"",0,0,0
+4323,"The Cardinal Gate",0,"Cardinal Gate",0,0,1,0,0,"",0,0,0
+4324,"Untouched Spring",0,"Untouched Spring",0,0,1,0,0,"",0,0,0
+4325,"Shrine of the Sixth Sense",1,"Shrine of the Sixth Sense",0,0,1,0,0,"",0,0,0
+4326,"Mountain Base",0,"mountain base",0,0,1,0,0,"",0,0,0
+4327,"Scenic Path",2,"Scenic Path",0,0,1,0,0,"",0,0,0
+4328,"Lower Pagoda",1,"lower pagoda",0,0,1,0,0,"",0,0,0
+4329,"Upper Pagoda",1,"upper pagoda",0,0,1,0,0,"",0,0,0
+4330,"Fifth Story",1,"fifth story",0,0,1,0,0,"",0,0,0
+4331,"Fragrant Forest",1,"Fragrant Forest",0,0,1,0,0,"",0,0,0
+4332,"Shojo Sanctum",1,"Shojo Sanctum",0,0,1,0,0,"",0,0,0
+4333,"Way of Naught",2,"Way of Naught",0,0,1,0,0,"",0,0,0
+4334,"Sacred Stores",1,"sacred stores",0,0,1,0,0,"",0,0,0
+4335,"Sweet Path",2,"Sweet Path",0,0,1,0,0,"",0,0,0
+4336,"Singing Path",2,"Singing Path",0,0,1,0,0,"",0,0,0
+4337,"Shore of Far Sight",2,"Shore of Far Sight",0,0,1,0,0,"",0,0,0
+4338,"Another Mount Rokkon",2,"Another Mount Rokkon",0,0,1,0,1,"",0,0,0
+4339,"Path of the First Virtue",2,"Path of the First Virtue",0,0,1,0,0,"",0,0,0
+4340,"Path of the Second Virtue",2,"Path of the Second Virtue",0,0,1,0,0,"",0,0,0
+4341,"Path of the Third Virtue",2,"Path of the Third Virtue",0,0,1,0,0,"",0,0,0
+4342,"The Single Step",0,"Single Step",0,0,1,0,0,"",0,0,0
+4343,"The Clever Roost",0,"Clever Roost",0,0,1,0,0,"",0,0,0
+4344,"Trial of Benevolence",1,"Trial of Benevolence",0,0,1,0,0,"",0,0,0
+4345,"Trial of Wisdom",1,"Trial of Wisdom",0,0,1,0,0,"",0,0,0
+4346,"Trial of Responsibility",1,"Trial of Responsibility",0,0,1,0,0,"",0,0,0
+4347,"Path of the First Virtue",2,"Path of the First Virtue",0,0,1,0,0,"",0,0,0
+4348,"Path of the Second Virtue",2,"Path of the Second Virtue",0,0,1,0,0,"",0,0,0
+4349,"Path of the Third Virtue",2,"Path of the Third Virtue",0,0,1,0,0,"",0,0,0
+4350,"",0,"",0,0,0,0,0,"",0,0,0
+4351,"",0,"",0,0,0,0,0,"",0,0,0
+4352,"",0,"",0,0,0,0,0,"",0,0,0
+4353,"",0,"",0,0,0,0,0,"",0,0,0
+4354,"",0,"",0,0,0,0,0,"",0,0,0
+4355,"",0,"",0,0,0,0,0,"",0,0,0
+4356,"",0,"",0,0,0,0,0,"",0,0,0
+4357,"",0,"",0,0,0,0,0,"",0,0,0
+4358,"The Aetherial Slough",1,"Aetherial Slough",0,0,1,0,0,"",0,0,0
+4359,"Mountain Hollow",1,"mountain hollow",0,0,1,0,0,"",0,0,0
+4360,"Surface Terrain",2,"surface terrain",0,0,1,0,0,"",0,0,0
+4361,"Cave System",1,"cave system",0,0,1,0,0,"",0,0,0
+4362,"The Dæmons' Nest",1,"Dæmons' Nest",0,0,1,0,0,"",0,0,0
+4363,"The Sirensong Sea",1,"Sirensong Sea",0,0,1,0,0,"",0,0,0
+4364,"Kugane",1,"Kugane",0,0,1,0,1,"",0,0,0
+4365,"The Ruby Sea",1,"Ruby Sea",0,0,1,0,0,"",0,0,0
+4366,"The One River",1,"One River",0,0,1,0,0,"",0,0,0
+4367,"Open Sirensong Sea",2,"open Sirensong Sea",0,0,1,0,0,"",0,0,0
+4368,"Sirensong Spectral Current",2,"Sirensong spectral current",0,0,1,0,0,"",0,0,0
+4369,"Kugane Coast",0,"Kugane coast",0,0,1,0,0,"",0,0,0
+4370,"Kugane Spectral Current",2,"Kugane spectral current",0,0,1,0,0,"",0,0,0
+4371,"Open Ruby Sea",2,"open Ruby Sea",0,0,1,0,0,"",0,0,0
+4372,"Ruby Spectral Current",2,"Ruby spectral current",0,0,1,0,0,"",0,0,0
+4373,"Lower One River",1,"lower One River",0,0,1,0,0,"",0,0,0
+4374,"One River Spectral Current",1,"One River spectral current",0,0,1,0,0,"",0,0,0
+4375,"Ascension",1,"Ascension",0,0,1,0,1,"",0,0,0
+4376,"Apex of Creation",0,"Apex of Creation",0,0,1,0,0,"",0,0,0
+4377,"The Gilded Araya",2,"Gilded Araya",0,0,1,0,0,"",0,0,0
+4378,"Spriggan's Delight",1,"spriggan's delight",0,0,1,0,0,"",0,0,0
+4379,"Shiny Spring",0,"shiny spring",0,0,1,0,0,"",0,0,0
+4380,"Estinien's Chambers",1,"Estinien's chambers",0,0,1,0,1,"",0,0,0
+4381,"Senatus",1,"Senatus",0,0,1,0,1,"",0,0,0
+4382,"The Red Moon",2,"red moon",0,0,1,0,0,"",0,0,0
+4383,"Aloalo Island",2,"Aloalo Island",0,0,1,0,1,"",0,0,0
+4384,"Island Foreshore",0,"island foreshore",0,0,1,0,0,"",0,0,0
+4385,"Island Coastline",2,"island coastline",0,0,1,0,0,"",0,0,0
+4386,"Incalculable Approach",2,"Incalculable approach",0,0,1,0,0,"",0,0,0
+4387,"The Incalculable",0,"Incalculable",0,0,1,0,0,"",0,0,0
+4388,"Island Interior",1,"island interior",0,0,1,0,0,"",0,0,0
+4389,"Thatchroot",0,"Thatchroot",0,0,1,0,1,"",0,0,0
+4390,"Arboreal Structure",1,"arboreal structure",0,0,1,0,0,"",0,0,0
+4391,"Forgotten Sanctum",1,"forgotten sanctum",0,0,1,0,0,"",0,0,0
+4392,"Ketulu Cove",1,"Ketulu Cove",0,0,1,0,1,"",0,0,0
+4393,"Elder Stump",2,"elder stump",0,0,1,0,0,"",0,0,0
+4394,"Ancient Forum",1,"ancient forum",0,0,1,0,0,"",0,0,0
+4395,"Seasong's Rest",0,"Seasong's Rest",0,0,1,0,1,"",0,0,0
+4396,"The Origin Spring",1,"Origin Spring",0,0,1,0,0,"",0,0,0
+4397,"Slumbering Canopy",0,"Slumbering Canopy",0,0,1,0,0,"",0,0,0
+4398,"Kairimai Loquloqai",0,"Kairimai Loquloqai",0,0,1,0,1,"",0,0,0
+4399,"Ancestral Pavilion",1,"ancestral pavilion",0,0,1,0,0,"",0,0,0
+4400,"Silver-white Sands",2,"silver-white sands",0,0,1,0,0,"",0,0,0
+4401,"Waveater Cave",1,"Waveater Cave",0,0,1,0,1,"",0,0,0
+4402,"Tesata Bay",1,"Tesata Bay",0,0,1,0,1,"",0,0,0
+4403,"Shipwreck Shoal",2,"shipwreck shoal",0,0,1,0,0,"",0,0,0
+4404,"Baleen Cape",0,"Baleen Cape",0,0,1,0,0,"",0,0,0
+4405,"Abiding Wetlands",1,"abiding wetlands",0,0,1,0,0,"",0,0,0
+4406,"Incalculable Roots",2,"Incalculable roots",0,0,1,0,0,"",0,0,0
+4407,"Boughsplane",2,"Boughsplane",0,0,1,0,1,"",0,0,0
+4408,"The Arithmetician's Cup",0,"Arithmetician's Cup",0,0,1,0,0,"",0,0,0
+4409,"Incalculable Heights",1,"Incalculable heights",0,0,1,0,0,"",0,0,0
+4410,"Aloqulo Thickets",1,"Aloqulo thickets",0,0,1,0,0,"",0,0,0
+4411,"Sacred Site",0,"sacred site",0,0,1,0,0,"",0,0,0
+4412,"Dreaming Halls",1,"Dreaming Halls",0,0,1,0,0,"",0,0,0
+4413,"Ancient Trail",2,"ancient trail",0,0,1,0,0,"",0,0,0
+4414,"Shrouded Bridge",2,"shrouded bridge",0,0,1,0,0,"",0,0,0
+4415,"The Speaker's Realm",1,"Speaker's Realm",0,0,1,0,0,"",0,0,0
+4416,"Another Aloalo Island",2,"Another Aloalo Island",0,0,1,0,1,"",0,0,0
+4417,"Dilumu",1,"Dilumu",0,0,1,0,1,"",0,0,0
+4418,"Qurupe",1,"Qurupe",0,0,1,0,1,"",0,0,0
+4419,"Nokosero",1,"Nokosero",0,0,1,0,1,"",0,0,0
+4420,"Sands of Morn",2,"Sands of Morn",0,0,1,0,0,"",0,0,0
+4421,"Roots of Gloam",0,"Roots of Gloam",0,0,1,0,0,"",0,0,0
+4422,"Dawn Trial",1,"Dawn Trial",0,0,1,0,0,"",0,0,0
+4423,"Dusk Trial",1,"Dusk Trial",0,0,1,0,0,"",0,0,0
+4424,"Midnight Trial",1,"Midnight Trial",0,0,1,0,0,"",0,0,0
+4425,"Dalu Dilumu",2,"Dalu Dilumu",0,0,1,0,1,"",0,0,0
+4426,"Dalu Qurupe",2,"Dalu Qurupe",0,0,1,0,1,"",0,0,0
+4427,"Dalo Nokosero",2,"Dalo Nokosero",0,0,1,0,1,"",0,0,0
+4428,"●ハーム島研究施設前",0,"",0,0,1,0,0,"",0,0,0
+4429,"Saibai Cavern",1,"Saibai Cavern",0,0,1,0,1,"",0,1,0
+4430,"Northwest Bronze Lake Depths",1,"northwest Bronze Lake depths",0,0,1,0,1,"",0,1,0
+4431,"The Lunar Subterrane",1,"lunar subterrane",0,0,1,0,0,"",0,0,0
+4432,"The Lunar Subterrane",1,"lunar subterrane",0,0,1,0,0,"",0,0,0
+4433,"Baron",1,"Baron",0,0,1,0,0,"",0,0,0
+4434,"Baron Castle",1,"Baron Castle",0,0,1,0,0,"",0,0,0
+4435,"Cloven Crystal Square",1,"cloven crystal square",0,0,1,0,0,"",0,0,0
+4436,"Bloodied Barbican",0,"bloodied barbican",0,0,1,0,0,"",0,0,0
+4437,"Carnelian Courtyard",1,"Carnelian Courtyard",0,0,1,0,0,"",0,0,0
+4438,"The Lunar Subterrane",1,"lunar subterrane",0,0,1,0,0,"",0,0,0
+4439,"Baron",1,"Baron",0,0,1,0,0,"",0,0,0
+4440,"Baron Castle",1,"Baron Castle",0,0,1,0,0,"",0,0,0
+4441,"The Abyssal Fracture",1,"Abyssal Fracture",0,0,1,0,0,"",0,0,0
+4442,"The Memory of Embers",1,"Memory of Embers",0,0,1,0,0,"",0,0,0
+4443,"Thaleia",1,"Thaleia",0,0,1,0,1,"",0,0,0
+4444,"Heaven of Water",1,"Heaven of Water",0,0,1,0,0,"",0,0,0
+4445,"Mind's Libation",1,"Mind's Libation",0,0,1,0,1,"",0,0,0
+4446,"Heaven of Wind",1,"Heaven of Wind",0,0,1,0,0,"",0,0,0
+4447,"Mythic Mountains",1,"mythic mountains",0,0,1,0,0,"",0,0,0
+4448,"The Wanderer's Heights",1,"Wanderer's Heights",0,0,1,0,0,"",0,0,0
+4449,"The Omphalos",1,"Omphalos",0,0,1,0,0,"",0,0,0
+4450,"Highest Heaven",1,"highest heaven",0,0,1,0,0,"",0,0,0
+4451,"Heaven of Water",1,"Heaven of Water",0,0,1,0,0,"",0,0,0
+4452,"Mind's Libation",1,"Mind's Libation",0,0,1,0,1,"",0,0,0
+4453,"Heaven of Wind",1,"Heaven of Wind",0,0,1,0,0,"",0,0,0
+4454,"Mythic Mountains",1,"mythic mountains",0,0,1,0,0,"",0,0,0
+4455,"The Omphalos",1,"Omphalos",0,0,1,0,0,"",0,0,0
+4456,"Highest Heaven",1,"highest heaven",0,0,1,0,0,"",0,0,0
+4457,"River of Knowledge",1,"River of Knowledge",0,0,1,0,0,"",0,0,0
+4458,"Briny Deep",1,"briny deep",0,0,1,0,0,"",0,0,0
+4459,"Windward Pass",1,"windward pass",0,0,1,0,0,"",0,0,0
+4460,"The Wanderer's Heights",1,"Wanderer's Heights",0,0,1,0,0,"",0,0,0
+4461,"The Twelve's Embrace",1,"Twelve's Embrace",0,0,1,0,0,"",0,0,0
+4462,"Way of the Wise",2,"Way of the Wise",0,0,1,0,0,"",0,0,0
+4463,"Seventh Gate",0,"seventh gate",0,0,1,0,0,"",0,0,0
+4464,"Stairway to the Seventh",2,"stairway to the seventh",0,0,1,0,0,"",0,0,0
+4465,"Mother Lode",0,"mother lode",0,0,1,0,0,"",0,0,0
+4466,"What Once Was",1,"what once was",0,0,1,0,1,"",0,0,0
+4467,"Darkened Vestibule",1,"darkened vestibule",0,0,1,0,0,"",0,0,0
+4468,"Blunderville Square",1,"Blunderville Square",0,0,1,0,1,"",0,0,0
+4469,"Blunderville",1,"Blunderville",0,0,1,0,1,"",0,0,0
+4470,"Gentlebean's Fever",1,"Gentlebean's Fever",0,0,1,0,1,"",0,0,0
+4471,"Manderville-can Parade",1,"Manderville-can Parade",0,0,1,0,0,"",0,0,0
+4472,"The Gold Swiveller",1,"Gold Swiveller",0,0,1,0,0,"",0,0,0
+4473,"Saucery Siege",1,"Saucery Siege",0,0,1,0,1,"",0,0,0
+4474,"Manderville Mountain",2,"Manderville Mountain",0,0,1,0,1,"",0,0,0
+4475,"Lobbyville",1,"Lobbyville",0,0,1,0,1,"",0,0,0
+4476,"",0,"",0,0,0,0,0,"",0,0,0
+4477,"Swiftstep Beach",2,"Swiftstep Beach",0,0,1,0,0,"",0,0,0
+4478,"Forgotten Footfalls",0,"forgotten footfalls",0,0,1,0,0,"",0,0,0
+4479,"Incalculable Boughs",1,"Incalculable boughs",0,0,1,0,0,"",0,0,0
+4480,"",0,"",0,0,0,0,0,"",0,0,0
+4481,"",0,"",0,0,0,0,0,"",0,0,0
+4482,"",0,"",0,0,0,0,0,"",0,0,0
+4483,"",0,"",0,0,0,0,0,"",0,0,0
+4484,"",0,"",0,0,0,0,0,"",0,0,0
+4485,"",0,"",0,0,0,0,0,"",0,0,0
+4486,"",0,"",0,0,0,0,0,"",0,0,0
+4487,"",0,"",0,0,0,0,0,"",0,0,0
+4488,"",0,"",0,0,0,0,0,"",0,0,0
+4489,"",0,"",0,0,0,0,0,"",0,0,0
+4490,"",0,"",0,0,0,0,0,"",0,0,0
+4491,"",0,"",0,0,0,0,0,"",0,0,0
+4492,"",0,"",0,0,0,0,0,"",0,0,0
+4493,"",0,"",0,0,0,0,0,"",0,0,0
+4494,"",0,"",0,0,0,0,0,"",0,0,0
