@@ -9,6 +9,8 @@ Note: `<host>` can be `paissadb` if running postgres locally or a postgres uri, 
 Last data timestamp imported: `paissadb-data-1638477984.sql`
 
 Last pre-Endwalker data: `paissadb-data-1638477984.sql`
+Last pre-Dawntrail data: `paissadb-1719435132.sql.gz` (includes all Endwalker data - last
+id `plot_states 3673581; events 22382986`)
 
 ## 1st Time Import
 
@@ -36,5 +38,5 @@ psql <host> -1 -f finalize-append.sql
 ## Big Dump
 
 ```bash
-pg_dump --data-only --no-owner -t plots -t events -v -F custom -Z 9 -f paissadb-data-shadowbringers.dump paissadb
+pg_dump --data-only --no-owner -t plot_states -t events -v -Z 9 -f paissadb-data-endwalker.sql.gz paissadb
 ```

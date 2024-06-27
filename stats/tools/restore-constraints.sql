@@ -2,40 +2,43 @@
 ALTER TABLE events
     RENAME TO tmp_events;
 
-ALTER TABLE plots
-    RENAME TO tmp_plots;
+ALTER TABLE plot_states
+    RENAME TO tmp_plot_states;
 
 -- recreate the tables we want
-CREATE TABLE public.events
+CREATE TABLE events
 (
-    id          integer NOT NULL,
-    sweeper_id  bigint,
-    "timestamp" timestamp WITHOUT TIME ZONE,
-    event_type  public.eventtype,
-    data        text
+    id          INTEGER NOT NULL,
+    sweeper_id  BIGINT,
+    "timestamp" TIMESTAMP WITHOUT TIME ZONE,
+    event_type  eventtype,
+    data        TEXT
 );
 
-CREATE TABLE public.plots
+CREATE TABLE plot_states
 (
-    id                integer NOT NULL,
-    world_id          integer,
-    territory_type_id integer,
-    ward_number       integer,
-    plot_number       integer,
-    "timestamp"       timestamp WITHOUT TIME ZONE,
-    sweep_id          integer,
-    event_id          integer,
-    is_owned          boolean,
-    has_built_house   boolean,
-    house_price       integer,
-    owner_name        character varying
+    id                INTEGER NOT NULL,
+    world_id          INTEGER,
+    territory_type_id INTEGER,
+    ward_number       INTEGER,
+    plot_number       INTEGER,
+    last_seen         TIMESTAMP WITHOUT TIME ZONE,
+    first_seen        TIMESTAMP WITHOUT TIME ZONE,
+    is_owned          BOOLEAN,
+    last_seen_price   INTEGER,
+    owner_name        CHARACTER VARYING,
+    purchase_system   INTEGER,
+    lotto_entries     INTEGER,
+    lotto_phase       INTEGER,
+    lotto_phase_until INTEGER
 );
+
 
 -- create primary keys
-ALTER TABLE ONLY public.events
+ALTER TABLE ONLY events
     ADD CONSTRAINT events_pkey PRIMARY KEY (id);
 
-ALTER TABLE ONLY public.plots
+ALTER TABLE ONLY plot_states
     ADD CONSTRAINT plots_pkey PRIMARY KEY (id);
 
 -- copy data from tmp tables, deduping on pk
@@ -44,29 +47,34 @@ SELECT *
 FROM tmp_events
 ON CONFLICT DO NOTHING;
 
-INSERT INTO plots
+INSERT INTO tmp_plot_states
 SELECT *
-FROM tmp_plots
+FROM plot_states
 ON CONFLICT DO NOTHING;
 
 -- create non-primary indexes
-CREATE INDEX ix_events_event_type ON public.events USING btree (event_type);
-CREATE INDEX ix_events_sweeper_id ON public.events USING btree (sweeper_id);
-CREATE INDEX ix_events_timestamp ON public.events USING btree ("timestamp");
+CREATE INDEX ix_events_event_type ON events USING btree (event_type);
+CREATE INDEX ix_events_sweeper_id ON events USING btree (sweeper_id);
+CREATE INDEX ix_events_timestamp ON events USING btree ("timestamp");
 
-CREATE INDEX ix_plots_event_id_desc ON public.plots USING btree (event_id DESC);
-CREATE INDEX ix_plots_sweep_id_desc ON public.plots USING btree (sweep_id DESC);
-CREATE INDEX ix_plots_timestamp_desc ON public.plots USING btree ("timestamp" DESC);
-CREATE INDEX ix_plots_ward_number_plot_number_timestamp_desc ON public.plots USING btree (ward_number, plot_number, "timestamp" DESC);
-CREATE INDEX ix_plots_world_id_territory_type_id_ward_number_plot_number ON public.plots USING btree (world_id, territory_type_id, ward_number, plot_number);
-
-ALTER TABLE ONLY public.plots
-    ADD CONSTRAINT plots_event_id_fkey FOREIGN KEY (event_id) REFERENCES public.events (id) ON DELETE CASCADE;
+CREATE INDEX ix_plot_states_loc_last_seen_desc
+    ON plot_states USING btree (world_id ASC, territory_type_id ASC, ward_number ASC, plot_number ASC, last_seen DESC);
+CREATE INDEX ix_plot_states_last_seen_desc
+    ON plot_states USING btree (last_seen DESC);
+ALTER TABLE plot_states
+    ADD CONSTRAINT plot_states_territory_type_id_plot_number_fkey
+        FOREIGN KEY (territory_type_id, plot_number) REFERENCES plotinfo;
+ALTER TABLE plot_states
+    ADD CONSTRAINT plot_states_world_id_fkey
+        FOREIGN KEY (world_id) REFERENCES worlds;
+ALTER TABLE plot_states
+    ADD CONSTRAINT plot_states_territory_type_id_fkey
+        FOREIGN KEY (territory_type_id) REFERENCES districts;
 
 -- create additional statgen indexes
 -- CREATE INDEX ix_plots_owner_name ON public.plots USING btree (owner_name);
-CREATE INDEX ix_plots_world_id_owner_name_timestamp ON public.plots USING btree (world_id, owner_name, "timestamp");
+-- CREATE INDEX ix_plots_world_id_owner_name_timestamp ON public.plots USING btree (world_id, owner_name, "timestamp");
 
 -- delete tmp tables
 DROP TABLE tmp_events;
-DROP TABLE tmp_plots;
+DROP TABLE tmp_plot_states;

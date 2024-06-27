@@ -2,31 +2,33 @@
 ALTER TABLE events
     RENAME TO tmp_events;
 
-ALTER TABLE plots
-    RENAME TO tmp_plots;
+ALTER TABLE plot_states
+    RENAME TO tmp_plot_states;
 
 -- create temp target tables for append data
 CREATE TABLE events
 (
-    id          integer NOT NULL,
-    sweeper_id  bigint,
-    "timestamp" timestamp WITHOUT TIME ZONE,
+    id          INTEGER NOT NULL,
+    sweeper_id  BIGINT,
+    "timestamp" TIMESTAMP WITHOUT TIME ZONE,
     event_type  eventtype,
-    data        text
+    data        TEXT
 );
 
-CREATE TABLE plots
+CREATE TABLE plot_states
 (
-    id                integer NOT NULL,
-    world_id          integer,
-    territory_type_id integer,
-    ward_number       integer,
-    plot_number       integer,
-    "timestamp"       timestamp WITHOUT TIME ZONE,
-    sweep_id          integer,
-    event_id          integer,
-    is_owned          boolean,
-    has_built_house   boolean,
-    house_price       integer,
-    owner_name        character varying
+    id                INTEGER NOT NULL,
+    world_id          INTEGER,
+    territory_type_id INTEGER,
+    ward_number       INTEGER,
+    plot_number       INTEGER,
+    last_seen         TIMESTAMP WITHOUT TIME ZONE,
+    first_seen        TIMESTAMP WITHOUT TIME ZONE,
+    is_owned          BOOLEAN,
+    last_seen_price   INTEGER,
+    owner_name        CHARACTER VARYING,
+    purchase_system   INTEGER,
+    lotto_entries     INTEGER,
+    lotto_phase       INTEGER,
+    lotto_phase_until INTEGER
 );

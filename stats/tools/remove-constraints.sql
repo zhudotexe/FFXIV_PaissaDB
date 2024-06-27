@@ -1,26 +1,13 @@
 -- drop idxs, constraints
--- plots
-DROP INDEX IF EXISTS ix_plots_event_id_desc;
-DROP INDEX IF EXISTS ix_plots_sweep_id_desc;
-DROP INDEX IF EXISTS ix_plots_timestamp_desc;
-DROP INDEX IF EXISTS ix_plots_ward_number_plot_number_timestamp_desc;
-DROP INDEX IF EXISTS ix_plots_world_id_territory_type_id_ward_number_plot_number;
-ALTER TABLE plots
-    DROP CONSTRAINT IF EXISTS plots_pkey;
-ALTER TABLE plots
-    DROP CONSTRAINT IF EXISTS plots_event_id_fkey;
-ALTER TABLE plots
-    DROP CONSTRAINT IF EXISTS plots_sweep_id_fkey;
-ALTER TABLE plots
-    DROP CONSTRAINT IF EXISTS plots_territory_type_id_fkey;
-ALTER TABLE plots
-    DROP CONSTRAINT IF EXISTS plots_territory_type_id_plot_number_fkey;
-ALTER TABLE plots
-    DROP CONSTRAINT IF EXISTS plots_world_id_fkey;
-
--- plots statgen indices
-DROP INDEX IF EXISTS ix_plots_owner_name;
-DROP INDEX IF EXISTS ix_plots_world_id_owner_name_timestamp;
+-- plot_states
+DROP INDEX IF EXISTS ix_plot_states_last_seen_desc;
+DROP INDEX IF EXISTS ix_plot_states_loc_last_seen_desc;
+ALTER TABLE plot_states
+    DROP CONSTRAINT IF EXISTS plot_states_territory_type_id_plot_number_fkey;
+ALTER TABLE plot_states
+    DROP CONSTRAINT IF EXISTS plot_states_world_id_fkey;
+ALTER TABLE plot_states
+    DROP CONSTRAINT IF EXISTS plot_states_territory_type_id_fkey;
 
 -- events
 DROP INDEX IF EXISTS ix_events_event_type;
