@@ -12,6 +12,7 @@ import sentry_sdk
 from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, WebSocket, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 from sqlalchemy.orm import Session
@@ -202,6 +203,10 @@ async def _do_csv_dump(fp, db):
     # unlock
     if (await redis.get("csv_dump_lock")) == rv:
         await redis.delete("csv_dump_lock")
+
+
+# csv static archive
+app.mount("/csv/archive", StaticFiles(directory="_csv_archive"), name="csv_archive")
 
 
 # --- misc ---
