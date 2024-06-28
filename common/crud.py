@@ -229,8 +229,10 @@ def do_csv_state_dump(db: Session) -> Iterator[Row]:
            s.first_seen                AS first_seen,
            s.last_seen                 AS last_seen,
            s.is_owned                  AS is_owned,
+           s.purchase_system           AS purchase_system,
            MD5(s.owner_name)           AS owner_name_hash,
            s.owner_name LIKE '% %'     AS owner_name_has_space,
+           LENGTH(s.owner_name)        AS owner_name_len,
            s.lotto_phase               AS lotto_phase,
            s.lotto_phase_until         AS lotto_phase_until
     FROM plot_states s
