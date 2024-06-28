@@ -16,7 +16,7 @@ fi
 
 # dump, upload to s3
 sudo -u paissadb pg_dump --schema-only --no-owner -v -Z 9 paissadb | aws s3 cp - s3://paissadb-historical/paissadb-schema-${timestamp}.sql.gz
-sudo -u paissadb pg_dump --data-only --no-owner -t plots -t events -v -Z 3 paissadb | aws s3 cp - s3://paissadb-historical/paissadb-data-${timestamp}.sql.gz
+sudo -u paissadb pg_dump --data-only --no-owner -t plot_states -t events -v -Z 3 paissadb | aws s3 cp - s3://paissadb-historical/paissadb-data-${timestamp}.sql.gz
 
 # if the upload succeeded, delete data older than 1 week
 if [[ $? == 0 ]]; then

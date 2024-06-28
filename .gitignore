@@ -122,3 +122,4 @@ temp/
 *.csv
 stats/data/
 _csv_cache/
+_csv_archive/
