@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from common import calc, config, crud, gamedata, models, schemas
 from common.database import EVENT_QUEUE_KEY, PUBSUB_WS_CHANNEL, SessionLocal, engine, redis
+from common.utils import executor
 from . import utils
 
 log = logging.getLogger("worker")
@@ -92,7 +93,7 @@ class Worker:
             should_broadcast = utils.update_historical_state_from(old_state, plot_state_event)
             if should_broadcast and is_newest:
                 update = schemas.paissa.WSPlotUpdate(data=calc.plot_update(plot_state_event, old_state))
-                await self.broadcast(update.json())
+                await self.broadcast(update)
         # else create a new state, broadcast state changes, and return
         elif is_newest:  # only if this is the latest state, don't broadcast updates to old states
             new_state = utils.new_state_from_event(plot_state_event)
@@ -106,10 +107,10 @@ class Worker:
                     )
                 else:
                     transition_detail = schemas.paissa.WSPlotSold(data=calc.sold_plot_detail(new_state, old_state))
-                await self.broadcast(transition_detail.json())
+                await self.broadcast(transition_detail)
             elif not new_state.is_owned:
                 update = schemas.paissa.WSPlotUpdate(data=calc.plot_update(plot_state_event, old_state))
-                await self.broadcast(update.json())
+                await self.broadcast(update)
 
     @staticmethod
     async def handle_intermediate_state(
@@ -125,10 +126,14 @@ class Worker:
         # otherwise just save the changes to db
         utils.update_historical_state_from(previous_state, plot_state_event)
 
-    async def broadcast(self, data: str):
+    async def broadcast(self, data: schemas.paissa.WSMessage):
         """Sends some string data to the web workers to broadcast to all connected websockets."""
-        log.debug(f"Broadcasting message: {data}")
-        await self.redis.publish(PUBSUB_WS_CHANNEL, data)
+        # send to redis for broadcast
+        payload = data.json()
+        log.debug(f"Broadcasting message: {payload}")
+        await self.redis.publish(PUBSUB_WS_CHANNEL, payload)
+        # save to db
+        await executor(crud.record_broadcast_payload(self.db, data))
 
 
 async def run():

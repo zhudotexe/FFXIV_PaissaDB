@@ -119,8 +119,9 @@ Index(
 Index("ix_plot_states_last_seen_desc", PlotState.last_seen.desc())
 
 
-# store of all ingested events for later analysis (e.g. FC/player ownership, relocation/resell graphs, etc)
+# ==== logging ====
 class Event(Base):
+    """store of all ingested events for later analysis (e.g. FC/player ownership, relocation/resell graphs, etc)"""
     __tablename__ = "events"
 
     id = Column(Integer, primary_key=True)
@@ -130,3 +131,14 @@ class Event(Base):
     data = Column(UnicodeText)
 
     sweeper = relationship("Sweeper", back_populates="events")
+
+
+class WSPayload(Base):
+    """store of all server-sent change events"""
+    __tablename__ = "ws_payloads"
+
+    id = Column(Integer, primary_key=True)
+    timestamp = Column(DateTime, server_default=func.now())
+    type = Column(String, index=True)
+    data = Column(UnicodeText)
+

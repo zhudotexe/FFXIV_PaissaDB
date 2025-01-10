@@ -357,3 +357,13 @@ def ffxiv_purchase_info_to_paissa(
     if tenant_type == schemas.ffxiv.TenantType.Unrestricted:
         purchase_system |= schemas.paissa.PurchaseSystem.FREE_COMPANY | schemas.paissa.PurchaseSystem.INDIVIDUAL
     return purchase_system
+
+
+# ==== logging ====
+def record_broadcast_payload(db: Session, data: schemas.paissa.WSMessage):
+    payload = models.WSPayload(
+        type=data.type,
+        data=data.json().replace("\x00", ""),  # remove any null bytes that might sneak in somehow
+    )
+    db.add(payload)
+    db.commit()
