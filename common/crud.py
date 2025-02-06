@@ -215,26 +215,27 @@ def _row_to_plotstate(row):
 
 def do_csv_state_dump(db: Session) -> Iterator[Row]:
     query = """
-    SELECT s.id                        AS id,
-           w.name                      AS world,
-           d.name                      AS district,
-           ward_number + 1             AS ward_number,
-           s.plot_number + 1           AS plot_number,
+        SELECT s.id                                   AS id,
+           w.name                                 AS world,
+           d.name                                 AS district,
+           ward_number + 1                        AS ward_number,
+           s.plot_number + 1                      AS plot_number,
            CASE p.house_size
                WHEN 0 THEN 'SMALL'
                WHEN 1 THEN 'MEDIUM'
-               WHEN 2 THEN 'LARGE' END AS house_size,
-           s.lotto_entries             AS lotto_entries,
-           s.last_seen_price           AS price,
-           s.first_seen                AS first_seen,
-           s.last_seen                 AS last_seen,
-           s.is_owned                  AS is_owned,
-           s.purchase_system           AS purchase_system,
-           MD5(s.owner_name)           AS owner_name_hash,
-           s.owner_name LIKE '% %'     AS owner_name_has_space,
-           LENGTH(s.owner_name)        AS owner_name_len,
-           s.lotto_phase               AS lotto_phase,
-           s.lotto_phase_until         AS lotto_phase_until
+               WHEN 2 THEN 'LARGE' END            AS house_size,
+           s.lotto_entries                        AS lotto_entries,
+           s.last_seen_price                      AS price,
+           s.first_seen                           AS first_seen,
+           s.last_seen                            AS last_seen,
+           s.is_owned                             AS is_owned,
+           s.purchase_system                      AS purchase_system,
+           MD5(s.owner_name)                      AS owner_name_hash,
+           s.owner_name LIKE '% %'                AS owner_name_has_space,
+           LENGTH(s.owner_name)                   AS owner_name_len,
+           s.owner_name ~ '[A-Z][a-z] [A-Z][a-z]' AS possible_character_name,
+           s.lotto_phase                          AS lotto_phase,
+           s.lotto_phase_until                    AS lotto_phase_until
     FROM plot_states s
              LEFT JOIN plotinfo p ON s.territory_type_id = p.territory_type_id AND s.plot_number = p.plot_number
              LEFT JOIN districts d ON d.id = s.territory_type_id

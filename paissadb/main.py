@@ -186,6 +186,7 @@ async def _do_csv_dump(fp, db):
                     "owner_name_hash",
                     "owner_name_has_space",
                     "owner_name_len",
+                    "possible_character_name",
                     "lotto_phase",
                     "lotto_phase_until",
                 ),

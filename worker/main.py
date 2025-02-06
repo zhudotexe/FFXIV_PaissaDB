@@ -133,7 +133,7 @@ class Worker:
         log.debug(f"Broadcasting message: {payload}")
         await self.redis.publish(PUBSUB_WS_CHANNEL, payload)
         # save to db
-        await executor(crud.record_broadcast_payload(self.db, data))
+        await executor(crud.record_broadcast_payload, self.db, data)
 
 
 async def run():
