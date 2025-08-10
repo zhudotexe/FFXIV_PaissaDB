@@ -77,16 +77,10 @@ class BaseFFXIVPacket(BaseModel):
 
 class HousingWardInfo(BaseFFXIVPacket):
     event_type = models.EventType.HOUSING_WARD_INFO
-    server_timestamp: float
-
     LandIdent: LandIdent
     HouseInfoEntries: conlist(HouseInfoEntry, min_items=60, max_items=60)
     PurchaseType: PurchaseType
     TenantType: TenantType
-
-    @property
-    def timestamp(self):
-        return self.server_timestamp
 
 
 class LotteryInfo(BaseFFXIVPacket):

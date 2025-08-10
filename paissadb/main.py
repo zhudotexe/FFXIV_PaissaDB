@@ -54,8 +54,8 @@ async def bulk_ingest(
     sweeper: schemas.paissa.JWTSweeper = Depends(auth.required),
     db: Session = Depends(get_db),
 ):
-    await crud.bulk_ingest(db, data, sweeper)
-    return {"message": "OK", "accepted": len(data)}
+    result = await crud.bulk_ingest(db, data, sweeper)
+    return {"message": result.message, "accepted": result.accepted, "rejected": result.rejected}
 
 
 @app.post("/hello")

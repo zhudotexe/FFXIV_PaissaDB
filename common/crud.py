@@ -3,6 +3,7 @@ import json
 import logging
 import struct
 import time
+from collections import namedtuple
 from typing import Iterator, List, Optional, Tuple
 
 import redis.asyncio as redis_lib
@@ -146,15 +147,15 @@ def latest_plot_states_in_district(db: Session, world_id: int, district_id: int)
     Gets the latest plot states in the district.
     """
     query = """
-    SELECT DISTINCT ON (ward_number, ps.plot_number) ps.*,
-        p.house_size,
-        p.house_base_price
-    FROM plot_states ps
-        JOIN plotinfo p ON ps.territory_type_id = p.territory_type_id AND ps.plot_number = p.plot_number
-    WHERE ps.world_id = :world_id
-      AND ps.territory_type_id = :district_id
-    ORDER BY ward_number, ps.plot_number, last_seen DESC;
-    """
+            SELECT DISTINCT ON (ward_number, ps.plot_number) ps.*,
+                                                             p.house_size,
+                                                             p.house_base_price
+            FROM plot_states ps
+                     JOIN plotinfo p ON ps.territory_type_id = p.territory_type_id AND ps.plot_number = p.plot_number
+            WHERE ps.world_id = :world_id
+              AND ps.territory_type_id = :district_id
+            ORDER BY ward_number, ps.plot_number, last_seen DESC; \
+            """
     stmt = text(query).bindparams(world_id=world_id, district_id=district_id)
     result = db.execute(stmt)
     return [_row_to_plotstate(row) for row in result]
@@ -248,48 +249,60 @@ def do_csv_state_dump(db: Session) -> Iterator[Row]:
 
 # ==== ingest ====
 DATUM_KEY_STRUCT = struct.Struct("!IIHH32s")  # world: u32, district: u32, ward: u16, plot: u16, ownername: char[32]
+BulkIngestResult = namedtuple("BulkIngestResult", "message accepted rejected")
 
 
-async def bulk_ingest(db: Session, data: List[schemas.ffxiv.BaseFFXIVPacket], sweeper: schemas.paissa.JWTSweeper):
+async def bulk_ingest(
+    db: Session, data: List[schemas.ffxiv.BaseFFXIVPacket], sweeper: schemas.paissa.JWTSweeper
+) -> BulkIngestResult:
     sweeper_id = sweeper.cid if sweeper is not None else None
     pipeline = redis.pipeline(transaction=True)
     now = time.time()
 
+    accepted = 0
+    message = "OK"
     for datum in data:
         if datum.timestamp > (now + 10):
             log.warning(
                 f"Skipping datum from {sweeper_id=} because client timestamp is too far in the future:"
                 f" {datum.timestamp} > {now} + 10"
             )
+            message = (
+                f"Rejection: client timestamp too far in future ({datum.timestamp - now:.1f} sec)! Check your system"
+                " time."
+            )
             continue
         # add to redis - switch on event type
         if isinstance(datum, schemas.ffxiv.HousingWardInfo):
             if datum.LandIdent.WorldId == 0:  # sometimes the server is borked and sends us fully null data
                 continue
-            await _ingest_wardinfo(pipeline, datum)
+            is_accepted = await _ingest_wardinfo(pipeline, datum, now)
         elif isinstance(datum, schemas.ffxiv.LotteryInfo):
-            await _ingest_lotteryinfo(pipeline, datum)
+            is_accepted = await _ingest_lotteryinfo(pipeline, datum, now)
         else:
             raise ValueError(f"Unknown event type: {datum.event_type}")
 
         # add to postgres
         db_event = models.Event(
             sweeper_id=sweeper_id,
-            timestamp=datum.timestamp,
+            timestamp=now,
             event_type=datum.event_type,
             data=datum.json().replace("\x00", ""),  # remove any null bytes that might sneak in somehow
         )
         db.add(db_event)
+        if is_accepted:
+            accepted += 1
     await pipeline.execute()
     await utils.executor(db.commit)
+    rejected = len(data) - accepted
+    return BulkIngestResult(message=message, accepted=accepted, rejected=rejected)
 
 
 # --- wardinfo ---
-async def _ingest_wardinfo(pipeline: redis_lib.client.Pipeline, wardinfo: schemas.ffxiv.HousingWardInfo):
+async def _ingest_wardinfo(pipeline: redis_lib.client.Pipeline, wardinfo: schemas.ffxiv.HousingWardInfo, now: float):
     world_id = wardinfo.LandIdent.WorldId
     district_id = wardinfo.LandIdent.TerritoryTypeId
     ward_num = wardinfo.LandIdent.WardNumber
-    server_timestamp = wardinfo.server_timestamp
     for plot_num, plot in enumerate(wardinfo.HouseInfoEntries):
         is_owned = bool(plot.InfoFlags & schemas.ffxiv.HousingFlags.PlotOwned)
         owner_name = plot.EstateOwnerName if is_owned else ""
@@ -303,7 +316,7 @@ async def _ingest_wardinfo(pipeline: redis_lib.client.Pipeline, wardinfo: schema
             district_id=district_id,
             ward_num=ward_num,
             plot_num=plot_num,
-            timestamp=server_timestamp,
+            timestamp=now,
             price=plot.HousePrice,
             is_owned=is_owned,
             owner_name=owner_name or None,
@@ -314,11 +327,15 @@ async def _ingest_wardinfo(pipeline: redis_lib.client.Pipeline, wardinfo: schema
         )
 
         await pipeline.set(plot_data_key, json.dumps(state_entry), nx=True, ex=TTL_ONE_HOUR)
-        await pipeline.zadd(EVENT_QUEUE_KEY, {plot_data_key: server_timestamp}, nx=True)
+        await pipeline.zadd(EVENT_QUEUE_KEY, {plot_data_key: now}, nx=True)
+    return True
 
 
 # --- lotteryinfo ---
-async def _ingest_lotteryinfo(pipeline: redis_lib.client.Pipeline, lotteryinfo: schemas.ffxiv.LotteryInfo):
+async def _ingest_lotteryinfo(pipeline: redis_lib.client.Pipeline, lotteryinfo: schemas.ffxiv.LotteryInfo, now: float):
+    # reject if now > lotto_phase_until
+    if now > lotteryinfo.PhaseEndsAt:
+        return False
     world_id = lotteryinfo.WorldId
     district_id = lotteryinfo.DistrictId
     ward_num = lotteryinfo.WardId
@@ -332,7 +349,7 @@ async def _ingest_lotteryinfo(pipeline: redis_lib.client.Pipeline, lotteryinfo: 
         district_id=district_id,
         ward_num=ward_num,
         plot_num=plot_num,
-        timestamp=lotteryinfo.client_timestamp,
+        timestamp=now,
         price=None,
         is_owned=False,
         owner_name=None,
@@ -343,7 +360,8 @@ async def _ingest_lotteryinfo(pipeline: redis_lib.client.Pipeline, lotteryinfo: 
     )
 
     await pipeline.set(plot_data_key, json.dumps(state_entry), nx=True, ex=TTL_ONE_HOUR)
-    await pipeline.zadd(EVENT_QUEUE_KEY, {plot_data_key: lotteryinfo.client_timestamp}, nx=True)
+    await pipeline.zadd(EVENT_QUEUE_KEY, {plot_data_key: now}, nx=True)
+    return True
 
 
 # --- helpers ---
