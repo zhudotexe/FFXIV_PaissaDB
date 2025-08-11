@@ -90,6 +90,7 @@ class PlotState(Base):
     is_owned = Column(Boolean)
     last_seen_price = Column(Integer, nullable=True)  # null for unknown price
     owner_name = Column(String, nullable=True)  # "Unknown" for unknown owner (UNKNOWN_OWNER), used to build relo graph
+    owner_is_fc = Column(Boolean, nullable=True)  # null for unowned or unknown
 
     purchase_system = Column(Integer)
     lotto_entries = Column(Integer, nullable=True)  # null if the plot is FCFS (purchase_system is even)
@@ -141,4 +142,3 @@ class WSPayload(Base):
     timestamp = Column(DateTime, server_default=func.now())
     type = Column(String, index=True)
     data = Column(UnicodeText)
-

@@ -173,6 +173,7 @@ def _row_to_plotstate(row):
         is_owned=row.is_owned,
         last_seen_price=row.last_seen_price,
         owner_name=row.owner_name,
+        owner_is_fc=row.owner_is_fc,
         purchase_system=row.purchase_system,
         lotto_entries=row.lotto_entries,
         lotto_phase=row.lotto_phase,
@@ -216,33 +217,30 @@ def _row_to_plotstate(row):
 
 def do_csv_state_dump(db: Session) -> Iterator[Row]:
     query = """
-        SELECT s.id                                   AS id,
-           w.name                                 AS world,
-           d.name                                 AS district,
-           ward_number + 1                        AS ward_number,
-           s.plot_number + 1                      AS plot_number,
-           CASE p.house_size
-               WHEN 0 THEN 'SMALL'
-               WHEN 1 THEN 'MEDIUM'
-               WHEN 2 THEN 'LARGE' END            AS house_size,
-           s.lotto_entries                        AS lotto_entries,
-           s.last_seen_price                      AS price,
-           s.first_seen                           AS first_seen,
-           s.last_seen                            AS last_seen,
-           s.is_owned                             AS is_owned,
-           s.purchase_system                      AS purchase_system,
-           MD5(s.owner_name)                      AS owner_name_hash,
-           s.owner_name LIKE '% %'                AS owner_name_has_space,
-           LENGTH(s.owner_name)                   AS owner_name_len,
-           s.owner_name ~ '[A-Z][a-z] [A-Z][a-z]' AS possible_character_name,
-           s.lotto_phase                          AS lotto_phase,
-           s.lotto_phase_until                    AS lotto_phase_until
-    FROM plot_states s
-             LEFT JOIN plotinfo p ON s.territory_type_id = p.territory_type_id AND s.plot_number = p.plot_number
-             LEFT JOIN districts d ON d.id = s.territory_type_id
-             LEFT JOIN worlds w ON w.id = s.world_id
-    ORDER BY id DESC;
-    """
+            SELECT s.id                        AS id,
+                   w.name                      AS world,
+                   d.name                      AS district,
+                   ward_number + 1             AS ward_number,
+                   s.plot_number + 1           AS plot_number,
+                   CASE p.house_size
+                       WHEN 0 THEN 'SMALL'
+                       WHEN 1 THEN 'MEDIUM'
+                       WHEN 2 THEN 'LARGE' END AS house_size,
+                   s.lotto_entries             AS lotto_entries,
+                   s.last_seen_price           AS price,
+                   s.first_seen                AS first_seen,
+                   s.last_seen                 AS last_seen,
+                   s.is_owned                  AS is_owned,
+                   s.owner_is_fc               AS owner_is_fc,
+                   s.purchase_system           AS purchase_system,
+                   s.lotto_phase               AS lotto_phase,
+                   s.lotto_phase_until         AS lotto_phase_until
+            FROM plot_states s
+                     LEFT JOIN plotinfo p ON s.territory_type_id = p.territory_type_id AND s.plot_number = p.plot_number
+                     LEFT JOIN districts d ON d.id = s.territory_type_id
+                     LEFT JOIN worlds w ON w.id = s.world_id
+            ORDER BY id DESC; \
+            """
     stmt = text(query)
     return db.execute(stmt)
 
@@ -320,6 +318,7 @@ async def _ingest_wardinfo(pipeline: redis_lib.client.Pipeline, wardinfo: schema
             price=plot.HousePrice,
             is_owned=is_owned,
             owner_name=owner_name or None,
+            owner_is_fc=bool(plot.InfoFlags & schemas.ffxiv.HousingFlags.OwnedByFC),
             purchase_system=purchase_system.value,
             lotto_entries=None,
             lotto_phase=None,
@@ -353,6 +352,7 @@ async def _ingest_lotteryinfo(pipeline: redis_lib.client.Pipeline, lotteryinfo: 
         price=None,
         is_owned=False,
         owner_name=None,
+        owner_is_fc=None,
         purchase_system=purchase_system.value,
         lotto_entries=lotteryinfo.EntryCount,
         lotto_phase=lotteryinfo.AvailabilityType.value,

@@ -40,6 +40,7 @@ class PlotStateEntry(BaseModel):
     price: Optional[int]
     is_owned: bool
     owner_name: Optional[str]  # this can be None if the plot is not owned or if we do not know the owner name
+    owner_is_fc: Optional[bool]  # this can be None if the plot is not owned or if we do not know the owner
     purchase_system: PurchaseSystem
     lotto_entries: Optional[int]  # this can be None if the ward is FCFS or we do not know the number of entries
     lotto_phase: Optional[ffxiv.LotteryPhase]  # None if wars is FCFS or we do not know the phase (HousingWardInfo)

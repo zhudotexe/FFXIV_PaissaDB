@@ -39,11 +39,13 @@ def update_historical_state_from(
     - lotto_phase if was None or latest
     - lotto_phase_until if latest
     - owner_name if was None
+    - owner_is_fc if was None
     """
     should_broadcast = False
     # set previously unpopulated owner name
     if did_update_owner := historical_state.owner_name is None and state_event.owner_name is not None:
         historical_state.owner_name = state_event.owner_name
+        historical_state.owner_is_fc = state_event.owner_is_fc
     # set previously unpopulated lotto phase
     if historical_state.lotto_phase is None and state_event.lotto_phase is not None:
         historical_state.lotto_phase = state_event.lotto_phase
@@ -90,6 +92,7 @@ def new_state_from_event(state_event: schemas.paissa.PlotStateEntry) -> models.P
         is_owned=state_event.is_owned,
         last_seen_price=state_event.price,
         owner_name=state_event.owner_name,
+        owner_is_fc=state_event.owner_is_fc,
         purchase_system=state_event.purchase_system.value,
         lotto_entries=state_event.lotto_entries,
         lotto_phase=state_event.lotto_phase,
