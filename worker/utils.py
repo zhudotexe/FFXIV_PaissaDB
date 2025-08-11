@@ -42,9 +42,10 @@ def update_historical_state_from(
     - owner_is_fc if was None
     """
     should_broadcast = False
-    # set previously unpopulated owner name
+    # set previously unpopulated owner name, owner_is_fc
     if did_update_owner := historical_state.owner_name is None and state_event.owner_name is not None:
         historical_state.owner_name = state_event.owner_name
+    if historical_state.owner_is_fc is None and state_event.owner_is_fc is not None:
         historical_state.owner_is_fc = state_event.owner_is_fc
     # set previously unpopulated lotto phase
     if historical_state.lotto_phase is None and state_event.lotto_phase is not None:
