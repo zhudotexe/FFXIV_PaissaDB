@@ -318,7 +318,7 @@ async def _ingest_wardinfo(pipeline: redis_lib.client.Pipeline, wardinfo: schema
             price=plot.HousePrice,
             is_owned=is_owned,
             owner_name=owner_name or None,
-            owner_is_fc=bool(plot.InfoFlags & schemas.ffxiv.HousingFlags.OwnedByFC),
+            owner_is_fc=bool(plot.InfoFlags & schemas.ffxiv.HousingFlags.OwnedByFC) if is_owned else None,
             purchase_system=purchase_system.value,
             lotto_entries=None,
             lotto_phase=None,
