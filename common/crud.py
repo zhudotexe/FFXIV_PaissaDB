@@ -250,8 +250,22 @@ DATUM_KEY_STRUCT = struct.Struct("!IIHH32s")  # world: u32, district: u32, ward:
 BulkIngestResult = namedtuple("BulkIngestResult", "message accepted rejected")
 
 
+async def log_events(db: Session, data: List[schemas.ffxiv.BaseFFXIVPacket], sweeper: schemas.paissa.JWTSweeper):
+    sweeper_id = sweeper.cid if sweeper is not None else None
+    now = time.time()
+    for datum in data:
+        db_event = models.Event(
+            sweeper_id=sweeper_id,
+            timestamp=now,
+            event_type=datum.event_type,
+            data=datum.json().replace("\x00", ""),  # remove any null bytes that might sneak in somehow
+        )
+        db.add(db_event)
+    await utils.executor(db.commit)
+
+
 async def bulk_ingest(
-    db: Session, data: List[schemas.ffxiv.BaseFFXIVPacket], sweeper: schemas.paissa.JWTSweeper
+    data: List[schemas.ffxiv.BaseFFXIVPacket], sweeper: schemas.paissa.JWTSweeper
 ) -> BulkIngestResult:
     sweeper_id = sweeper.cid if sweeper is not None else None
     pipeline = redis.pipeline(transaction=True)
@@ -280,18 +294,9 @@ async def bulk_ingest(
         else:
             raise ValueError(f"Unknown event type: {datum.event_type}")
 
-        # add to postgres
-        db_event = models.Event(
-            sweeper_id=sweeper_id,
-            timestamp=now,
-            event_type=datum.event_type,
-            data=datum.json().replace("\x00", ""),  # remove any null bytes that might sneak in somehow
-        )
-        db.add(db_event)
         if is_accepted:
             accepted += 1
     await pipeline.execute()
-    await utils.executor(db.commit)
     rejected = len(data) - accepted
     return BulkIngestResult(message=message, accepted=accepted, rejected=rejected)
 

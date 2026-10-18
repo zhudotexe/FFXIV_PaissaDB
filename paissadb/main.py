@@ -9,7 +9,7 @@ from typing import List, Optional
 
 import jwt as jwtlib  # name conflict with jwt query param in /ws
 import sentry_sdk
-from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, WebSocket, status
+from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, Request, WebSocket, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
@@ -20,7 +20,7 @@ from sqlalchemy.orm import Session
 from common import calc, config, crud, schemas
 from common.database import get_db, redis
 from common.utils import REPO_ROOT, executor
-from . import auth, metrics, ws
+from . import antispoof, auth, metrics, ws
 
 log = logging.getLogger(__name__)
 if "debug" in sys.argv:
@@ -50,11 +50,15 @@ metrics.register(app)
 # --- ingest ---
 @app.post("/ingest", status_code=202)
 async def bulk_ingest(
+    request: Request,
     data: List[schemas.ffxiv.BaseFFXIVPacket],
     sweeper: schemas.paissa.JWTSweeper = Depends(auth.required),
     db: Session = Depends(get_db),
 ):
-    result = await crud.bulk_ingest(db, data, sweeper)
+    await crud.log_events(db, data, sweeper)
+    if (spoof_result := await antispoof.verify(db, request, data, sweeper)) is not None:
+        return {"message": spoof_result.message, "accepted": spoof_result.accepted, "rejected": spoof_result.rejected}
+    result = await crud.bulk_ingest(data, sweeper)
     return {"message": result.message, "accepted": result.accepted, "rejected": result.rejected}
 
 
