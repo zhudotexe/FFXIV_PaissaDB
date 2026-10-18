@@ -1,0 +1,3 @@
+[submodule "paissadb/antispoof"]
+	path = paissadb/antispoof
+	url = https://github.com/zhudotexe/PaissaDB-antispoof.git
